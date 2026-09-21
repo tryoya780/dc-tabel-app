@@ -57,6 +57,7 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
     <div class="row" id="o-sum-row"><span>Текущая сумма</span><b id="o-sum"></b></div>
     <button class="btn red" onclick="startOut()">🔴 Ушёл — закрыть смену</button>
   </div>
+  <div id="last-card" class="card" style="display:none"></div>
   <div id="in-card">
     <button class="btn" id="btn-scan" onclick="scanQR()">📷 Сканировать QR у входа</button>
     <div class="card" style="margin-top:12px">
@@ -134,6 +135,9 @@ function renderMe(){
   if(me.stop){document.getElementById('hi-sub').textContent='Вы не допущены к работе на мероприятиях Diamond Catering. Обратитесь к координатору.';document.getElementById('in-card').style.display='none';return}
   if(me.open){renderOpen(me.open);document.getElementById('open-card').style.display='block';document.getElementById('in-card').style.display='none';document.getElementById('hi-sub').textContent='У вас открыта смена'}
   else{document.getElementById('open-card').style.display='none';document.getElementById('in-card').style.display='block';document.getElementById('hi-sub').textContent='Отметьте приход на мероприятие'}
+  const lc=document.getElementById('last-card');
+  if(me.last&&!me.open){lc.style.display='block';lc.innerHTML='<div class="sub" style="margin-bottom:6px">Последняя смена</div><div class="row"><span>'+me.last.evName+'</span><b>'+me.last.date+'</b></div><div class="row"><span>'+me.last.role+'</span><b>'+me.last.since+(me.last.till?' → '+me.last.till:'')+'</b></div><div class="row"><span>Зачтено</span><b>'+h2(me.last.payH)+'</b></div>'+(me.last.sum==null?'':'<div class="row"><span>К выдаче</span><b>'+rub(me.last.sum)+'</b></div>')+(me.last.auto?'<p class="sub bad" style="margin:10px 0 0">Смена закрыта автоматически: вы не отметили уход. Часы уточняет администратор.</p>':'')}
+  else lc.style.display='none';
 }
 async function init(){
   if(tg){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#141210');tg.setBackgroundColor&&tg.setBackgroundColor('#141210');}
@@ -254,7 +258,7 @@ async function sendShot(){
     }else{
       const r=await api('checkout',{photo:photoB64});
       document.getElementById('done-title').textContent='🔴 Смена закрыта';
-      document.getElementById('done-card').innerHTML='<div class="row"><span>Мероприятие</span><b>'+r.closed.evName+'</b></div><div class="row"><span>Время</span><b>'+r.closed.since+' → '+r.closed.till+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(r.closed.payH)+'</b></div>'+(r.closed.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(r.closed.sum)+'</div><p class="sub">Если цифра не сходится — скажите сегодня, а не в конце месяца.</p>');
+      document.getElementById('done-card').innerHTML='<div class="row"><span>Сотрудник</span><b>'+r.closed.fio+'</b></div><div class="row"><span>Категория</span><b>'+r.closed.role+'</b></div><div class="row"><span>Мероприятие</span><b>'+r.closed.evName+'</b></div><div class="row"><span>Дата</span><b>'+r.closed.date+'</b></div><div class="row"><span>Время</span><b>'+r.closed.since+' → '+r.closed.till+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(r.closed.payH)+'</b></div>'+(r.closed.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(r.closed.sum)+'</div><p class="sub">Если цифра не сходится — скажите сегодня, а не в конце месяца.</p>');
     }
     try{localStorage.removeItem('me')}catch(e){}
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
