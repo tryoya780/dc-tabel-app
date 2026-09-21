@@ -163,8 +163,10 @@ function toast(t,ok){const e=document.getElementById('toast');e.textContent=t;e.
 function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
 function h2(n){return (Math.round(n*100)/100).toFixed(2).replace('.',',')+' ч'}
 
+const QS=new URLSearchParams(location.search);
 async function api(action,data){
   const body=Object.assign({action:action,initData:tg?tg.initData:''},data||{});
+  if(QS.get('k')&&QS.get('tg')){body.testKey=QS.get('k');body.tgId=QS.get('tg')} // тестовый вход (только песочница)
   const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
   const j=await r.json();
   if(!j.ok)throw j;
