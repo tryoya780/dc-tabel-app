@@ -286,7 +286,22 @@ function takeShot(){
   const g=c.getContext('2d');g.translate(c.width,0);g.scale(-1,1);g.drawImage(v,0,0,c.width,c.height);finishShot(c);
 }
 function gotImage(img){const c=document.createElement('canvas');const k=Math.min(1,900/Math.max(img.width,img.height));c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);finishShot(c)}
+/* впечатать в кадр дату, время, событие, категорию, ФИО — подделать сложнее, чем имя файла */
+function stamp(c){
+  const g=c.getContext('2d'),w=c.width,h=c.height;
+  const now=new Date(),p=n=>('0'+n).slice(-2);
+  const l1=p(now.getDate())+'.'+p(now.getMonth()+1)+'.'+now.getFullYear()+'  '+p(now.getHours())+':'+p(now.getMinutes())+':'+p(now.getSeconds());
+  const who=(me&&me.fio)||fio||'';
+  const l2=mode==='in'?((ev?ev.name:'')+(cat?' · '+cat:'')):((me&&me.open?me.open.evName+' · '+me.open.role:'')+' · выход');
+  const fs=Math.round(w/26),pad=Math.round(fs*0.6),bh=fs*3+pad*2;
+  g.fillStyle='rgba(0,0,0,0.55)';g.fillRect(0,h-bh,w,bh);
+  g.fillStyle='#fff';g.textBaseline='top';
+  g.font='bold '+fs+'px sans-serif';g.fillText(l1,pad,h-bh+pad);
+  g.font=fs*0.85+'px sans-serif';g.fillText(l2,pad,h-bh+pad+fs*1.15);g.fillText(who,pad,h-bh+pad+fs*2.15);
+  g.font=fs*0.7+'px sans-serif';g.textAlign='right';g.fillStyle='#c9a961';g.fillText('DIAMOND · ТАБЕЛЬ',w-pad,h-bh+pad);g.textAlign='left';
+}
 function finishShot(c){
+  stamp(c);
   photoB64=c.toDataURL('image/jpeg',0.72);
   const s=document.getElementById('shot');s.src=photoB64;s.style.display='block';document.getElementById('video').style.display='none';stopCam();
   document.getElementById('btn-shot').style.display='none';document.getElementById('btn-send').style.display='block';document.getElementById('btn-retake').style.display='block';
