@@ -39,6 +39,34 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
 .ok{color:var(--ok)}.bad{color:var(--bad)}
 .spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--brass);border-radius:50%;animation:s 1s linear infinite;margin:40px auto}
 @keyframes s{to{transform:rotate(360deg)}}
+.wrap{max-width:760px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.pill{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
+.pill.open{color:var(--ok);border-color:var(--ok)}.pill.closed{color:var(--mut)}.pill.new{color:var(--brass);border-color:var(--brass)}
+.evc{cursor:pointer}
+.evc h3{margin:0 0 2px;font-size:17px}
+.bar{height:8px;background:#0f0d0b;border-radius:6px;overflow:hidden;margin:8px 0 4px;position:relative}
+.bar i{display:block;height:100%;background:var(--brass)}
+.bar.over i{background:var(--bad)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tile b{font-size:22px;display:block}
+.tile small{color:var(--mut)}
+.sh{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.sh:last-child{border-bottom:0}
+.sh .n{font-weight:600}.sh .m{color:var(--mut);font-size:13px}
+.sh .r{text-align:right;white-space:nowrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--mut)}
+.dot.on{background:var(--ok)}.dot.auto{background:var(--bad)}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.acts .btn{margin:0;padding:12px;font-size:15px}
+.lnk{color:var(--brass);text-decoration:none;font-size:13px}
+.qrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.qrs img{width:100%;border-radius:10px;background:#fff}
+.qrs figcaption{text-align:center;margin-top:6px;font-weight:600}
+h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text-transform:uppercase}
+.muted{color:var(--mut);font-size:14px}
+@media print{body{background:#fff;color:#000}.noprint{display:none}}
 </style>
 </head>
 <body>
@@ -57,6 +85,7 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
     <div class="row" id="o-sum-row"><span>Текущая сумма</span><b id="o-sum"></b></div>
     <button class="btn red" onclick="startOut()">🔴 Ушёл — закрыть смену</button>
   </div>
+  <button class="btn sec" id="btn-con" style="display:none" onclick="conList()">🗂 Консоль руководителя</button>
   <div id="last-card" class="card" style="display:none"></div>
   <div id="in-card">
     <button class="btn" id="btn-scan" onclick="scanQR()">📷 Сканировать QR у входа</button>
@@ -102,6 +131,18 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
   <button class="btn" id="btn-send" style="display:none" onclick="sendShot()">Отправить</button>
   <button class="btn sec" id="btn-retake" style="display:none" onclick="retake()">Переснять</button>
   <button class="btn sec" onclick="stopCam();show(camBack)">Назад</button>
+</div>
+
+<div id="s-con" class="scr wrap">
+  <div class="top"><div><h1 style="margin:0">Консоль</h1><div class="muted" id="con-me"></div></div><button class="btn sec" style="width:auto;margin:0;padding:10px 14px" onclick="show('s-home')">Отметиться</button></div>
+  <div id="con-list"></div>
+</div>
+
+<div id="s-conev" class="scr wrap">
+  <div class="top"><button class="btn sec" style="width:auto;margin:0;padding:10px 14px" onclick="conList()">‹ Все</button><span class="pill" id="ce-status"></span></div>
+  <h1 id="ce-name" style="margin-top:4px"></h1>
+  <div class="muted" id="ce-sub"></div>
+  <div id="ce-body"></div>
 </div>
 
 <div id="s-done" class="scr">
@@ -150,8 +191,10 @@ async function init(){
     me=await api('me');
     try{localStorage.setItem('me',JSON.stringify(me))}catch(e){}
     renderMe();
+    document.getElementById('btn-con').style.display=me.staff?'block':'none';
     const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
     if(sp&&!me.open&&!window._spUsed){window._spUsed=1;loadEvent({payload:sp})}
+    else if(me.staff&&!me.open&&!window._conShown){window._conShown=1;conList()}
   }catch(e){renderMe();toast(e.msg||'Сервер отвечает медленно. Попробуйте ещё раз через минуту.')}
 }
 function renderOpen(o){
@@ -269,6 +312,80 @@ async function sendShot(){
     if(e.error==='need_fio')return show('s-fio');
     toast(e.msg||'Ошибка отправки');
   }
+}
+/* ── консоль ── */
+let conMe=null;
+function pct(a,b){return b?Math.round(a/b*100):0}
+function pillCls(st){return st==='Открыто'?'open':st==='Закрыто'?'closed':'new'}
+async function conList(){
+  show('s-load');
+  try{
+    const r=await api('con.events');conMe=r.me;
+    document.getElementById('con-me').textContent=r.me.fio+' · '+r.me.role;
+    const box=document.getElementById('con-list');box.innerHTML='';
+    if(!r.events.length)box.innerHTML='<p class="muted">Мероприятий нет.</p>';
+    r.events.forEach(e=>{
+      const d=document.createElement('div');d.className='card evc';d.onclick=()=>conOpen(e.id);
+      d.innerHTML='<div class="top" style="margin:0 0 4px"><h3>'+e.name+'</h3><span class="pill '+pillCls(e.status)+'">'+e.status+'</span></div>'+
+        '<div class="muted">'+e.date+' · '+(e.venue||'')+' · '+e.start+'–'+e.end+(e.mgr?' · '+e.mgr:'')+'</div>'+
+        (e.limit?'<div class="bar'+(e.fact>e.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(e.fact,e.plan))+'%"></i></div>'+
+        '<div class="muted">факт '+rub(e.fact)+' из '+rub(e.plan)+' · вышло '+e.came+' из '+e.limit+' · на объекте '+e.on+(e.flags?' · ⚑ '+e.flags:'')+'</div>':'<div class="muted">наряд не согласован</div>');
+      box.appendChild(d);
+    });
+    show('s-con');
+  }catch(e){show('s-home');toast(e.msg||'Нет доступа к консоли')}
+}
+let ceId='';
+async function conOpen(id){
+  show('s-load');ceId=id;
+  try{
+    const r=await api('con.event',{id:id});conMe=r.me;
+    const ev=r.event,st=r.stats;
+    document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
+    document.getElementById('ce-name').textContent=ev.name;
+    document.getElementById('ce-sub').textContent=ev.date+' · '+(ev.venue||'')+' · '+ev.start+'–'+ev.end+' · гостей '+(ev.guests||'—')+(ev.mgr?' · менеджер '+ev.mgr:'')+(ev.code?' · код '+ev.code:'');
+    let h='';
+    h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+'</small></div>'+
+       '<div class="tile"><b>'+st.came+' / '+st.limit+'</b><small>вышло из лимита</small></div>'+
+       '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
+       '<div class="tile"><b>'+(st.plan-st.fact>=0?'−':'+')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?'экономия к плану':'перерасход')+'</small></div></div>';
+    h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · окно регистрации '+ev.qrFrom+'–'+ev.regTo+', уход до '+ev.qrTo+'</div>';
+    h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>'<div class="tile"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+'</small><div class="muted" style="font-size:12px;margin-top:4px">на объекте '+c.on+' · ушли '+c.left+' · не вышли '+c.free+'<br>'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>').join('')+'</div>';
+    if(r.orders.length)h+='<h2>Дозаказы</h2><div class="card">'+r.orders.map(o=>'<div class="row"><span>'+o.role+' +'+o.n+' · '+o.why+'</span><b>'+rub(o.sum)+'</b></div>').join('')+'</div>';
+    h+='<h2>Смены · '+r.shifts.length+'</h2><div class="card">'+(r.shifts.length?r.shifts.map(x=>'<div class="sh"><div><div class="n"><span class="dot'+(x.open?' on':x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+(x.out?' → '+x.out:' · в смене')+(x.via==='APP'?'':' · '+(x.via||'чат'))+(x.flag?' · ⚑ '+x.flag:'')+(x.auto?' · автозакрытие':'')+'</div>'+
+        '<div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото входа</a>':'')+(x.photoOut?' · <a class="lnk" href="#" onclick="openL(\''+x.photoOut+'\');return false">фото выхода</a>':'')+'</div></div>'+
+        '<div class="r"><div>'+h2(x.payH)+'</div><div class="m">'+(x.sum==null?'':rub(x.sum))+'</div></div></div>').join(''):'<p class="muted">Отметок ещё нет.</p>')+'</div>';
+    if(r.journal.length)h+='<h2>Журнал</h2><div class="card">'+r.journal.slice().reverse().map(j=>'<div class="sh"><div><div class="n">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</div><div class="m">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</div></div></div>').join('')+'</div>';
+    h+='<h2>Действия</h2><div class="acts noprint">';
+    if(ev.code)h+='<button class="btn sec" onclick="conAct(\'qr\')">QR-листы</button>';
+    if(conMe.admin){
+      if(ev.status!=='Открыто'&&ev.status!=='Закрыто')h+='<button class="btn" onclick="conAct(\'open\')">Открыть + QR</button>';
+      if(ev.status==='Открыто')h+='<button class="btn red" onclick="conClose()">Закрыть</button>';
+      h+='<button class="btn sec" onclick="conAct(\'registry\')">Реестр подрядчику</button>';
+      if(ev.code)h+='<button class="btn sec" onclick="if(confirm(\'Перевыпустить QR? Старые листы перестанут работать.\'))conAct(\'reissue\')">Перевыпустить QR</button>';
+    }
+    h+='<button class="btn sec" onclick="conOpen(ceId)">Обновить</button></div><div id="ce-qr"></div>';
+    document.getElementById('ce-body').innerHTML=h;
+    show('s-conev');
+  }catch(e){show('s-con');toast(e.msg||'Ошибка')}
+}
+function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
+async function conAct(act){
+  try{
+    const r=await api('con.act',{id:ceId,act:act});
+    if(act==='qr'){
+      document.getElementById('ce-qr').innerHTML='<h2>QR · код '+r.code+'</h2><div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+q.role+'</figcaption></figure>').join('')+'</div><p class="muted noprint">Откройте на компьютере и распечатайте: Ctrl+P. Или перешлите картинки из чата бота.</p>';
+      window.scrollTo(0,document.body.scrollHeight);return;
+    }
+    toast(r.msg||'Готово',true);
+    if(r.url)openL(r.url);
+    conOpen(ceId);
+  }catch(e){toast(e.msg||'Ошибка')}
+}
+function conClose(){
+  if(!confirm('Закрыть мероприятие?'))return;
+  const shifts=confirm('Закрыть открытые смены сейчас по половине минимума?\nОК — закрыть сейчас, Отмена — оставить до утреннего автозакрытия.');
+  conAct(shifts?'closeShifts':'close');
 }
 init();
 </script>
