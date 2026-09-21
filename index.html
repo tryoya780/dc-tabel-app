@@ -289,11 +289,12 @@ function gotImage(img){const c=document.createElement('canvas');const k=Math.min
 /* впечатать в кадр дату, время, событие, категорию, ФИО — подделать сложнее, чем имя файла */
 function stamp(c){
   const g=c.getContext('2d'),w=c.width,h=c.height;
+  g.setTransform(1,0,0,1,0,0); // текст без зеркала, даже если кадр отзеркален
   const now=new Date(),p=n=>('0'+n).slice(-2);
   const l1=p(now.getDate())+'.'+p(now.getMonth()+1)+'.'+now.getFullYear()+'  '+p(now.getHours())+':'+p(now.getMinutes())+':'+p(now.getSeconds());
   const who=(me&&me.fio)||fio||'';
   const l2=mode==='in'?((ev?ev.name:'')+(cat?' · '+cat:'')):((me&&me.open?me.open.evName+' · '+me.open.role:'')+' · выход');
-  const fs=Math.round(w/26),pad=Math.round(fs*0.6),bh=fs*3+pad*2;
+  const fs=Math.round(Math.min(w,h)/30),pad=Math.round(fs*0.6),bh=Math.round(fs*3.2+pad*2);
   g.fillStyle='rgba(0,0,0,0.55)';g.fillRect(0,h-bh,w,bh);
   g.fillStyle='#fff';g.textBaseline='top';
   g.font='bold '+fs+'px sans-serif';g.fillText(l1,pad,h-bh+pad);
