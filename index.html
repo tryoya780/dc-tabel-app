@@ -129,20 +129,26 @@ async function api(action,data){
   return j;
 }
 
+function renderMe(){
+  document.getElementById('hi').textContent=me.fio?('Здравствуйте, '+me.fio.split(' ').slice(1,2).join('')):'Здравствуйте';
+  if(me.stop){document.getElementById('hi-sub').textContent='Вы не допущены к работе на мероприятиях Diamond Catering. Обратитесь к координатору.';document.getElementById('in-card').style.display='none';return}
+  if(me.open){renderOpen(me.open);document.getElementById('open-card').style.display='block';document.getElementById('in-card').style.display='none';document.getElementById('hi-sub').textContent='У вас открыта смена'}
+  else{document.getElementById('open-card').style.display='none';document.getElementById('in-card').style.display='block';document.getElementById('hi-sub').textContent='Отметьте приход на мероприятие'}
+}
 async function init(){
-  show('s-load');
+  if(tg){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#141210');tg.setBackgroundColor&&tg.setBackgroundColor('#141210');}
+  document.getElementById('btn-scan').style.display=(tg&&tg.showScanQrPopup&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.4'))?'block':'none';
+  try{me=JSON.parse(localStorage.getItem('me')||'null')}catch(e){me=null}
+  if(!me)me={phone:false,fio:'',open:null};
+  renderMe();show('s-home');
+  document.getElementById('hi-sub').textContent+=' · обновляю…';
   try{
-    if(tg){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#141210');tg.setBackgroundColor&&tg.setBackgroundColor('#141210');}
     me=await api('me');
-    document.getElementById('hi').textContent=me.fio?('Здравствуйте, '+me.fio.split(' ').slice(1,2).join('')):'Здравствуйте';
-    if(me.stop){document.getElementById('hi-sub').textContent='Вы не допущены к работе на мероприятиях Diamond Catering. Обратитесь к координатору.';document.getElementById('in-card').style.display='none';show('s-home');return}
-    if(me.open){renderOpen(me.open);document.getElementById('open-card').style.display='block';document.getElementById('in-card').style.display='none';document.getElementById('hi-sub').textContent='У вас открыта смена'}
-    else{document.getElementById('open-card').style.display='none';document.getElementById('in-card').style.display='block';document.getElementById('hi-sub').textContent='Отметьте приход на мероприятие'}
-    document.getElementById('btn-scan').style.display=(tg&&tg.showScanQrPopup&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.4'))?'block':'none';
-    show('s-home');
+    try{localStorage.setItem('me',JSON.stringify(me))}catch(e){}
+    renderMe();
     const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
     if(sp&&!me.open&&!window._spUsed){window._spUsed=1;loadEvent({payload:sp})}
-  }catch(e){show('s-home');toast(e.msg||'Нет связи с сервером')}
+  }catch(e){renderMe();toast(e.msg||'Сервер отвечает медленно. Попробуйте ещё раз через минуту.')}
 }
 function renderOpen(o){
   document.getElementById('o-ev').textContent=o.evName;document.getElementById('o-role').textContent=o.role;
@@ -250,6 +256,7 @@ async function sendShot(){
       document.getElementById('done-title').textContent='🔴 Смена закрыта';
       document.getElementById('done-card').innerHTML='<div class="row"><span>Мероприятие</span><b>'+r.closed.evName+'</b></div><div class="row"><span>Время</span><b>'+r.closed.since+' → '+r.closed.till+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(r.closed.payH)+'</b></div>'+(r.closed.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(r.closed.sum)+'</div><p class="sub">Если цифра не сходится — скажите сегодня, а не в конце месяца.</p>');
     }
+    try{localStorage.removeItem('me')}catch(e){}
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
     show('s-done');
   }catch(e){
