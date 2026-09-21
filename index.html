@@ -70,6 +70,7 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
 <div id="s-cats" class="scr">
   <h1 id="ev-name"></h1>
   <p class="sub" id="ev-sub"></p>
+  <p class="sub" style="color:var(--txt)">Выберите свою категорию и нажмите «Далее»</p>
   <div id="cats"></div>
   <button class="btn" id="btn-cat" disabled onclick="afterCat()">Далее</button>
   <button class="btn sec" onclick="show('s-home')">Назад</button>
@@ -207,6 +208,7 @@ function startOut(){mode='out';camBack='s-home';document.getElementById('cam-tit
 
 async function openCam(){
   photoB64='';document.getElementById('shot').style.display='none';document.getElementById('video').style.display='block';
+  const bs=document.getElementById('btn-send');bs.disabled=false;bs.textContent='Отправить';document.getElementById('btn-shot').onclick=takeShot;
   document.getElementById('btn-shot').style.display='block';document.getElementById('btn-send').style.display='none';document.getElementById('btn-retake').style.display='none';
   show('s-cam');
   try{
@@ -226,7 +228,7 @@ function takeShot(){
   if(!stream)return document.getElementById('file').click();
   const v=document.getElementById('video');const c=document.createElement('canvas');
   const w=v.videoWidth,h=v.videoHeight,k=Math.min(1,900/Math.max(w,h));c.width=Math.round(w*k);c.height=Math.round(h*k);
-  c.getContext('2d').drawImage(v,0,0,c.width,c.height);finishShot(c);
+  const g=c.getContext('2d');g.translate(c.width,0);g.scale(-1,1);g.drawImage(v,0,0,c.width,c.height);finishShot(c);
 }
 function gotImage(img){const c=document.createElement('canvas');const k=Math.min(1,900/Math.max(img.width,img.height));c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);finishShot(c)}
 function finishShot(c){
