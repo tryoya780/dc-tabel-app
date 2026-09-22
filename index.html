@@ -99,6 +99,12 @@ h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text
 #busy .spin{margin:0}
 #busy .t{color:var(--txt);font-size:15px}#busy .s{color:var(--mut);font-size:13px;min-height:16px}
 body.busy .btn{pointer-events:none;opacity:.6}
+#modal{position:fixed;inset:0;background:rgba(20,18,16,.78);display:none;align-items:center;justify-content:center;z-index:40;padding:16px}
+#modal.on{display:flex}
+#modal .box{background:var(--card);border:1px solid var(--brass);border-radius:16px;padding:18px 16px;width:100%;max-width:420px}
+#modal textarea{width:100%;min-height:80px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);border-radius:10px;padding:10px;font-size:15px;font-family:inherit;box-sizing:border-box}
+#modal label.ck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}
+#modal label.ck input{width:20px;height:20px;margin-top:1px}
 </style>
 </head>
 <body>
@@ -186,6 +192,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 <div class="toast" id="toast"></div>
 <div class="scrim" id="scrim" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer"><button class="x" onclick="closeDrawer()">×</button><div id="dr-body"></div></aside>
+<div id="modal"><div class="box" id="modal-box"></div></div>
 <div id="busy"><div class="spin"></div><div class="t" id="busy-t">Загружаю…</div><div class="s" id="busy-s"></div></div>
 
 <script>
@@ -195,6 +202,23 @@ let me=null,ev=null,cats=[],cat='',fio='',mode='in',camBack='s-cats',stream=null
 
 function show(id){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0)}
 function toast(t,ok){const e=document.getElementById('toast');e.textContent=t;e.className='toast'+(ok?' ok':'');e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',4000)}
+/* подтверждение: окно Telegram, если доступно, иначе браузерное */
+function ask(msg){return new Promise(res=>{if(tg&&tg.showConfirm&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.2')){try{tg.showConfirm(msg,ok=>res(!!ok));return}catch(e){}}res(window.confirm(msg))})}
+function modalClose(){document.getElementById('modal').classList.remove('on')}
+/* «Выгнать»: причина обязательна, стоп-лист по галочке */
+function kickAsk(row,fio){
+  document.getElementById('modal-box').innerHTML='<h2 style="margin:0 0 6px">⛔ Выгнать: '+fio+'</h2><p class="muted" style="margin:0 0 10px">Смена закроется сейчас, оплата 0. Причину увидит сотрудник в боте и администратор в таблице.</p>'+
+    '<textarea id="kick-why" placeholder="Причина (обязательно): нетрезв, грязная форма, конфликт…"></textarea>'+
+    '<label class="ck"><input type="checkbox" id="kick-stop"><span>В стоп-лист: по номеру и Telegram. Больше не сможет отметиться ни на одном мероприятии. Снять — в таблице, лист 02.</span></label>'+
+    '<div class="acts"><button class="btn red" onclick="kickGo('+row+')">Выгнать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>';
+  document.getElementById('modal').classList.add('on');setTimeout(()=>document.getElementById('kick-why').focus(),50);
+}
+async function kickGo(row){
+  const why=document.getElementById('kick-why').value.replace(/\s+/g,' ').trim(),stop=document.getElementById('kick-stop').checked;
+  if(!why){toast('Укажите причину');return}
+  if(!(await ask(stop?'Выгнать и добавить в стоп-лист? Это не отменяется кнопкой.':'Выгнать? Оплата за смену будет 0.')))return;
+  modalClose();closeDrawer();conAct('kick',row,'',{reason:why,stop:stop});
+}
 function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
 function h2(n){return (Math.round(n*100)/100).toFixed(2).replace('.',',')+' ч'}
 
@@ -427,12 +451,12 @@ async function conOpen(id,day){
       '<div class="legend"><span><span class="tok on"></span>на объекте</span><span><span class="tok left"></span>ушёл</span><span><span class="tok pend"></span>ждёт подтверждения</span><span><span class="tok no"></span>не вышел</span></div>';
     h+=timeline(r);
     const pend=r.shifts.filter(x=>x.pending&&x.open);
-    if(pend.length)h+='<h2>⏳ Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>'<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div><div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото</a>':'')+'</div></div><div class="r"><button class="btn" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'confirm\','+x.inRow+')">✅</button> <button class="btn sec" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'reject\','+x.inRow+')">❌</button></div></div>').join('')+(pend.length>1?'<button class="btn sec" onclick="conAct(\'confirmAll\')">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
+    if(pend.length)h+='<h2>⏳ Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>'<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div><div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото</a>':'')+'</div></div><div class="r"><button class="btn" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'confirm\','+x.inRow+')">'+(/ранний/.test(x.pending)?'⏱':'✅')+'</button> <button class="btn sec" style="margin:0;padding:8px 12px;font-size:14px" onclick="kickAsk('+x.inRow+',\''+x.fio.replace(/'/g,'')+'\')">⛔</button></div></div>').join('')+(pend.length>1?'<button class="btn sec" onclick="conAct(\'confirmAll\')">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
     if(r.orders.length)h+='<h2>Дозаказы</h2><div class="card">'+r.orders.map(o=>{const p=o.why.split(' · подтвердил ');return '<div class="row"><span>'+o.role+' +'+o.n+' · '+p[0]+(p[1]?'<br><span class="muted" style="font-size:13px">подтвердил '+p[1]+'</span>':'')+'</span><b>'+rub(o.sum)+'</b></div>'}).join('')+'</div>';
     // общий список смен убран: его заменяют лента и панели категорий
 
     const fl=r.shifts.filter(x=>x.flag||x.auto||x.rejected||(x.pending&&x.open));
-    if(fl.length)h+='<h2>⚑ Флаги · '+fl.length+'</h2><div class="card">'+fl.map(x=>'<div class="sh" onclick="openShift('+r.shifts.indexOf(x)+')"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+(x.pending&&x.open?'ждёт подтверждения: '+x.pending:x.rejected?'отклонено':x.auto?'автозакрытие, ½ минимума':x.flag)+'</div></div><div class="r">›</div></div>').join('')+'</div>';
+    if(fl.length)h+='<h2>⚑ Флаги · '+fl.length+'</h2><div class="card">'+fl.map(x=>'<div class="sh" onclick="openShift('+r.shifts.indexOf(x)+')"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+(x.pending&&x.open?'ждёт подтверждения: '+x.pending:x.kicked?'выгнан: '+x.kickWhy:x.rejected?'отклонено':x.auto?'автозакрытие, ½ минимума':x.flag)+'</div></div><div class="r">›</div></div>').join('')+'</div>';
     const own=r.shifts.filter(x=>!x.open&&x.own&&x.sum!=null),sub=r.shifts.filter(x=>!x.open&&!x.own);
     h+='<h2>Реестры на оплату</h2><div class="tiles"><div class="tile"><b>'+rub(own.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>свои · наличная ведомость · '+own.length+' чел.</small></div><div class="tile"><b>'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>подрядчик · безнал · '+sub.length+' чел.</small></div></div>';
     if(r.journal.length)h+='<h2>Журнал</h2><div class="card">'+r.journal.slice().reverse().map(j=>'<div class="sh"><div><div class="n">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</div><div class="m">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</div></div></div>').join('')+'</div>';
@@ -442,7 +466,7 @@ async function conOpen(id,day){
       if(ev.status!=='Открыто'&&ev.status!=='Закрыто')h+='<button class="btn" onclick="conAct(\'open\')">Открыть + QR</button>';
       if(ev.status==='Открыто')h+='<button class="btn red" onclick="conClose()">Закрыть</button>';
       h+='<button class="btn sec" onclick="conAct(\'registry\')">Реестр подрядчику</button><button class="btn sec" onclick="conAct(\'cashsheet\')">Наличная ведомость</button>';
-      if(ev.code)h+='<button class="btn sec" onclick="if(confirm(\'Перевыпустить QR? Старые листы перестанут работать.\'))conAct(\'reissue\')">Перевыпустить QR</button>';
+      if(ev.code)h+='<button class="btn sec" onclick="ask(\'Перевыпустить QR? Старые листы и код перестанут работать.\').then(ok=>{if(ok)conAct(\'reissue\')})">Перевыпустить QR</button>';
     }
     h+='<button class="btn sec" onclick="conOpen(ceId,ceDay)">Обновить</button></div><div id="ce-qr"></div>';
     document.getElementById('ce-body').innerHTML=h;
@@ -467,12 +491,15 @@ function openShift(i){
   const kv=(k,v,c)=>'<div class="kv"><span class="k">'+k+'</span><b'+(c?' class="'+c+'"':'')+'>'+v+'</b></div>';
   const step=x.open?'в смене':(x.step||'');
   let h='<h1 style="margin:0 0 2px">'+x.fio+'</h1><div class="muted" style="margin-bottom:12px">'+x.role+' · '+ev.name+'</div>';
-  h+='<div class="stepbox">'+(x.open?(x.pending?'⏳ Ждёт подтверждения: '+x.pending:'🟢 В смене с '+x.in)+(x.released?' · 🟡 отпущен':''):(x.rejected?'❌ Отклонено менеджером':x.auto?'⚠️ Автозакрытие: не отметил уход, ½ минимума':'🔴 Закрыта · '+step))+'</div>';
+  h+='<div class="stepbox">'+(x.open?(x.pending?'⏳ Ждёт подтверждения: '+x.pending:'🟢 В смене с '+x.in)+'':(x.kicked?'⛔ Выгнан менеджером · '+x.kickWhy:x.rejected?'❌ Отклонено менеджером':x.auto?'⚠️ Автозакрытие: не отметил уход, ½ минимума':'🔴 Закрыта · '+step))+'</div>';
   h+=kv('Приход',(x.in||'—')+(x.early?(x.confirmed?' · зачтено с прихода':' · раньше плана, зачёт с начала окна'):''))+kv('Уход',x.out||'—')+kv('Факт',h2(x.factH))+kv('Минимум за выход',x.min+' ч')+kv('Зачтено к оплате',h2(x.payH))+kv('Ставка',x.rate+' ₽/ч')+(x.open?kv('Сумма','считается при закрытии'):x.sum!=null?kv('Сумма',rub(x.sum)):kv('Сумма','подрядчик, не показывается'))+(x.flag?kv('Флаг',x.flag,'bad'):'')+kv('Отметка через',x.via==='APP'?'приложение':(x.via||'чат'));
   h+='<div class="acts" style="margin-top:14px">'+(x.photoIn?'<button class="btn sec" onclick="openL(\''+x.photoIn+'\')">Фото входа</button>':'')+(x.photoOut?'<button class="btn sec" onclick="openL(\''+x.photoOut+'\')">Фото выхода</button>':'')+
-     (x.pending&&x.open?'<button class="btn" onclick="closeDrawer();conAct(\'confirm\','+x.inRow+')">✅ Подтвердить</button><button class="btn red" onclick="closeDrawer();conAct(\'reject\','+x.inRow+')">❌ Отклонить</button>':'')+
-     (x.open&&!x.released?'<button class="btn sec" onclick="if(confirm(\'Отпустить раньше плана? Минимум за выход сохранится.\')){closeDrawer();conAct(\'release\','+x.inRow+')}">🟡 Отпустить</button>':'')+
-     (x.early&&!x.confirmed&&!x.rejected?'<button class="btn sec" onclick="if(confirm(\'Зачесть время с фактического прихода '+x.in+', а не с планового начала?\')){closeDrawer();conAct(\'early\','+x.inRow+')}">⏱ Зачесть с прихода</button>':'')+'</div>';
+     (x.pending&&x.open&&!/ранний/.test(x.pending)?'<button class="btn" onclick="closeDrawer();conAct(\'confirm\','+x.inRow+')">✅ Подтвердить приход</button>':'')+
+     (x.open&&x.early&&!x.confirmed?'<button class="btn" onclick="ask(\'Зачесть время с фактического прихода '+x.in+', а не с начала окна?\').then(ok=>{if(ok){closeDrawer();conAct(\'early\','+x.inRow+')}})">⏱ Зачесть с прихода</button>':'')+
+     (x.open?'<button class="btn sec" onclick="ask(\'Отпустить '+x.fio.replace(/'/g,'')+' сейчас? Смена закроется, зачтено по факту.\').then(ok=>{if(ok){closeDrawer();conAct(\'release\','+x.inRow+')}})">🟡 Отпустить</button>':'')+
+     (x.open?'<button class="btn red" onclick="kickAsk('+x.inRow+',\''+x.fio.replace(/'/g,'')+'\')">⛔ Выгнать</button>':'')+'</div>';
+  if(x.open&&x.early&&!x.confirmed)h+='<p class="muted" style="margin-top:8px">Пришёл раньше окна. Если ничего не нажимать — зачёт с начала окна.</p>';
+  if(x.pending&&x.open&&!/ранний/.test(x.pending))h+='<p class="muted" style="margin-top:8px">Пришёл позже окна. Без подтверждения — оплата по факту, без минимума.</p>';
   h+='<p class="muted" style="margin-top:12px">Правка часов — в таблице, лист 07: каждая правка попадает в журнал.</p>';
   document.getElementById('dr-body').innerHTML=h;document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');
 }
@@ -482,21 +509,22 @@ function openCat(name){
   const sh=r.shifts.map((x,i)=>Object.assign({i:i},x)).filter(x=>x.role===name);
   const on=sh.filter(x=>x.open),off=sh.filter(x=>!x.open);
   const row=x=>'<div class="sh" onclick="openShift('+x.i+')"><div><div class="n"><span class="dot'+(x.open?(x.pending?' pend':' on'):x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+
-    (x.open?'с '+x.in+' · идёт '+h2(x.factH)+(x.pending?' · ⏳ '+x.pending:'')+(x.released?' · 🟡 отпущен':''):x.in+' → '+x.out+' · зачтено '+h2(x.payH)+(x.auto?' · автозакрытие':'')+(x.rejected?' · отклонено':''))+'</div></div>'+
-    '<div class="r">'+(x.pending&&x.open?'<button class="btn" style="margin:0;padding:6px 10px;font-size:13px" onclick="event.stopPropagation();closeDrawer();conAct(\'confirm\','+x.inRow+')">✅</button> <button class="btn sec" style="margin:0;padding:6px 10px;font-size:13px" onclick="event.stopPropagation();closeDrawer();conAct(\'reject\','+x.inRow+')">❌</button>':'›')+'</div></div>';
+    (x.open?'с '+x.in+' · идёт '+h2(x.factH)+(x.pending?' · ⏳ '+x.pending:''):x.in+' → '+x.out+' · зачтено '+h2(x.payH)+(x.auto?' · автозакрытие':'')+(x.kicked?' · ⛔ выгнан':x.rejected?' · отклонено':'')+(x.released&&!x.relMin?' · 🟡 отпущен':''))+'</div></div>'+
+    '<div class="r">›</div></div>';
   let h='<h1 style="margin:0 0 2px">'+name+'</h1><div class="muted" style="margin-bottom:10px">'+(w?'окно '+w.start+'–'+w.end+' · ':'')+'лимит '+c.limit+' · мин. '+c.min+' ч · '+rub(c.fact)+' из '+rub(c.plan)+'</div>';
   h+='<h2 style="margin-top:8px">На объекте · '+on.length+'</h2><div class="card">'+(on.length?on.map(row).join(''):'<p class="muted" style="margin:0">никого</p>')+'</div>';
   h+='<h2>Ушли · '+off.length+'</h2><div class="card">'+(off.length?off.map(row).join(''):'<p class="muted" style="margin:0">никого</p>')+'</div>';
   h+='<div class="tile" style="margin-top:4px"><b>'+c.free+'</b><small>не вышли · свободных мест из '+c.limit+'</small></div>';
   const notRel=on.filter(x=>!x.released);
-  h+='<div class="acts" style="margin-top:14px">'+(notRel.length?'<button class="btn" onclick="if(confirm(\'Отпустить '+notRel.length+' чел. раньше плана? Минимум за выход у них сохранится.\')){closeDrawer();conAct(\'releaseCat\',0,\''+name.replace(/'/g,'')+'\')}">🟡 Отпустить всех ('+notRel.length+')</button>':'')+'<button class="btn sec" onclick="closeDrawer();conAct(\'qr\')">QR-листы</button></div>';
+  h+='<div class="acts" style="margin-top:14px">'+(SHOW_RELEASE_CAT&&notRel.length?'<button class="btn" onclick="ask(\'Отпустить бригаду: '+notRel.length+' чел.? Смены закроются, минимум за выход сохранится.\').then(ok=>{if(ok){closeDrawer();conAct(\'releaseCat\',0,\''+name.replace(/'/g,'')+'\')}})">🟡 Отпустить бригаду ('+notRel.length+')</button>':'')+'<button class="btn sec" onclick="closeDrawer();conAct(\'qr\')">QR-листы</button></div>';
   document.getElementById('dr-body').innerHTML=h;document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on')}
 function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
-async function conAct(act,row,role){
+const SHOW_RELEASE_CAT=false; // «Отпустить бригаду» (минимум всем) скрыта по решению 22.09, сервер её поддерживает
+async function conAct(act,row,role,extra){
   try{
-    const r=await api('con.act',{id:ceId,act:act,row:row||0,role:role||''});
+    const r=await api('con.act',Object.assign({id:ceId,act:act,row:row||0,role:role||''},extra||{}));
     if(act==='qr'){
       document.getElementById('ce-qr').innerHTML='<h2>QR · код '+r.code+'</h2><div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+q.role+'</figcaption></figure>').join('')+'</div><p class="muted noprint">Откройте на компьютере и распечатайте: Ctrl+P. Или перешлите картинки из чата бота.</p>';
       window.scrollTo(0,document.body.scrollHeight);return;
@@ -506,9 +534,9 @@ async function conAct(act,row,role){
     await conOpen(ceId,ceDay);
   }catch(e){toast(e.msg||'Ошибка')}
 }
-function conClose(){
-  if(!confirm('Закрыть мероприятие?'))return;
-  const shifts=confirm('Закрыть открытые смены сейчас по половине минимума?\nОК — закрыть сейчас, Отмена — оставить до утреннего автозакрытия.');
+async function conClose(){
+  if(!(await ask('Закрыть мероприятие? Код и QR перестанут работать.')))return;
+  const shifts=await ask('Закрыть открытые смены сейчас по половине минимума?\nОК — закрыть сейчас. Отмена — оставить до утреннего автозакрытия.');
   conAct(shifts?'closeShifts':'close');
 }
 init();
