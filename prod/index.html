@@ -67,6 +67,11 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
 h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text-transform:uppercase}
 .muted{color:var(--mut);font-size:14px}
 @media print{body{background:#fff;color:#000}.noprint{display:none}}
+#busy{position:fixed;inset:0;background:rgba(20,18,16,.78);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column;gap:12px}
+#busy.on{display:flex}
+#busy .spin{margin:0}
+#busy .t{color:var(--txt);font-size:15px}#busy .s{color:var(--mut);font-size:13px;min-height:16px}
+body.busy .btn{pointer-events:none;opacity:.6}
 </style>
 </head>
 <body>
@@ -153,6 +158,7 @@ h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="busy"><div class="spin"></div><div class="t" id="busy-t">Загружаю…</div><div class="s" id="busy-s"></div></div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbyxcSvr6_EzWSApSJMaoSwOC2NeU_Er24dOvaA4RPJIpudVgrgG0A8R3Rk0DiCFs1Nr/exec';
@@ -165,13 +171,24 @@ function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
 function h2(n){return (Math.round(n*100)/100).toFixed(2).replace('.',',')+' ч'}
 
 const QS=new URLSearchParams(location.search);
-async function api(action,data){
+const BUSY_TXT={me:'Загружаю профиль…',event:'Ищу мероприятие…',contact:'Подтверждаю номер…',checkin:'Отправляю фото и открываю смену…',checkout:'Отправляю фото и закрываю смену…','con.events':'Загружаю мероприятия…','con.event':'Загружаю карточку…','con.act':'Выполняю…'};
+let busyN=0,busyTimer=null;
+function busy(t){busyN++;document.getElementById('busy-t').textContent=t||'Загружаю…';document.getElementById('busy-s').textContent='';document.getElementById('busy').classList.add('on');document.body.classList.add('busy');
+  clearTimeout(busyTimer);busyTimer=setTimeout(()=>{document.getElementById('busy-s').textContent='Сервер отвечает медленно, ждём…'},8000)}
+function unbusy(){busyN=Math.max(0,busyN-1);if(!busyN){document.getElementById('busy').classList.remove('on');document.body.classList.remove('busy');clearTimeout(busyTimer)}}
+async function api(action,data,quiet){
   const body=Object.assign({action:action,initData:tg?tg.initData:''},data||{});
   if(QS.get('k')&&QS.get('tg')){body.testKey=QS.get('k');body.tgId=QS.get('tg')} // тестовый вход (только песочница)
-  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
-  const j=await r.json();
-  if(!j.ok)throw j;
-  return j;
+  if(!quiet)busy(BUSY_TXT[action]);
+  try{
+    const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),40000);
+    let r;try{r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body),signal:ctl.signal})}
+    catch(e){throw{ok:false,error:'net',msg:e.name==='AbortError'?'Сервер не ответил за 40 секунд. Проверьте связь и попробуйте ещё раз.':'Нет связи с сервером. Проверьте интернет.'}}
+    clearTimeout(to);
+    let j;try{j=await r.json()}catch(e){throw{ok:false,error:'bad',msg:'Сервер вернул непонятный ответ. Попробуйте ещё раз.'}}
+    if(!j.ok)throw j;
+    return j;
+  }finally{if(!quiet)unbusy()}
 }
 
 function renderMe(){
@@ -191,7 +208,7 @@ async function init(){
   renderMe();show('s-home');
   document.getElementById('hi-sub').textContent+=' · обновляю…';
   try{
-    me=await api('me');
+    me=await api('me',null,true);
     try{localStorage.setItem('me',JSON.stringify(me))}catch(e){}
     renderMe();
     document.getElementById('btn-con').style.display=me.staff?'block':'none';
@@ -217,7 +234,6 @@ function scanQR(){
 }
 function byCode(){const c=document.getElementById('code').value.trim();if(!/^\d{6}$/.test(c))return toast('Введите шесть цифр');loadEvent({code:c})}
 async function loadEvent(q){
-  show('s-load');
   try{
     const r=await api('event',q);
     ev=r.event;cats=r.cats;cat='';
@@ -234,7 +250,7 @@ async function loadEvent(q){
     if(!r.regOpen){toast('Регистрация закрыта в '+r.regTo+'. Если вас вызвали позже — сообщите координатору.');}
     document.getElementById('btn-cat').disabled=!cat;
     show('s-cats');
-  }catch(e){show('s-home');toast(e.msg||'Ошибка')}
+  }catch(e){toast(e.msg||'Ошибка')}
 }
 function afterCat(){
   if(!cat)return;
@@ -327,18 +343,16 @@ async function sendShot(){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
     show('s-done');
   }catch(e){
-    b.disabled=false;b.textContent='Отправить';
     if(e.error==='need_contact')return show('s-contact');
     if(e.error==='need_fio')return show('s-fio');
     toast(e.msg||'Ошибка отправки');
-  }
+  }finally{b.disabled=false;b.textContent='Отправить'}
 }
 /* ── консоль ── */
 let conMe=null;
 function pct(a,b){return b?Math.round(a/b*100):0}
 function pillCls(st){return st==='Открыто'?'open':st==='Закрыто'?'closed':'new'}
 async function conList(){
-  show('s-load');
   try{
     const r=await api('con.events');conMe=r.me;
     document.getElementById('con-me').textContent=r.me.fio+' · '+r.me.role;
@@ -353,11 +367,11 @@ async function conList(){
       box.appendChild(d);
     });
     show('s-con');
-  }catch(e){show('s-home');toast(e.msg||'Нет доступа к консоли')}
+  }catch(e){toast(e.msg||'Нет доступа к консоли')}
 }
 let ceId='';
 async function conOpen(id){
-  show('s-load');ceId=id;
+  ceId=id;
   try{
     const r=await api('con.event',{id:id});conMe=r.me;
     const ev=r.event,st=r.stats;
@@ -390,7 +404,7 @@ async function conOpen(id){
     h+='<button class="btn sec" onclick="conOpen(ceId)">Обновить</button></div><div id="ce-qr"></div>';
     document.getElementById('ce-body').innerHTML=h;
     show('s-conev');
-  }catch(e){show('s-con');toast(e.msg||'Ошибка')}
+  }catch(e){toast(e.msg||'Ошибка')}
 }
 function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
 async function conAct(act,row){
@@ -402,7 +416,7 @@ async function conAct(act,row){
     }
     toast(r.msg||'Готово',true);
     if(r.url)openL(r.url);
-    conOpen(ceId);
+    await conOpen(ceId);
   }catch(e){toast(e.msg||'Ошибка')}
 }
 function conClose(){
