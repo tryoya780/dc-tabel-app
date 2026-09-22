@@ -67,6 +67,32 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
 h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text-transform:uppercase}
 .muted{color:var(--mut);font-size:14px}
 @media print{body{background:#fff;color:#000}.noprint{display:none}}
+.toks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tok{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--mut);box-sizing:border-box}
+.tok.on{background:var(--ok);border-color:var(--ok)}.tok.left{background:var(--line);border-color:var(--mut)}.tok.no{border-style:dashed;border-color:var(--bad)}.tok.pend{background:#d9a03c;border-color:#d9a03c}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin:6px 0 0}
+.legend .tok{width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px}
+.tl{position:relative;margin-top:8px}
+.tl .ax{position:relative;height:18px;border-bottom:1px solid var(--line);color:var(--mut);font-size:11px}
+.tl .ax span{position:absolute;transform:translateX(-50%);top:0}
+.tl .rw{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.tl .rw:last-child{border-bottom:0}
+.tl .nm{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl .nm small{display:block;color:var(--mut);font-size:11px}
+.tl .tr{position:relative;height:16px;background:#0f0d0b;border-radius:4px}
+.tl .win{position:absolute;top:0;bottom:0;background:rgba(201,169,97,.12);border-left:1px dashed var(--brass);border-right:1px dashed var(--brass)}
+.tl .bar{position:absolute;top:3px;bottom:3px;border-radius:3px;background:var(--brass);margin:0}
+.tl .bar.open{background:var(--ok)}.tl .bar.auto{background:var(--bad)}.tl .bar.pend{background:#d9a03c}
+.tl .mk{position:absolute;top:0;bottom:0;width:2px;background:var(--txt);opacity:.7}
+.tl .nowl{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--bad)}
+.drawer{position:fixed;inset:auto 0 0 0;max-height:85vh;overflow:auto;background:var(--card);border-top:1px solid var(--brass);border-radius:18px 18px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s;z-index:30}
+.drawer.on{transform:none}
+.drawer .x{position:absolute;right:14px;top:10px;background:none;border:0;color:var(--mut);font-size:26px;line-height:1}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0}.kv .k{color:var(--mut)}
+.stepbox{border:1px solid var(--brass);border-radius:12px;padding:10px 12px;margin:10px 0;background:rgba(201,169,97,.06);font-size:14px}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:29}.scrim.on{display:block}
+@media (min-width:700px){.drawer{left:auto;right:0;top:0;bottom:0;max-height:none;width:420px;border-radius:0;border-left:1px solid var(--brass);border-top:0;transform:translateX(105%)}.drawer.on{transform:none}}
 #busy{position:fixed;inset:0;background:rgba(20,18,16,.78);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column;gap:12px}
 #busy.on{display:flex}
 #busy .spin{margin:0}
@@ -158,6 +184,8 @@ body.busy .btn{pointer-events:none;opacity:.6}
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"><button class="x" onclick="closeDrawer()">×</button><div id="dr-body"></div></aside>
 <div id="busy"><div class="spin"></div><div class="t" id="busy-t">Загружаю…</div><div class="s" id="busy-s"></div></div>
 
 <script>
@@ -385,20 +413,29 @@ async function conOpen(id){
        '<div class="tile"><b>'+(st.plan-st.fact>=0?'−':'+')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход')+'</small></div></div>';
     h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · окно регистрации '+ev.qrFrom+'–'+ev.regTo+', уход до '+ev.qrTo+'</div>';
     const wins={};(r.windows||[]).forEach(w=>wins[w.role]=w);
-    h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>{const w=wins[c.name];return '<div class="tile"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small><div class="muted" style="font-size:12px;margin-top:4px">на объекте '+c.on+' · ушли '+c.left+' · не вышли '+c.free+'<br>'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>'}).join('')+'</div>';
+    conData=r;
+    h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>{const w=wins[c.name];const sh=r.shifts.filter(x=>x.role===c.name);
+      const toks=sh.map(x=>'<span class="tok '+(x.open?(x.pending?'pend':'on'):'left')+'" title="'+x.fio+'"></span>').join('')+Array(Math.max(0,c.limit-sh.length)).fill('<span class="tok no"></span>').join('');
+      return '<div class="tile"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small><div class="toks">'+toks+'</div><div class="muted" style="font-size:12px;margin-top:6px">'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>'}).join('')+'</div>'+
+      '<div class="legend"><span><span class="tok on"></span>на объекте</span><span><span class="tok left"></span>ушёл</span><span><span class="tok pend"></span>ждёт подтверждения</span><span><span class="tok no"></span>не вышел</span></div>';
+    h+=timeline(r);
     const pend=r.shifts.filter(x=>x.pending&&x.open);
     if(pend.length)h+='<h2>⏳ Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>'<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div><div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото</a>':'')+'</div></div><div class="r"><button class="btn" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'confirm\','+x.inRow+')">✅</button> <button class="btn sec" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'reject\','+x.inRow+')">❌</button></div></div>').join('')+(pend.length>1?'<button class="btn sec" onclick="conAct(\'confirmAll\')">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
     if(r.orders.length)h+='<h2>Дозаказы</h2><div class="card">'+r.orders.map(o=>{const p=o.why.split(' · подтвердил ');return '<div class="row"><span>'+o.role+' +'+o.n+' · '+p[0]+(p[1]?'<br><span class="muted" style="font-size:13px">подтвердил '+p[1]+'</span>':'')+'</span><b>'+rub(o.sum)+'</b></div>'}).join('')+'</div>';
-    h+='<h2>Смены · '+r.shifts.length+'</h2><div class="card">'+(r.shifts.length?r.shifts.map(x=>'<div class="sh"><div><div class="n"><span class="dot'+(x.open?' on':x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+(x.out?' → '+x.out:' · в смене')+(x.via==='APP'?'':' · '+(x.via||'чат'))+(x.pending&&x.open?' · ⏳ ждёт подтверждения':'')+(x.rejected?' · ❌ отклонено':'')+(x.flag?' · ⚑ '+x.flag:'')+(x.auto?' · автозакрытие':'')+'</div>'+
+    h+='<h2>Смены · '+r.shifts.length+'</h2><div class="card">'+(r.shifts.length?r.shifts.map((x,i)=>'<div class="sh" onclick="openShift('+i+')"><div><div class="n"><span class="dot'+(x.open?' on':x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+(x.out?' → '+x.out:' · в смене')+(x.via==='APP'?'':' · '+(x.via||'чат'))+(x.pending&&x.open?' · ⏳ ждёт подтверждения':'')+(x.rejected?' · ❌ отклонено':'')+(x.flag?' · ⚑ '+x.flag:'')+(x.auto?' · автозакрытие':'')+'</div>'+
         '<div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото входа</a>':'')+(x.photoOut?' · <a class="lnk" href="#" onclick="openL(\''+x.photoOut+'\');return false">фото выхода</a>':'')+'</div></div>'+
         '<div class="r"><div>'+h2(x.payH)+'</div><div class="m">'+(x.sum==null?'':rub(x.sum))+'</div></div></div>').join(''):'<p class="muted">Отметок ещё нет.</p>')+'</div>';
+    const fl=r.shifts.filter(x=>x.flag||x.auto||x.rejected||(x.pending&&x.open));
+    if(fl.length)h+='<h2>⚑ Флаги · '+fl.length+'</h2><div class="card">'+fl.map(x=>'<div class="sh" onclick="openShift('+r.shifts.indexOf(x)+')"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+(x.pending&&x.open?'ждёт подтверждения: '+x.pending:x.rejected?'отклонено':x.auto?'автозакрытие, ½ минимума':x.flag)+'</div></div><div class="r">›</div></div>').join('')+'</div>';
+    const own=r.shifts.filter(x=>!x.open&&x.own&&x.sum!=null),sub=r.shifts.filter(x=>!x.open&&!x.own);
+    h+='<h2>Реестры на оплату</h2><div class="tiles"><div class="tile"><b>'+rub(own.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>свои · наличная ведомость · '+own.length+' чел.</small></div><div class="tile"><b>'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>подрядчик · безнал · '+sub.length+' чел.</small></div></div>';
     if(r.journal.length)h+='<h2>Журнал</h2><div class="card">'+r.journal.slice().reverse().map(j=>'<div class="sh"><div><div class="n">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</div><div class="m">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</div></div></div>').join('')+'</div>';
     h+='<h2>Действия</h2><div class="acts noprint">';
     if(ev.code)h+='<button class="btn sec" onclick="conAct(\'qr\')">QR-листы</button>';
     if(conMe.admin){
       if(ev.status!=='Открыто'&&ev.status!=='Закрыто')h+='<button class="btn" onclick="conAct(\'open\')">Открыть + QR</button>';
       if(ev.status==='Открыто')h+='<button class="btn red" onclick="conClose()">Закрыть</button>';
-      h+='<button class="btn sec" onclick="conAct(\'registry\')">Реестр подрядчику</button>';
+      h+='<button class="btn sec" onclick="conAct(\'registry\')">Реестр подрядчику</button><button class="btn sec" onclick="conAct(\'cashsheet\')">Наличная ведомость</button>';
       if(ev.code)h+='<button class="btn sec" onclick="if(confirm(\'Перевыпустить QR? Старые листы перестанут работать.\'))conAct(\'reissue\')">Перевыпустить QR</button>';
     }
     h+='<button class="btn sec" onclick="conOpen(ceId)">Обновить</button></div><div id="ce-qr"></div>';
@@ -406,6 +443,32 @@ async function conOpen(id){
     show('s-conev');
   }catch(e){toast(e.msg||'Ошибка')}
 }
+let conData=null;
+function timeline(r){
+  const sh=r.shifts;if(!sh.length)return '';
+  const ws=(r.windows||[]);let t0=Math.min.apply(null,ws.map(w=>w.startTs).concat(sh.map(x=>x.inTs).filter(Boolean)))-36e5;
+  let t1=Math.max.apply(null,ws.map(w=>w.endTs).concat(sh.map(x=>x.outTs||r.now)))+36e5;
+  const span=t1-t0,px=t=>Math.max(0,Math.min(100,(t-t0)/span*100));
+  let ax='';for(let t=Math.ceil(t0/36e5)*36e5;t<=t1;t+=36e5*(span>14*36e5?2:1)){const d=new Date(t);ax+='<span style="left:'+px(t)+'%">'+('0'+d.getHours()).slice(-2)+'</span>'}
+  const wins={};ws.forEach(w=>wins[w.role]=w);
+  return '<h2>Лента смен</h2><div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{const w=wins[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
+    return '<div class="rw" onclick="openShift('+i+')"><div class="nm">'+x.fio+'<small>'+x.role+'</small></div><div class="tr">'+(w?'<div class="win" style="left:'+px(w.startTs)+'%;width:'+(px(w.endTs)-px(w.startTs))+'%"></div>':'')+
+      '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(0.8,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+'</div></div>'}).join('')+
+    '<div class="tr" style="position:relative;height:0"></div><div class="legend"><span>▮ полоса — смена</span><span>┆ окно категории</span><span>| риска минимума</span></div></div>';
+}
+function openShift(i){
+  const x=conData.shifts[i],ev=conData.event;if(!x)return;
+  const kv=(k,v,c)=>'<div class="kv"><span class="k">'+k+'</span><b'+(c?' class="'+c+'"':'')+'>'+v+'</b></div>';
+  const step=x.open?'в смене':(x.step||'');
+  let h='<h1 style="margin:0 0 2px">'+x.fio+'</h1><div class="muted" style="margin-bottom:12px">'+x.role+' · '+ev.name+'</div>';
+  h+='<div class="stepbox">'+(x.open?(x.pending?'⏳ Ждёт подтверждения: '+x.pending:'🟢 В смене с '+x.in):(x.rejected?'❌ Отклонено менеджером':x.auto?'⚠️ Автозакрытие: не отметил уход, ½ минимума':'🔴 Закрыта · '+step))+'</div>';
+  h+=kv('Приход',x.in||'—')+kv('Уход',x.out||'—')+kv('Факт',h2(x.factH))+kv('Минимум за выход',x.min+' ч')+kv('Зачтено к оплате',h2(x.payH))+kv('Ставка',x.rate+' ₽/ч')+(x.sum!=null?kv('Сумма',rub(x.sum)):kv('Сумма','подрядчик, не показывается'))+(x.flag?kv('Флаг',x.flag,'bad'):'')+kv('Отметка через',x.via==='APP'?'приложение':(x.via||'чат'));
+  h+='<div class="acts" style="margin-top:14px">'+(x.photoIn?'<button class="btn sec" onclick="openL(\''+x.photoIn+'\')">Фото входа</button>':'')+(x.photoOut?'<button class="btn sec" onclick="openL(\''+x.photoOut+'\')">Фото выхода</button>':'')+
+     (x.pending&&x.open?'<button class="btn" onclick="closeDrawer();conAct(\'confirm\','+x.inRow+')">✅ Подтвердить</button><button class="btn red" onclick="closeDrawer();conAct(\'reject\','+x.inRow+')">❌ Отклонить</button>':'')+'</div>';
+  h+='<p class="muted" style="margin-top:12px">Правка часов — в таблице, лист 07: каждая правка попадает в журнал.</p>';
+  document.getElementById('dr-body').innerHTML=h;document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on')}
 function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
 async function conAct(act,row){
   try{
