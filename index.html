@@ -83,6 +83,7 @@ h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text
     <div class="row"><span>Смена открыта</span><b id="o-since"></b></div>
     <div class="row"><span>Зачтено сейчас</span><b id="o-pay"></b></div>
     <div class="row" id="o-sum-row"><span>Текущая сумма</span><b id="o-sum"></b></div>
+    <p class="sub bad" id="o-pend" style="display:none;margin:10px 0 0"></p>
     <button class="btn red" onclick="startOut()">🔴 Ушёл — закрыть смену</button>
   </div>
   <button class="btn sec" id="btn-con" style="display:none" onclick="conList()">🗂 Консоль руководителя</button>
@@ -203,6 +204,7 @@ function renderOpen(o){
   document.getElementById('o-ev').textContent=o.evName;document.getElementById('o-role').textContent=o.role;
   document.getElementById('o-since').textContent=o.since;document.getElementById('o-pay').textContent=h2(o.payH)+' · мин. '+o.min+' ч';
   document.getElementById('o-sum-row').style.display=o.sum==null?'none':'flex';document.getElementById('o-sum').textContent=o.sum==null?'':rub(o.sum);
+  document.getElementById('o-pend').style.display=o.pending?'block':'none';document.getElementById('o-pend').textContent=o.pending?'⏳ Ждёт подтверждения менеджера: '+o.pending+'. Пока не подтверждено, часы не зачтутся.':'';
 }
 function scanQR(){
   tg.showScanQrPopup({text:'Наведите на QR-код у входа'},function(txt){
@@ -314,8 +316,8 @@ async function sendShot(){
   try{
     if(mode==='in'){
       const r=await api('checkin',{eventId:ev.id,token:ev.token,role:cat,fio:fio,photo:photoB64});
-      document.getElementById('done-title').textContent='🟢 Смена открыта';
-      document.getElementById('done-card').innerHTML='<div class="row"><span>Мероприятие</span><b>'+r.open.evName+'</b></div><div class="row"><span>Категория</span><b>'+r.open.role+'</b></div><div class="row"><span>Приход</span><b>'+r.open.since+'</b></div><div class="row"><span>Минимум за выход</span><b>'+r.open.min+' ч</b></div><p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Ушёл» — иначе смена закроется по минимуму.</p>';
+      document.getElementById('done-title').textContent=r.pending?'🟢 Смена открыта · ⏳ ждёт подтверждения':'🟢 Смена открыта';
+      document.getElementById('done-card').innerHTML='<div class="row"><span>Мероприятие</span><b>'+r.open.evName+'</b></div><div class="row"><span>Категория</span><b>'+r.open.role+'</b></div><div class="row"><span>Приход</span><b>'+r.open.since+'</b></div><div class="row"><span>Минимум за выход</span><b>'+r.open.min+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">Вы отметились вне планового окна: '+r.pending+'. Менеджер подтвердит по фото, до этого часы не зачтутся.</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Ушёл» — иначе смена закроется по минимуму.</p>';
     }else{
       const r=await api('checkout',{photo:photoB64});
       document.getElementById('done-title').textContent='🔴 Смена закрыта';
@@ -368,9 +370,12 @@ async function conOpen(id){
        '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
        '<div class="tile"><b>'+(st.plan-st.fact>=0?'−':'+')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход')+'</small></div></div>';
     h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · окно регистрации '+ev.qrFrom+'–'+ev.regTo+', уход до '+ev.qrTo+'</div>';
-    h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>'<div class="tile"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+'</small><div class="muted" style="font-size:12px;margin-top:4px">на объекте '+c.on+' · ушли '+c.left+' · не вышли '+c.free+'<br>'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>').join('')+'</div>';
+    const wins={};(r.windows||[]).forEach(w=>wins[w.role]=w);
+    h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>{const w=wins[c.name];return '<div class="tile"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small><div class="muted" style="font-size:12px;margin-top:4px">на объекте '+c.on+' · ушли '+c.left+' · не вышли '+c.free+'<br>'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>'}).join('')+'</div>';
+    const pend=r.shifts.filter(x=>x.pending&&x.open);
+    if(pend.length)h+='<h2>⏳ Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>'<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div><div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото</a>':'')+'</div></div><div class="r"><button class="btn" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'confirm\','+x.inRow+')">✅</button> <button class="btn sec" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'reject\','+x.inRow+')">❌</button></div></div>').join('')+(pend.length>1?'<button class="btn sec" onclick="conAct(\'confirmAll\')">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
     if(r.orders.length)h+='<h2>Дозаказы</h2><div class="card">'+r.orders.map(o=>{const p=o.why.split(' · подтвердил ');return '<div class="row"><span>'+o.role+' +'+o.n+' · '+p[0]+(p[1]?'<br><span class="muted" style="font-size:13px">подтвердил '+p[1]+'</span>':'')+'</span><b>'+rub(o.sum)+'</b></div>'}).join('')+'</div>';
-    h+='<h2>Смены · '+r.shifts.length+'</h2><div class="card">'+(r.shifts.length?r.shifts.map(x=>'<div class="sh"><div><div class="n"><span class="dot'+(x.open?' on':x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+(x.out?' → '+x.out:' · в смене')+(x.via==='APP'?'':' · '+(x.via||'чат'))+(x.flag?' · ⚑ '+x.flag:'')+(x.auto?' · автозакрытие':'')+'</div>'+
+    h+='<h2>Смены · '+r.shifts.length+'</h2><div class="card">'+(r.shifts.length?r.shifts.map(x=>'<div class="sh"><div><div class="n"><span class="dot'+(x.open?' on':x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+(x.out?' → '+x.out:' · в смене')+(x.via==='APP'?'':' · '+(x.via||'чат'))+(x.pending&&x.open?' · ⏳ ждёт подтверждения':'')+(x.rejected?' · ❌ отклонено':'')+(x.flag?' · ⚑ '+x.flag:'')+(x.auto?' · автозакрытие':'')+'</div>'+
         '<div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото входа</a>':'')+(x.photoOut?' · <a class="lnk" href="#" onclick="openL(\''+x.photoOut+'\');return false">фото выхода</a>':'')+'</div></div>'+
         '<div class="r"><div>'+h2(x.payH)+'</div><div class="m">'+(x.sum==null?'':rub(x.sum))+'</div></div></div>').join(''):'<p class="muted">Отметок ещё нет.</p>')+'</div>';
     if(r.journal.length)h+='<h2>Журнал</h2><div class="card">'+r.journal.slice().reverse().map(j=>'<div class="sh"><div><div class="n">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</div><div class="m">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</div></div></div>').join('')+'</div>';
@@ -388,9 +393,9 @@ async function conOpen(id){
   }catch(e){show('s-con');toast(e.msg||'Ошибка')}
 }
 function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
-async function conAct(act){
+async function conAct(act,row){
   try{
-    const r=await api('con.act',{id:ceId,act:act});
+    const r=await api('con.act',{id:ceId,act:act,row:row||0});
     if(act==='qr'){
       document.getElementById('ce-qr').innerHTML='<h2>QR · код '+r.code+'</h2><div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+q.role+'</figcaption></figure>').join('')+'</div><p class="muted noprint">Откройте на компьютере и распечатайте: Ctrl+P. Или перешлите картинки из чата бота.</p>';
       window.scrollTo(0,document.body.scrollHeight);return;
