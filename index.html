@@ -278,6 +278,7 @@ async function loadEvent(q){
     });
     if(!r.regOpen){toast('Регистрация закрыта в '+r.regTo+'. Если вас вызвали позже — сообщите координатору.');}
     document.getElementById('btn-cat').disabled=!cat;
+    if(cat&&r.autoCat&&me.phone&&me.fio){startIn();return}
     show('s-cats');
   }catch(e){toast(e.msg||'Ошибка')}
 }
@@ -305,8 +306,8 @@ function askContact(){
   });
 }
 function afterFio(){fio=document.getElementById('fio').value.trim();if(fio.split(/\s+/).length<2)return toast('Нужны фамилия и имя');if(/[A-Za-z]/.test(fio))return toast('Пишите кириллицей');startIn()}
-function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').textContent=ev.name+' · '+cat;openCam()}
-function startOut(){mode='out';camBack='s-home';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').textContent='Смена закроется после отправки';openCam()}
+function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').innerHTML=ev.name+' · <b>'+cat+'</b> · <a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">сменить</a>';openCam()}
+function startOut(){mode='out';camBack='s-home';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').innerHTML='Смена закроется после отправки';openCam()}
 
 async function openCam(){
   photoB64='';document.getElementById('shot').style.display='none';document.getElementById('video').style.display='block';
