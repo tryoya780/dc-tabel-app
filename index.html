@@ -253,7 +253,7 @@ async function init(){
 function renderOpen(o){
   document.getElementById('o-ev').textContent=o.evName;document.getElementById('o-role').textContent=o.role;
   document.getElementById('o-since').textContent=o.since+(o.payFrom?' · зачёт с '+o.payFrom:'');document.getElementById('o-pay').textContent=o.min+' ч';
-  document.getElementById('o-pend').style.display=o.pending?'block':'none';document.getElementById('o-pend').textContent=o.pending?'⏳ Ждёт подтверждения менеджера: '+o.pending+'. Пока не подтверждено, часы не зачтутся.':'';
+  document.getElementById('o-pend').style.display=o.pending?'block':'none';document.getElementById('o-pend').textContent=o.pending?'⏳ '+o.pending+'. Если менеджер подтвердит — зачёт с фактического прихода, иначе с планового начала.':'';
 }
 function scanQR(){
   tg.showScanQrPopup({text:'Наведите на QR-код у входа'},function(txt){
