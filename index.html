@@ -270,7 +270,7 @@ async function loadEvent(q){
     const r=await api('event',q);
     ev=r.event;cats=r.cats;cat='';
     document.getElementById('ev-name').textContent=ev.name;
-    document.getElementById('ev-sub').textContent=(ev.venue?ev.venue+' · ':'')+ev.date+(r.regOpen?'':' · регистрация закрыта в '+r.regTo);
+    document.getElementById('ev-sub').textContent=(ev.venue?ev.venue+' · ':'')+ev.date+(r.regOpen?'':' · поздний приход, после '+r.regTo);
     const box=document.getElementById('cats');box.innerHTML='';
     cats.forEach(c=>{
       const d=document.createElement('div');d.className='cat'+(c.free?'':' full');
@@ -279,7 +279,7 @@ async function loadEvent(q){
       box.appendChild(d);
       if(r.preCat&&r.preCat===c.name&&c.free)d.onclick();
     });
-    if(!r.regOpen){toast('Регистрация закрыта в '+r.regTo+'. Если вас вызвали позже — сообщите координатору.');}
+    if(!r.regOpen){toast('Плановая регистрация закрылась в '+r.regTo+'. Отметиться можно, смена будет с пометкой «поздний приход».',true);}
     document.getElementById('btn-cat').disabled=!cat;
     if(cat&&r.autoCat&&me.phone&&me.fio){startIn();return}
     show('s-cats');
