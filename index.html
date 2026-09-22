@@ -113,8 +113,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
     <div class="row"><span>Мероприятие</span><b id="o-ev"></b></div>
     <div class="row"><span>Категория</span><b id="o-role"></b></div>
     <div class="row"><span>Смена открыта</span><b id="o-since"></b></div>
-    <div class="row"><span>Зачтено сейчас</span><b id="o-pay"></b></div>
-    <div class="row" id="o-sum-row"><span>Текущая сумма</span><b id="o-sum"></b></div>
+    <div class="row"><span>Минимум за выход</span><b id="o-pay"></b></div>
     <p class="sub bad" id="o-pend" style="display:none;margin:10px 0 0"></p>
     <button class="btn red" onclick="startOut()">🔴 Ушёл — закрыть смену</button>
   </div>
@@ -248,8 +247,7 @@ async function init(){
 }
 function renderOpen(o){
   document.getElementById('o-ev').textContent=o.evName;document.getElementById('o-role').textContent=o.role;
-  document.getElementById('o-since').textContent=o.since+(o.payFrom?' · зачёт с '+o.payFrom:'');document.getElementById('o-pay').textContent=h2(o.payH)+' · мин. '+o.min+' ч';
-  document.getElementById('o-sum-row').style.display=o.sum==null?'none':'flex';document.getElementById('o-sum').textContent=o.sum==null?'':rub(o.sum);
+  document.getElementById('o-since').textContent=o.since+(o.payFrom?' · зачёт с '+o.payFrom:'');document.getElementById('o-pay').textContent=o.min+' ч';
   document.getElementById('o-pend').style.display=o.pending?'block':'none';document.getElementById('o-pend').textContent=o.pending?'⏳ Ждёт подтверждения менеджера: '+o.pending+'. Пока не подтверждено, часы не зачтутся.':'';
 }
 function scanQR(){
