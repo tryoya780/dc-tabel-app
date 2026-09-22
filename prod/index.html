@@ -412,13 +412,13 @@ async function conOpen(id){
     h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+'</small></div>'+
        '<div class="tile"><b>'+st.came+' / '+st.limit+'</b><small>вышло из лимита</small></div>'+
        '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
-       '<div class="tile"><b>'+(st.plan-st.fact>=0?'−':'+')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход')+'</small></div></div>';
+       '<div class="tile"><b'+(st.plan-st.fact<0?' class="bad"':'')+'>'+(st.plan-st.fact<0?'+':'')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход к плану')+'</small></div></div>';
     h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · окно регистрации '+ev.qrFrom+'–'+ev.regTo+', уход до '+ev.qrTo+'</div>';
     const wins={};(r.windows||[]).forEach(w=>wins[w.role]=w);
     conData=r;
     h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>{const w=wins[c.name];const sh=r.shifts.filter(x=>x.role===c.name);
       const toks=sh.map(x=>'<span class="tok '+(x.open?(x.pending?'pend':'on'):'left')+'" title="'+x.fio+'"></span>').join('')+Array(Math.max(0,c.limit-sh.length)).fill('<span class="tok no"></span>').join('');
-      return '<div class="tile evc" onclick="openCat(\''+c.name.replace(/'/g,'')+'\')"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small><div class="toks">'+toks+'</div><div class="muted" style="font-size:12px;margin-top:6px">'+rub(c.fact)+' из '+rub(c.plan)+' · <span class="lnk">кто здесь ›</span></div></div>'}).join('')+'</div>'+
+      return '<div class="tile evc" onclick="openCat(\''+c.name.replace(/'/g,'')+'\')"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small><div class="toks">'+toks+'</div><div class="muted" style="font-size:12px;margin-top:6px">'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>'}).join('')+'</div>'+
       '<div class="legend"><span><span class="tok on"></span>на объекте</span><span><span class="tok left"></span>ушёл</span><span><span class="tok pend"></span>ждёт подтверждения</span><span><span class="tok no"></span>не вышел</span></div>';
     h+=timeline(r);
     const pend=r.shifts.filter(x=>x.pending&&x.open);
