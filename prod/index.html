@@ -216,6 +216,11 @@ async function api(action,data,quiet){
     let j;try{j=await r.json()}catch(e){throw{ok:false,error:'bad',msg:'Сервер вернул непонятный ответ. Попробуйте ещё раз.'}}
     if(!j.ok)throw j;
     return j;
+  }catch(e){
+    // запросы чтения безопасно повторить один раз: холодный старт сервера иногда даёт мусор или таймаут
+    const readOnly=['me','event','con.events','con.event'].indexOf(action)>=0;
+    if(readOnly&&!data?._retry&&(e.error==='bad'||e.error==='net')){return api(action,Object.assign({},data||{},{_retry:1}),quiet)}
+    throw e;
   }finally{if(!quiet)unbusy()}
 }
 
