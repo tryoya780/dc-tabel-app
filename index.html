@@ -219,7 +219,7 @@ async function init(){
 }
 function renderOpen(o){
   document.getElementById('o-ev').textContent=o.evName;document.getElementById('o-role').textContent=o.role;
-  document.getElementById('o-since').textContent=o.since;document.getElementById('o-pay').textContent=h2(o.payH)+' · мин. '+o.min+' ч';
+  document.getElementById('o-since').textContent=o.since+(o.payFrom?' · зачёт с '+o.payFrom:'');document.getElementById('o-pay').textContent=h2(o.payH)+' · мин. '+o.min+' ч';
   document.getElementById('o-sum-row').style.display=o.sum==null?'none':'flex';document.getElementById('o-sum').textContent=o.sum==null?'':rub(o.sum);
   document.getElementById('o-pend').style.display=o.pending?'block':'none';document.getElementById('o-pend').textContent=o.pending?'⏳ Ждёт подтверждения менеджера: '+o.pending+'. Пока не подтверждено, часы не зачтутся.':'';
 }
@@ -333,7 +333,7 @@ async function sendShot(){
     if(mode==='in'){
       const r=await api('checkin',{eventId:ev.id,token:ev.token,role:cat,fio:fio,photo:photoB64});
       document.getElementById('done-title').textContent=r.pending?'🟢 Смена открыта · ⏳ ждёт подтверждения':'🟢 Смена открыта';
-      document.getElementById('done-card').innerHTML='<div class="row"><span>Мероприятие</span><b>'+r.open.evName+'</b></div><div class="row"><span>Категория</span><b>'+r.open.role+'</b></div><div class="row"><span>Приход</span><b>'+r.open.since+'</b></div><div class="row"><span>Минимум за выход</span><b>'+r.open.min+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">Вы отметились вне планового окна: '+r.pending+'. Менеджер подтвердит по фото, до этого часы не зачтутся.</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Ушёл» — иначе смена закроется по минимуму.</p>';
+      document.getElementById('done-card').innerHTML='<div class="row"><span>Мероприятие</span><b>'+r.open.evName+'</b></div><div class="row"><span>Категория</span><b>'+r.open.role+'</b></div><div class="row"><span>Приход</span><b>'+r.open.since+(r.open.payFrom?' · зачёт с '+r.open.payFrom:'')+'</b></div><div class="row"><span>Минимум за выход</span><b>'+r.open.min+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">Вы отметились вне планового окна: '+r.pending+'. Менеджер подтвердит по фото, до этого часы не зачтутся.</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Ушёл» — иначе смена закроется по минимуму.</p>';
     }else{
       const r=await api('checkout',{photo:photoB64});
       document.getElementById('done-title').textContent='🔴 Смена закрыта';
