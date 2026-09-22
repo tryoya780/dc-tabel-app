@@ -402,17 +402,19 @@ async function conList(){
     show('s-con');
   }catch(e){toast(e.msg||'Нет доступа к консоли')}
 }
-let ceId='';
-async function conOpen(id){
-  ceId=id;
+let ceId='',ceDay='';
+function ruDay(d){return d.split('-').reverse().slice(0,2).join('.')}
+async function conOpen(id,day){
+  ceId=id;if(day!==undefined)ceDay=day;
   try{
-    const r=await api('con.event',{id:id});conMe=r.me;
+    const r=await api('con.event',{id:id,day:ceDay||''});conMe=r.me;ceDay=r.day||'';
     const ev=r.event,st=r.stats;
     document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
     document.getElementById('ce-name').textContent=ev.name;
     document.getElementById('ce-sub').textContent=ev.date+' · '+(ev.venue||'')+' · '+ev.start+'–'+ev.end+' · гостей '+(ev.guests||'—')+(ev.mgr?' · менеджер '+ev.mgr:'')+(ev.code?' · код '+ev.code:'');
     let h='';
-    h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+'</small></div>'+
+    if(r.days&&r.days.length>1)h+='<div class="legend" style="margin:0 0 10px;gap:8px">'+r.days.map(d=>'<span class="pill'+(d===r.day?' open':'')+'" style="cursor:pointer;padding:6px 12px;font-size:13px" onclick="conOpen(ceId,\''+d+'\')">'+ruDay(d)+'</span>').join('')+'<span class="muted" style="align-self:center">день мероприятия</span></div>';
+    h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+(r.days&&r.days.length>1?' · '+ruDay(r.day):'')+'</small></div>'+
        '<div class="tile"><b>'+st.came+' / '+st.limit+'</b><small>вышло из лимита</small></div>'+
        '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
        '<div class="tile"><b'+(st.plan-st.fact<0?' class="bad"':'')+'>'+(st.plan-st.fact<0?'+':'')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход к плану')+'</small></div></div>';
@@ -442,7 +444,7 @@ async function conOpen(id){
       h+='<button class="btn sec" onclick="conAct(\'registry\')">Реестр подрядчику</button><button class="btn sec" onclick="conAct(\'cashsheet\')">Наличная ведомость</button>';
       if(ev.code)h+='<button class="btn sec" onclick="if(confirm(\'Перевыпустить QR? Старые листы перестанут работать.\'))conAct(\'reissue\')">Перевыпустить QR</button>';
     }
-    h+='<button class="btn sec" onclick="conOpen(ceId)">Обновить</button></div><div id="ce-qr"></div>';
+    h+='<button class="btn sec" onclick="conOpen(ceId,ceDay)">Обновить</button></div><div id="ce-qr"></div>';
     document.getElementById('ce-body').innerHTML=h;
     show('s-conev');
   }catch(e){toast(e.msg||'Ошибка')}
@@ -501,7 +503,7 @@ async function conAct(act,row,role){
     }
     toast(r.msg||'Готово',true);
     if(r.url)openL(r.url);
-    await conOpen(ceId);
+    await conOpen(ceId,ceDay);
   }catch(e){toast(e.msg||'Ошибка')}
 }
 function conClose(){
