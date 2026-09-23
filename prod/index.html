@@ -467,7 +467,7 @@ async function conList(quiet){
   }catch(e){toast(e.msg||'Нет доступа к консоли')}
 }
 let ceId='',ceDay='',deepRow=0,deepDz=false,lastJson='',conMeta=null,pollBusy=false;
-/* тихое обновление раз в 40 с: без слоя загрузки, перерисовка только если данные изменились, не мешает открытой карточке */
+/* тихое обновление раз в 30 с: без слоя загрузки, перерисовка только если данные изменились, не мешает открытой карточке */
 setInterval(async()=>{
   if(document.visibilityState!=='visible'||pollBusy||busyN||document.getElementById('modal').classList.contains('on'))return;
   const onEv=document.getElementById('s-conev').classList.contains('on'),onList=document.getElementById('s-con').classList.contains('on');
@@ -476,7 +476,7 @@ setInterval(async()=>{
   pollBusy=true;
   try{if(onEv)await conOpen(ceId,ceDay,true);else await conList(true)}catch(e){}
   pollBusy=false;
-},40000);
+},30000);
 function stampNow(){const d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
 function ruDay(d){return d.split('-').reverse().slice(0,2).join('.')}
 async function conOpen(id,day,quiet){
