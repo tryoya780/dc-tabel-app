@@ -219,11 +219,47 @@ async function kickGo(row){
   if(!(await ask(stop?'Выгнать и добавить в стоп-лист? Это не отменяется кнопкой.':'Выгнать? Оплата за смену будет 0.')))return;
   modalClose();closeDrawer();conAct('kick',row,'',{reason:why,stop:stop});
 }
+/* дозаказ из консоли */
+function dzAsk(){
+  const roles=(conData&&conData.roles)||[];
+  document.getElementById('modal-box').innerHTML='<h2 style="margin:0 0 6px">➕ Дозаказ</h2><p class="muted" style="margin:0 0 10px">Администратор подтвердит в приложении, лимит вырастет. Код у входа тот же.</p>'+
+    '<select id="dz-role" style="width:100%;padding:10px;font-size:15px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--brass)">'+roles.map(r=>'<option>'+r+'</option>').join('')+'</select>'+
+    '<input id="dz-n" type="number" min="1" max="50" placeholder="Сколько человек" style="width:100%;margin-top:10px;padding:10px;font-size:15px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);box-sizing:border-box">'+
+    '<textarea id="dz-why" placeholder="Причина: заказчик добавил 30 гостей…" style="margin-top:10px"></textarea>'+
+    '<div class="acts"><button class="btn" onclick="dzGo()">Отправить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>';
+  document.getElementById('modal').classList.add('on');
+}
+function dzGo(){
+  const role=document.getElementById('dz-role').value,n=+document.getElementById('dz-n').value,why=document.getElementById('dz-why').value.trim();
+  if(!n||n<1||n>50){toast('Число людей от 1 до 50');return}
+  if(!why){toast('Укажите причину');return}
+  modalClose();conAct('dzRequest',0,role,{n:n,why:why});
+}
+async function dzDecide(id,ok,label){
+  if(!(await ask((ok?'Подтвердить дозаказ ':'Отклонить дозаказ ')+label+'?')))return;
+  conAct(ok?'dzConfirm':'dzReject',0,'',{req:id});
+}
+/* создание мероприятия администратором */
+function evCreateAsk(){
+  const mg=(conMeta&&conMeta.managers)||[];
+  const inp=(id,ph,type)=>'<input id="'+id+'" type="'+(type||'text')+'" placeholder="'+ph+'" style="width:100%;margin-top:8px;padding:10px;font-size:15px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);box-sizing:border-box">';
+  document.getElementById('modal-box').innerHTML='<h2 style="margin:0 0 6px">＋ Новое мероприятие</h2>'+inp('ev-name','Название')+inp('ev-date','Дата','date')+inp('ev-venue','Площадка')+
+    '<div style="display:flex;gap:8px">'+inp('ev-start','Начало','time')+inp('ev-end','Конец','time')+'</div>'+inp('ev-guests','Гостей','number')+
+    '<select id="ev-mgr" style="width:100%;margin-top:8px;padding:10px;font-size:15px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--brass)"><option value="">Менеджер не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
+    '<div class="acts"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>';
+  document.getElementById('modal').classList.add('on');
+}
+function evCreateGo(){
+  const g=id=>document.getElementById(id).value.trim();
+  const d={name:g('ev-name'),date:g('ev-date'),venue:g('ev-venue'),start:g('ev-start'),end:g('ev-end'),guests:g('ev-guests'),mgr:g('ev-mgr')};
+  if(!d.name||!d.date||!d.start||!d.end){toast('Заполните название, дату, начало и конец');return}
+  modalClose();conAct('evCreate',0,'',d);
+}
 function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
-function h2(n){return (Math.round(n*100)/100).toFixed(2).replace('.',',')+' ч'}
+function h2(n){const m=Math.round((+n||0)*60),h=Math.floor(m/60),r=m%60;return h?(r?h+' ч '+r+' мин':h+' ч'):m+' мин'}
 
 const QS=new URLSearchParams(location.search);
-const BUSY_TXT={me:'Загружаю профиль…',event:'Ищу мероприятие…',contact:'Подтверждаю номер…',checkin:'Отправляю фото и открываю смену…',checkout:'Отправляю фото и закрываю смену…','con.events':'Загружаю мероприятия…','con.event':'Загружаю карточку…','con.act':'Выполняю…'};
+const BUSY_TXT={'con.act':'Выполняю…',me:'Загружаю профиль…',event:'Ищу мероприятие…',contact:'Подтверждаю номер…',checkin:'Отправляю фото и открываю смену…',checkout:'Отправляю фото и закрываю смену…','con.events':'Загружаю мероприятия…','con.event':'Загружаю карточку…','con.act':'Выполняю…'};
 let busyN=0,busyTimer=null;
 function busy(t){busyN++;document.getElementById('busy-t').textContent=t||'Загружаю…';document.getElementById('busy-s').textContent='';document.getElementById('busy').classList.add('on');document.body.classList.add('busy');
   clearTimeout(busyTimer);busyTimer=setTimeout(()=>{document.getElementById('busy-s').textContent='Сервер отвечает медленно, ждём…'},8000)}
@@ -269,8 +305,9 @@ async function init(){
     try{localStorage.setItem('me',JSON.stringify(me))}catch(e){}
     renderMe();
     document.getElementById('btn-con').style.display=me.staff?'block':'none';
-    const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
-    if(sp&&!me.open&&!window._spUsed){window._spUsed=1;loadEvent({payload:sp})}
+    const sp=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||QS.get('p');
+    if(QS.get('con')&&me.staff&&!window._conShown){window._conShown=1;deepRow=+QS.get('row')||0;deepDz=!!QS.get('dz');conOpen(QS.get('con'))}
+    else if(sp&&!me.open&&!window._spUsed){window._spUsed=1;loadEvent({payload:sp})}
     else if(me.staff&&!me.open&&!window._conShown){window._conShown=1;conList()}
   }catch(e){renderMe();toast(e.msg||'Сервер отвечает медленно. Попробуйте ещё раз через минуту.')}
 }
@@ -409,9 +446,10 @@ async function sendShot(){
 let conMe=null;
 function pct(a,b){return b?Math.round(a/b*100):0}
 function pillCls(st){return st==='Открыто'?'open':st==='Закрыто'?'closed':'new'}
-async function conList(){
+async function conList(quiet){
   try{
-    const r=await api('con.events');conMe=r.me;
+    const r=await api('con.events',null,quiet);conMe=r.me;conMeta=r;
+    const key='L'+JSON.stringify(r.events);if(quiet&&key===lastJson)return;lastJson=key;
     document.getElementById('con-me').textContent=r.me.fio+' · '+r.me.role;
     const box=document.getElementById('con-list');box.innerHTML='';
     if(!r.events.length)box.innerHTML='<p class="muted">Мероприятий нет.</p>';
@@ -423,15 +461,29 @@ async function conList(){
         '<div class="muted">факт '+rub(e.fact)+' из '+rub(e.plan)+' · вышло '+e.came+' из '+e.limit+' · на объекте '+e.on+(e.flags?' · ⚑ '+e.flags:'')+'</div>':'<div class="muted">наряд не согласован</div>');
       box.appendChild(d);
     });
+    if(r.me.admin){const b=document.createElement('button');b.className='btn';b.textContent='＋ Новое мероприятие';b.onclick=evCreateAsk;box.appendChild(b)}
+    const u=document.createElement('p');u.className='muted';u.style.textAlign='center';u.textContent='обновлено '+stampNow()+' · обновляется само';box.appendChild(u);
     show('s-con');
   }catch(e){toast(e.msg||'Нет доступа к консоли')}
 }
-let ceId='',ceDay='';
+let ceId='',ceDay='',deepRow=0,deepDz=false,lastJson='',conMeta=null,pollBusy=false;
+/* тихое обновление раз в 40 с: без слоя загрузки, перерисовка только если данные изменились, не мешает открытой карточке */
+setInterval(async()=>{
+  if(document.visibilityState!=='visible'||pollBusy||busyN||document.getElementById('modal').classList.contains('on'))return;
+  const onEv=document.getElementById('s-conev').classList.contains('on'),onList=document.getElementById('s-con').classList.contains('on');
+  if(!onEv&&!onList)return;
+  if(onEv&&document.getElementById('drawer').classList.contains('on'))return;
+  pollBusy=true;
+  try{if(onEv)await conOpen(ceId,ceDay,true);else await conList(true)}catch(e){}
+  pollBusy=false;
+},40000);
+function stampNow(){const d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
 function ruDay(d){return d.split('-').reverse().slice(0,2).join('.')}
-async function conOpen(id,day){
-  ceId=id;if(day!==undefined)ceDay=day;
+async function conOpen(id,day,quiet){
+  ceId=id;if(day!==undefined&&day!==null)ceDay=day;
   try{
-    const r=await api('con.event',{id:id,day:ceDay||''});conMe=r.me;ceDay=r.day||'';
+    const r=await api('con.event',{id:id,day:ceDay||''},quiet);conMe=r.me;ceDay=r.day||'';
+    const key='E'+JSON.stringify([r.stats,r.shifts,r.orders,r.dz,r.journal,r.event.status,r.day]);if(quiet&&key===lastJson)return;lastJson=key;
     const ev=r.event,st=r.stats;
     document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
     document.getElementById('ce-name').textContent=ev.name;
@@ -452,6 +504,7 @@ async function conOpen(id,day){
     h+=timeline(r);
     const pend=r.shifts.filter(x=>x.pending&&x.open);
     if(pend.length)h+='<h2>⏳ Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>'<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div><div class="m">'+(x.photoIn?'<a class="lnk" href="#" onclick="openL(\''+x.photoIn+'\');return false">фото</a>':'')+'</div></div><div class="r"><button class="btn" style="margin:0;padding:8px 12px;font-size:14px" onclick="conAct(\'confirm\','+x.inRow+')">'+(/ранний/.test(x.pending)?'⏱':'✅')+'</button> <button class="btn sec" style="margin:0;padding:8px 12px;font-size:14px" onclick="kickAsk('+x.inRow+',\''+x.fio.replace(/'/g,'')+'\')">⛔</button></div></div>').join('')+(pend.length>1?'<button class="btn sec" onclick="conAct(\'confirmAll\')">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
+    if((r.dz||[]).length)h+='<h2 id="dz-block">➕ Запросы дозаказа · '+r.dz.length+'</h2><div class="card">'+r.dz.map(d=>'<div class="sh"><div><div class="n">'+d.role+' +'+d.n+' · '+rub(d.sum)+'</div><div class="m">'+d.why+' · '+d.byFio+' · '+d.t+'</div></div><div class="r">'+(conMe.admin?'<button class="btn" style="margin:0;padding:8px 12px;font-size:14px" onclick="dzDecide(\''+d.id+'\',true,\''+(d.role+' +'+d.n).replace(/'/g,'')+'\')">✅</button> <button class="btn sec" style="margin:0;padding:8px 12px;font-size:14px" onclick="dzDecide(\''+d.id+'\',false,\''+(d.role+' +'+d.n).replace(/'/g,'')+'\')">❌</button>':'<span class="muted">ждёт</span>')+'</div></div>').join('')+'</div>';
     if(r.orders.length)h+='<h2>Дозаказы</h2><div class="card">'+r.orders.map(o=>{const p=o.why.split(' · подтвердил ');return '<div class="row"><span>'+o.role+' +'+o.n+' · '+p[0]+(p[1]?'<br><span class="muted" style="font-size:13px">подтвердил '+p[1]+'</span>':'')+'</span><b>'+rub(o.sum)+'</b></div>'}).join('')+'</div>';
     // общий список смен убран: его заменяют лента и панели категорий
 
@@ -462,15 +515,19 @@ async function conOpen(id,day){
     if(r.journal.length)h+='<h2>Журнал</h2><div class="card">'+r.journal.slice().reverse().map(j=>'<div class="sh"><div><div class="n">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</div><div class="m">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</div></div></div>').join('')+'</div>';
     h+='<h2>Действия</h2><div class="acts noprint">';
     if(ev.code)h+='<button class="btn sec" onclick="conAct(\'qr\')">QR-листы</button>';
+    if(ev.status==='Открыто')h+='<button class="btn sec" onclick="dzAsk()">➕ Дозаказ</button>';
     if(conMe.admin){
+      h+='<button class="btn sec" onclick="conAct(\'report\')">Отчёт</button>';
       if(ev.status!=='Открыто'&&ev.status!=='Закрыто')h+='<button class="btn" onclick="conAct(\'open\')">Открыть + QR</button>';
       if(ev.status==='Открыто')h+='<button class="btn red" onclick="conClose()">Закрыть</button>';
       h+='<button class="btn sec" onclick="conAct(\'registry\')">Реестр подрядчику</button><button class="btn sec" onclick="conAct(\'cashsheet\')">Наличная ведомость</button>';
       if(ev.code)h+='<button class="btn sec" onclick="ask(\'Перевыпустить QR? Старые листы и код перестанут работать.\').then(ok=>{if(ok)conAct(\'reissue\')})">Перевыпустить QR</button>';
     }
-    h+='<button class="btn sec" onclick="conOpen(ceId,ceDay)">Обновить</button></div><div id="ce-qr"></div>';
+    h+='<button class="btn sec" onclick="conOpen(ceId,ceDay)">Обновить</button></div><p class="muted" style="text-align:center">обновлено '+stampNow()+' · обновляется само</p><div id="ce-qr"></div>';
     document.getElementById('ce-body').innerHTML=h;
     show('s-conev');
+    if(deepRow){const i=r.shifts.findIndex(x=>x.inRow===deepRow);deepRow=0;if(i>=0)openShift(i)}
+    if(deepDz){deepDz=false;const el=document.getElementById('dz-block');if(el)el.scrollIntoView({behavior:'smooth'})}
   }catch(e){toast(e.msg||'Ошибка')}
 }
 let conData=null;
@@ -532,8 +589,10 @@ async function conAct(act,row,role,extra){
       document.getElementById('ce-qr').innerHTML='<h2>QR · код '+r.code+'</h2><div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+q.role+'</figcaption></figure>').join('')+'</div><p class="muted noprint">Откройте на компьютере и распечатайте: Ctrl+P. Или перешлите картинки из чата бота.</p>';
       window.scrollTo(0,document.body.scrollHeight);return;
     }
+    if(act==='report'){document.getElementById('dr-body').innerHTML='<h1 style="margin:0 0 10px">Отчёт</h1><pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:0">'+r.text.replace(/</g,'&lt;')+'</pre>';document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');return}
     toast(r.msg||'Готово',true);
     if(r.url)openL(r.url);
+    if(act==='evCreate'){await conList();return}
     await conOpen(ceId,ceDay);
   }catch(e){toast(e.msg||'Ошибка')}
 }
