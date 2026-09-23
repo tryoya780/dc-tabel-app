@@ -443,11 +443,11 @@ async function conOpen(id,day){
        '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
        '<div class="tile"><b'+(st.plan-st.fact<0?' class="bad"':'')+'>'+(st.plan-st.fact<0?'+':'')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход к плану')+'</small></div></div>';
     h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · окно регистрации '+ev.qrFrom+'–'+ev.regTo+', уход до '+ev.qrTo+'</div>';
-    const wins={};(r.windows||[]).forEach(w=>wins[w.role]=w);
+    const wins={};(r.windows||[]).forEach(w=>{(wins[w.role]=wins[w.role]||[]).push(w)});
     conData=r;
-    h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>{const w=wins[c.name];const sh=r.shifts.filter(x=>x.role===c.name);
+    h+='<h2>Категории</h2><div class="tiles">'+st.cats.map(c=>{const ws=wins[c.name]||[];const sh=r.shifts.filter(x=>x.role===c.name);const w=ws.length===1?ws[0]:null;
       const toks=sh.map(x=>'<span class="tok '+(x.open?(x.pending?'pend':'on'):'left')+'" title="'+x.fio+'"></span>').join('')+Array(Math.max(0,c.limit-sh.length)).fill('<span class="tok no"></span>').join('');
-      return '<div class="tile evc" onclick="openCat(\''+c.name.replace(/'/g,'')+'\')"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small><div class="toks">'+toks+'</div><div class="muted" style="font-size:12px;margin-top:6px">'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>'}).join('')+'</div>'+
+      return '<div class="tile evc" onclick="openCat(\''+c.name.replace(/'/g,'')+'\')"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small>'+(ws.length>1?'<div class="muted" style="font-size:12px;margin-top:4px">'+ws.map(g=>{const n=sh.filter(x=>x.win===g.key).length;return 'к '+g.start+': '+n+' из '+g.count+(g.dz?' (дозаказ)':'')}).join(' · ')+'</div>':'')+'<div class="toks">'+toks+'</div><div class="muted" style="font-size:12px;margin-top:6px">'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>'}).join('')+'</div>'+
       '<div class="legend"><span><span class="tok on"></span>на объекте</span><span><span class="tok left"></span>ушёл</span><span><span class="tok pend"></span>ждёт подтверждения</span><span><span class="tok no"></span>не вышел</span></div>';
     h+=timeline(r);
     const pend=r.shifts.filter(x=>x.pending&&x.open);
@@ -480,8 +480,8 @@ function timeline(r){
   let t1=Math.max.apply(null,ws.map(w=>w.endTs).concat(sh.map(x=>x.outTs||r.now)))+36e5;
   const span=t1-t0,px=t=>Math.max(0,Math.min(100,(t-t0)/span*100));
   let ax='';for(let t=Math.ceil(t0/36e5)*36e5;t<=t1;t+=36e5*(span>14*36e5?2:1)){const d=new Date(t);ax+='<span style="left:'+px(t)+'%">'+('0'+d.getHours()).slice(-2)+'</span>'}
-  const wins={};ws.forEach(w=>wins[w.role]=w);
-  return '<h2>Лента смен</h2><div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{const w=wins[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
+  const byKey={};ws.forEach(w=>byKey[w.key]=w);const first={};ws.forEach(w=>{if(!first[w.role])first[w.role]=w});
+  return '<h2>Лента смен</h2><div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
     return '<div class="rw" onclick="openShift('+i+')"><div class="nm">'+x.fio+'<small>'+x.role+'</small></div><div class="tr">'+(w?'<div class="win" style="left:'+px(w.startTs)+'%;width:'+(px(w.endTs)-px(w.startTs))+'%"></div>':'')+
       '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(0.8,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+'</div></div>'}).join('')+
     '<div class="legend" style="margin-top:10px"><span><i class="lg" style="background:var(--brass)"></i>смена закрыта</span><span><i class="lg" style="background:var(--ok)"></i>в смене сейчас</span><span><i class="lg" style="background:#d9a03c"></i>ждёт подтверждения</span><span><i class="lg" style="background:var(--bad)"></i>автозакрытие</span><span><i class="lg" style="background:rgba(201,169,97,.25);border:1px dashed var(--brass)"></i>плановое окно категории</span><span><i class="lg" style="width:2px;background:var(--txt)"></i>минимум за выход (приход + мин. часы)</span></div></div>';
@@ -492,6 +492,8 @@ function openShift(i){
   const step=x.open?'в смене':(x.step||'');
   let h='<h1 style="margin:0 0 2px">'+x.fio+'</h1><div class="muted" style="margin-bottom:12px">'+x.role+' · '+ev.name+'</div>';
   h+='<div class="stepbox">'+(x.open?(x.pending?'⏳ Ждёт подтверждения: '+x.pending:'🟢 В смене с '+x.in)+'':(x.kicked?'⛔ Выгнан менеджером · '+x.kickWhy:x.rejected?'❌ Отклонено менеджером':x.auto?'⚠️ Автозакрытие: не отметил уход, ½ минимума':'🔴 Закрыта · '+step))+'</div>';
+  const g=(conData.windows||[]).filter(w=>w.key===x.win)[0];
+  if(g)h+=kv('Группа','к '+g.start+', до '+g.end);
   h+=kv('Приход',(x.in||'—')+(x.early?(x.confirmed?' · зачтено с прихода':' · раньше плана, зачёт с начала окна'):''))+kv('Уход',x.out||'—')+kv('Факт',h2(x.factH))+kv('Минимум за выход',x.min+' ч')+kv('Зачтено к оплате',h2(x.payH))+kv('Ставка',x.rate+' ₽/ч')+(x.open?kv('Сумма','считается при закрытии'):x.sum!=null?kv('Сумма',rub(x.sum)):kv('Сумма','подрядчик, не показывается'))+(x.flag?kv('Флаг',x.flag,'bad'):'')+kv('Отметка через',x.via==='APP'?'приложение':(x.via||'чат'));
   h+='<div class="acts" style="margin-top:14px">'+(x.photoIn?'<button class="btn sec" onclick="openL(\''+x.photoIn+'\')">Фото входа</button>':'')+(x.photoOut?'<button class="btn sec" onclick="openL(\''+x.photoOut+'\')">Фото выхода</button>':'')+
      (x.pending&&x.open&&!/ранний/.test(x.pending)?'<button class="btn" onclick="closeDrawer();conAct(\'confirm\','+x.inRow+')">✅ Подтвердить приход</button>':'')+
@@ -505,13 +507,14 @@ function openShift(i){
 }
 function openCat(name){
   const r=conData,c=r.stats.cats.filter(x=>x.name===name)[0];if(!c)return;
-  const w=(r.windows||[]).filter(x=>x.role===name)[0];
+  const ws=(r.windows||[]).filter(x=>x.role===name),w=ws.length===1?ws[0]:null;
   const sh=r.shifts.map((x,i)=>Object.assign({i:i},x)).filter(x=>x.role===name);
   const on=sh.filter(x=>x.open),off=sh.filter(x=>!x.open);
   const row=x=>'<div class="sh" onclick="openShift('+x.i+')"><div><div class="n"><span class="dot'+(x.open?(x.pending?' pend':' on'):x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+
     (x.open?'с '+x.in+' · идёт '+h2(x.factH)+(x.pending?' · ⏳ '+x.pending:''):x.in+' → '+x.out+' · зачтено '+h2(x.payH)+(x.auto?' · автозакрытие':'')+(x.kicked?' · ⛔ выгнан':x.rejected?' · отклонено':'')+(x.released&&!x.relMin?' · 🟡 отпущен':''))+'</div></div>'+
     '<div class="r">›</div></div>';
   let h='<h1 style="margin:0 0 2px">'+name+'</h1><div class="muted" style="margin-bottom:10px">'+(w?'окно '+w.start+'–'+w.end+' · ':'')+'лимит '+c.limit+' · мин. '+c.min+' ч · '+rub(c.fact)+' из '+rub(c.plan)+'</div>';
+  if(ws.length>1)h+='<h2 style="margin-top:8px">Группы</h2><div class="card">'+ws.map(g=>{const gs=sh.filter(x=>x.win===g.key);const on=gs.filter(x=>x.open).length;return '<div class="kv"><span class="k">к '+g.start+', до '+g.end+(g.dz?' · дозаказ':'')+'</span><b>'+gs.length+' из '+g.count+(on?' · на объекте '+on:'')+'</b></div>'}).join('')+'<p class="muted" style="margin:6px 0 0">Человек относится к группе, чьё начало ближе к его приходу. Лимит общий на категорию.</p></div>';
   h+='<h2 style="margin-top:8px">На объекте · '+on.length+'</h2><div class="card">'+(on.length?on.map(row).join(''):'<p class="muted" style="margin:0">никого</p>')+'</div>';
   h+='<h2>Ушли · '+off.length+'</h2><div class="card">'+(off.length?off.map(row).join(''):'<p class="muted" style="margin:0">никого</p>')+'</div>';
   h+='<div class="tile" style="margin-top:4px"><b>'+c.free+'</b><small>не вышли · свободных мест из '+c.limit+'</small></div>';
