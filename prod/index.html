@@ -462,7 +462,7 @@ async function conList(quiet){
       box.appendChild(d);
     });
     if(r.me.admin){const b=document.createElement('button');b.className='btn';b.textContent='＋ Новое мероприятие';b.onclick=evCreateAsk;box.appendChild(b)}
-    const u=document.createElement('p');u.className='muted';u.style.textAlign='center';u.textContent='обновлено '+stampNow()+' · обновляется само';box.appendChild(u);
+    const u=document.createElement('p');u.className='muted';u.style.textAlign='center';u.textContent='обновлено '+stampNow()+'';box.appendChild(u);
     show('s-con');
   }catch(e){toast(e.msg||'Нет доступа к консоли')}
 }
@@ -523,7 +523,7 @@ async function conOpen(id,day,quiet){
       h+='<button class="btn sec" onclick="conAct(\'registry\')">Реестр подрядчику</button><button class="btn sec" onclick="conAct(\'cashsheet\')">Наличная ведомость</button>';
       if(ev.code)h+='<button class="btn sec" onclick="ask(\'Перевыпустить QR? Старые листы и код перестанут работать.\').then(ok=>{if(ok)conAct(\'reissue\')})">Перевыпустить QR</button>';
     }
-    h+='<button class="btn sec" onclick="conOpen(ceId,ceDay)">Обновить</button></div><p class="muted" style="text-align:center">обновлено '+stampNow()+' · обновляется само</p><div id="ce-qr"></div>';
+    h+='<button class="btn sec" onclick="conOpen(ceId,ceDay)">Обновить</button></div><p class="muted" style="text-align:center">обновлено '+stampNow()+'</p><div id="ce-qr"></div>';
     document.getElementById('ce-body').innerHTML=h;
     show('s-conev');
     if(deepRow){const i=r.shifts.findIndex(x=>x.inRow===deepRow);deepRow=0;if(i>=0)openShift(i)}
