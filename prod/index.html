@@ -39,7 +39,8 @@ body.tgback .navback{display:none}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));background:#2a1f1c;border:1px solid var(--bad);color:#fff;padding:12px 14px;border-radius:12px;font-size:15px;display:none;z-index:50}
 .toast.ok{background:#1c2a20;border-color:var(--ok)}
 .toast.warn{background:#2a2416;border-color:#d9a03c}
-.cam{position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4;max-height:52vh}
+.cam{position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4;width:100%}
+@media (max-height:760px){.cam{aspect-ratio:1}}
 .cam-msg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut);font-size:15px}
 .cam.nocam .cam-msg{display:flex}
 .cam video,.cam img{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
@@ -377,8 +378,14 @@ async function init(){
     if(QS.get('con')&&me.staff&&!window._conShown){window._conShown=1;deepRow=+QS.get('row')||0;deepDz=!!QS.get('dz');conOpen(QS.get('con'))}
     else if(sp&&!me.open&&!window._spUsed){window._spUsed=1;loadEvent({payload:sp})}
     else if(me.staff&&!me.open&&!window._conShown){window._conShown=1;conList()}
-  }catch(e){renderMe();toast(e.msg||'Сервер отвечает медленно. Попробуйте ещё раз через минуту.')}
+  }catch(e){renderMe();toast(e.error==='auth'?authWhy_(e.msg):(e.msg||'Сервер отвечает медленно. Попробуйте ещё раз через минуту.'))}
   finally{document.body.classList.remove('stale')}
+}
+/* почему сервер не принял вход: пустые данные, старая метка времени или другое; пишем в тост, чтобы понять с телефона */
+function authWhy_(msg){
+  if(!tg||!tg.initData)return (msg||'')+' Telegram не передал данные входа. Откройте через кнопку «Табель» в меню бота.';
+  const ad=+(tg.initDataUnsafe&&tg.initDataUnsafe.auth_date)||0,age=ad?Math.round((Date.now()/1000-ad)/3600):-1;
+  return (msg||'')+' Данные входа: '+tg.initData.length+' зн., возраст '+(age<0?'?':age+' ч')+', '+(tg.platform||'?')+' '+(tg.version||'?')+'.';
 }
 function saveMe(){try{localStorage.setItem('me',JSON.stringify(me))}catch(e){}}
 /* вернулись в приложение: главный экран перечитывает профиль тихо, чтобы не показать закрытую смену как открытую */
