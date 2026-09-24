@@ -255,6 +255,9 @@ function evCreateGo(){
   if(!d.name||!d.date||!d.start||!d.end){toast('Заполните название, дату, начало и конец');return}
   modalClose();conAct('evCreate',0,'',d);
 }
+/* защита от HTML в данных (причины, ФИО, названия): экранируем все строки ответа, кроме перечисленных полей */
+function escS(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function escDeep(o,skip){if(!o||typeof o!=='object')return;Object.keys(o).forEach(k=>{if(skip.indexOf(k)>=0)return;const v=o[k];if(typeof v==='string')o[k]=escS(v);else if(v&&typeof v==='object')escDeep(v,skip)})}
 function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
 function h2(n){const m=Math.round((+n||0)*60),h=Math.floor(m/60),r=m%60;return h?(r?h+' ч '+r+' мин':h+' ч'):m+' мин'}
 
@@ -275,6 +278,7 @@ async function api(action,data,quiet){
     clearTimeout(to);
     let j;try{j=await r.json()}catch(e){throw{ok:false,error:'bad',msg:'Сервер вернул непонятный ответ. Попробуйте ещё раз.'}}
     if(!j.ok)throw j;
+    if(action==='con.event'||action==='con.events')escDeep(j,['text']); // всё, что рисуется в разметку, экранируется один раз на входе
     return j;
   }catch(e){
     // запросы чтения безопасно повторить один раз: холодный старт сервера иногда даёт мусор или таймаут
@@ -450,7 +454,7 @@ async function conList(quiet){
   try{
     const r=await api('con.events',null,quiet);conMe=r.me;conMeta=r;
     const key='L'+JSON.stringify(r.events);if(quiet&&key===lastJson)return;lastJson=key;
-    document.getElementById('con-me').textContent=r.me.fio+' · '+r.me.role;
+    document.getElementById('con-me').innerHTML=r.me.fio+' · '+r.me.role;
     const box=document.getElementById('con-list');box.innerHTML='';
     if(!r.events.length)box.innerHTML='<p class="muted">Мероприятий нет.</p>';
     r.events.forEach(e=>{
@@ -486,8 +490,8 @@ async function conOpen(id,day,quiet){
     const key='E'+JSON.stringify([r.stats,r.shifts,r.orders,r.dz,r.journal,r.event.status,r.day]);if(quiet&&key===lastJson)return;lastJson=key;
     const ev=r.event,st=r.stats;
     document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
-    document.getElementById('ce-name').textContent=ev.name;
-    document.getElementById('ce-sub').textContent=ev.date+' · '+(ev.venue||'')+' · '+ev.start+'–'+ev.end+' · гостей '+(ev.guests||'—')+(ev.mgr?' · менеджер '+ev.mgr:'')+(ev.code?' · код '+ev.code:'');
+    document.getElementById('ce-name').innerHTML=ev.name;
+    document.getElementById('ce-sub').innerHTML=ev.date+' · '+(ev.venue||'')+' · '+ev.start+'–'+ev.end+' · гостей '+(ev.guests||'—')+(ev.mgr?' · менеджер '+ev.mgr:'')+(ev.code?' · код '+ev.code:'');
     let h='';
     if(r.days&&r.days.length>1)h+='<div class="legend" style="margin:0 0 10px;gap:8px">'+r.days.map(d=>'<span class="pill'+(d===r.day?' open':'')+'" style="cursor:pointer;padding:6px 12px;font-size:13px" onclick="conOpen(ceId,\''+d+'\')">'+ruDay(d)+'</span>').join('')+'<span class="muted" style="align-self:center">день мероприятия</span></div>';
     h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+(r.days&&r.days.length>1?' · '+ruDay(r.day):'')+'</small></div>'+
