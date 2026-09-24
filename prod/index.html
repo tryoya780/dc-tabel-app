@@ -99,6 +99,7 @@ h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text
 .tl .rw:last-child{border-bottom:0}
 .tl .nm{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl .nm small{display:block;color:var(--mut);font-size:12px}
+@media (max-width:520px){.tl .rw{grid-template-columns:1fr;gap:4px;padding:8px 0}.tl .nm{white-space:normal}.tl .nm small{display:inline}.tl .nm small::before{content:' · '}}
 .tl .tr{position:relative;height:16px;background:#0f0d0b;border-radius:4px}
 .tl .win{position:absolute;top:0;bottom:0;background:rgba(201,169,97,.12);border-left:1px dashed var(--brass);border-right:1px dashed var(--brass)}
 .tl .bar{position:absolute;top:3px;bottom:3px;border-radius:3px;background:var(--brass);margin:0}
