@@ -624,7 +624,7 @@ function timeline(r){
   const ws=(r.windows||[]);let t0=Math.min.apply(null,ws.map(w=>w.startTs).concat(sh.map(x=>x.inTs).filter(Boolean)))-36e5;
   let t1=Math.max.apply(null,ws.map(w=>w.endTs).concat(sh.map(x=>x.outTs||r.now)))+36e5;
   const span=t1-t0,px=t=>Math.max(0,Math.min(100,(t-t0)/span*100));
-  let ax='';for(let t=Math.ceil(t0/36e5)*36e5;t<=t1;t+=36e5*(span>14*36e5?2:1)){const d=new Date(t);ax+='<span style="left:'+px(t)+'%">'+(d.getHours()?('0'+d.getHours()).slice(-2):'00<small>+1</small>')+'</span>'}
+  let ax='';for(let t=Math.ceil(t0/36e5)*36e5;t<=t1;t+=36e5*(span>14*36e5?2:1)){const d=new Date(t);ax+='<span style="left:'+px(t)+'%">'+('0'+d.getHours()).slice(-2)+'</span>'}
   const nowIn=r.now>t0&&r.now<t1;
   const byKey={};ws.forEach(w=>byKey[w.key]=w);const first={};ws.forEach(w=>{if(!first[w.role])first[w.role]=w});
   return '<h2>Лента смен</h2><div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
