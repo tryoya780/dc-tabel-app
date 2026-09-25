@@ -511,18 +511,37 @@ function finishShot(c){
   document.getElementById('btn-shot').style.display='none';document.getElementById('btn-send').style.display='block';document.getElementById('btn-retake').style.display='block';
 }
 function retake(){openCam()}
+/* приход/уход с повтором: «сервер занят», обрыв связи или пустой ответ → ждём и пробуем ещё, до 3 попыток.
+   Если после повтора сервер отвечает «смена уже открыта» / «открытых смен нет» — предыдущая попытка на самом деле записалась. */
+async function apiRetry(action,data){
+  const WAIT=[4000,7000,10000];let tries=0;
+  for(;;){
+    try{return await api(action,data)}
+    catch(e){
+      const retry=['busy','net','bad'].indexOf(e.error)>=0&&tries<WAIT.length;
+      if(!retry){
+        if(tries&&action==='checkin'&&e.error==='open'){const m=await api('me',{},true);if(m.open)return{ok:true,open:m.open,pending:m.open.pending||''}}
+        if(tries&&action==='checkout'&&e.error==='noshift')return{ok:true,closed:null};
+        throw e;
+      }
+      const b=document.getElementById('btn-send');if(b)b.textContent='В очереди, повторяю ('+(tries+2)+' из '+(WAIT.length+1)+')…';
+      toast('Сервер занят, повторяю через '+Math.round(WAIT[tries]/1000)+' с…','warn');
+      await new Promise(r=>setTimeout(r,WAIT[tries]));tries++;
+    }
+  }
+}
 async function sendShot(){
   if(!photoB64)return;
   const b=document.getElementById('btn-send');b.disabled=true;b.textContent='Отправляю…';
   try{
     if(mode==='in'){
-      const r=await api('checkin',{eventId:ev.id,token:ev.token,role:unesc(cat),fio:fio,photo:photoB64});
+      const r=await apiRetry('checkin',{eventId:ev.id,token:ev.token,role:unesc(cat),fio:fio,photo:photoB64});
       const o=r.open,dt=document.getElementById('done-title');dt.textContent='Смена открыта';dt.className=r.pending?'pend':'ok';
       document.getElementById('done-card').innerHTML=(r.pending?'<div class="stepbox pend" style="margin:0 0 10px">Ждёт подтверждения менеджера: '+escS(r.pending)+'</div>':'')+'<div class="row"><span>Мероприятие</span><b>'+escS(o.evName)+'</b></div><div class="row"><span>Категория</span><b>'+escS(o.role)+'</b></div><div class="row"><span>Приход</span><b>'+escS(o.since)+(o.payFrom?' · зачёт с '+escS(o.payFrom):'')+'</b></div><div class="row"><span>Минимум за выход</span><b>'+escS(o.min)+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">Вы отметились вне планового окна. Менеджер подтвердит по фото, до этого часы не зачтутся.</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Закрыть смену», иначе утром смена закроется на половину минимума.</p>';
     }else{
-      const r=await api('checkout',{photo:photoB64});const c=r.closed;
+      const r=await apiRetry('checkout',{photo:photoB64});const c=r.closed;
       const dt=document.getElementById('done-title');dt.textContent='Смена закрыта';dt.className='';
-      document.getElementById('done-card').innerHTML='<div class="row"><span>Сотрудник</span><b>'+escS(c.fio)+'</b></div><div class="row"><span>Категория</span><b>'+escS(c.role)+'</b></div><div class="row"><span>Мероприятие</span><b>'+escS(c.evName)+'</b></div><div class="row"><span>Дата</span><b>'+escS(c.date)+'</b></div><div class="row"><span>Время</span><b>'+escS(c.since)+' → '+escS(c.till)+'</b></div>'+(c.count>1?'<div class="row"><span>Выходов за день</span><b>'+c.count+'</b></div>':'')+'<div class="row"><span>Факт</span><b>'+h2(c.factH)+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(c.payH)+(c.step&&c.step.indexOf('минимум')>=0?' · минимум':'')+'</b></div>'+(c.note?'<div class="stepbox bad" style="margin:10px 0 0">'+escS(c.note)+' Вопросы к координатору.</div>':'')+(c.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(c.sum)+'</div><p class="sub">Если цифра не сходится, скажите сегодня, а не в конце месяца.</p>');
+      document.getElementById('done-card').innerHTML=!c?'<p class="sub">Уход записан с прошлой попытки. Часы и сумма — в квитанции в чате бота.</p>':'<div class="row"><span>Сотрудник</span><b>'+escS(c.fio)+'</b></div><div class="row"><span>Категория</span><b>'+escS(c.role)+'</b></div><div class="row"><span>Мероприятие</span><b>'+escS(c.evName)+'</b></div><div class="row"><span>Дата</span><b>'+escS(c.date)+'</b></div><div class="row"><span>Время</span><b>'+escS(c.since)+' → '+escS(c.till)+'</b></div>'+(c.count>1?'<div class="row"><span>Выходов за день</span><b>'+c.count+'</b></div>':'')+'<div class="row"><span>Факт</span><b>'+h2(c.factH)+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(c.payH)+(c.step&&c.step.indexOf('минимум')>=0?' · минимум':'')+'</b></div>'+(c.note?'<div class="stepbox bad" style="margin:10px 0 0">'+escS(c.note)+' Вопросы к координатору.</div>':'')+(c.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(c.sum)+'</div><p class="sub">Если цифра не сходится, скажите сегодня, а не в конце месяца.</p>');
     }
     try{localStorage.removeItem('me')}catch(e){}
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
