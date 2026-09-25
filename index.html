@@ -413,7 +413,7 @@ async function loadEvent(q){
     const r=await api('event',q);
     ev=r.event;cats=r.cats;cat='';lateTo=r.regOpen?'':r.regTo;
     document.getElementById('ev-name').textContent=ev.name;
-    document.getElementById('ev-sub').textContent=(ev.venue?ev.venue+' · ':'')+ev.date+(r.regOpen?'':' · поздний приход, после '+r.regTo);
+    document.getElementById('ev-sub').textContent=(ev.venue?ev.venue+' · ':'')+ev.date+(r.regOpen?'':' · позже планового начала, нужно подтверждение менеджера');
     const box=document.getElementById('cats');box.innerHTML='';
     cats.forEach(c=>{
       const d=document.createElement('div');d.className='cat'+(c.free?'':' full');
@@ -422,7 +422,7 @@ async function loadEvent(q){
       box.appendChild(d);
       if(r.preCat&&r.preCat===c.name&&c.free){cat=c.name;d.classList.add('sel')}
     });
-    if(!r.regOpen){toast('Плановая регистрация закрылась в '+r.regTo+'. Отметиться можно, смена будет с пометкой «поздний приход».','warn');}
+    if(!r.regOpen){toast('Вы позже планового начала (после '+r.regTo+'). Отметка пройдёт, менеджер получит запрос на подтверждение.','warn');}
     if(cat&&r.autoCat&&me.phone&&me.fio){startIn();return}
     if(r.preCat&&r.autoCat&&!cat)toast('Мест в вашей категории нет. Выберите другую или обратитесь к координатору.','warn');
     show('s-cats');
