@@ -132,6 +132,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 #modal .ph-wrap{margin:10px 0;min-height:80px;text-align:center}#modal .ph-img{width:100%;max-height:70vh;object-fit:contain;border-radius:10px;background:#000}
 #modal label.ck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}
 #modal label.ck input{width:20px;height:20px;margin-top:1px}
+.acts.pb .btn{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.15}.acts.pb .btn small,.btn small{font-size:12px;font-weight:400;opacity:.75}
 </style>
 </head>
 <body>
@@ -256,7 +257,7 @@ function kickAsk(i){
   const x=conData.shifts[i];if(!x)return;const row=x.inRow,fio=x.fio;
   modalOpen('<div class="mh">Выгнать: '+fio+'</div><p class="muted" style="margin:0 0 10px">Смена закроется сейчас, оплата 0. Причину увидит сотрудник в боте и администратор в таблице.</p>'+
     '<textarea id="kick-why" placeholder="Причина (обязательно): нетрезв, грязная форма, конфликт…"></textarea>'+
-    '<label class="ck"><input type="checkbox" id="kick-stop"><span>В стоп-лист: по номеру и Telegram. Больше не сможет отметиться ни на одном мероприятии. Снять — в таблице, лист 02.</span></label>'+
+    '<label class="ck"><input type="checkbox" id="kick-stop"><span>В стоп-лист: по номеру и Telegram. Больше не сможет отметиться ни на одном мероприятии.</span></label>'+
     '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn red" onclick="kickGo('+row+')">Выгнать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
   setTimeout(()=>document.getElementById('kick-why').focus(),50);
 }
@@ -461,7 +462,7 @@ async function contactFromChat(){
 }
 function afterFio(){fio=document.getElementById('fio').value.trim();if(fio.split(/\s+/).length<2)return toast('Нужны фамилия и имя');if(/[A-Za-z]/.test(fio))return toast('Пишите кириллицей');startIn()}
 function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').innerHTML=escS(ev.name)+' · <b>'+escS(cat)+'</b> · <a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">сменить</a>'+(lateTo?'<br><span class="bad">Поздний приход: плановая регистрация закрылась в '+escS(lateTo)+'. Смена уйдёт менеджеру на подтверждение.</span>':'');openCam()}
-function startOut(){mode='out';camBack='s-home';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').innerHTML='Смена закроется после отправки';openCam()}
+function startOut(){mode='out';camBack='s-home';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').innerHTML='Смена закроется после отправки. Снимите так, чтобы за спиной был виден зал или площадка.';openCam()}
 
 async function openCam(){
   stopCam();photoB64='';document.getElementById('shot').style.display='none';document.getElementById('video').style.display='block';document.getElementById('cam-box').classList.remove('nocam');
@@ -614,13 +615,13 @@ async function conOpen(id,day,quiet){
     if(r.days&&r.days.length>1)h+='<div class="abar" style="margin:0 0 10px">'+r.days.map((d,k)=>'<button class="btn'+(d===r.day?'':' sec')+'" onclick="conDay('+k+')">'+ruDay(d)+'</button>').join('')+'</div>';
     // главное для менеджера на площадке: подтверждения и дозаказы сразу под кнопками
     const pend=r.shifts.filter(x=>x.pending&&x.open);
-    if(pend.length)h+='<h2>Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>{const i=r.shifts.indexOf(x);return '<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div></div><div class="r"><a class="lnk" href="#" onclick="openShift('+i+');return false">карточка ›</a></div></div><div class="acts" style="margin:0 0 12px">'+(/ранний/.test(x.pending)?'<button class="btn" onclick="conAct(\'early\','+x.inRow+')">Зачесть с прихода</button>':'<button class="btn" onclick="conAct(\'confirm\','+x.inRow+')">Подтвердить приход</button>')+'<button class="btn red" onclick="kickAsk('+i+')">Выгнать</button>'+(x.photoIn?'<button class="btn sec wide" onclick="openPhoto('+i+',\'in\')">Фото входа</button>':'')+'</div>'}).join('')+(pend.length>1?'<button class="btn sec" onclick="ask(\'Подтвердить всех: '+pend.length+' чел.? Видели каждого лично?\').then(ok=>{if(ok)conAct(\'confirmAll\')})">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
+    if(pend.length)h+='<h2>Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>{const i=r.shifts.indexOf(x);return '<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div></div><div class="r"><a class="lnk" href="#" onclick="openShift('+i+');return false">карточка ›</a></div></div>'+(x.fresh?'<p class="muted" style="margin:0 0 8px">Новое лицо: первый выход. Посмотрите фото.</p>':'')+pendBtns(x)+(x.photoIn?'<div class="acts" style="margin:0 0 12px"><button class="btn sec wide" onclick="openPhoto('+i+',\'in\')">Фото входа</button></div>':'')}).join('')+(pend.length>1?'<button class="btn sec" onclick="ask(\'Всех вызывали к этому времени? Каждому зачтётся минимум за выход.\').then(ok=>{if(ok)conAct(\'confirmAll\')})">Вызывали всех ('+pend.length+')</button>':'')+'</div>';
     if((r.dz||[]).length)h+='<h2 id="dz-block">Запросы дозаказа · '+r.dz.length+'</h2><div class="card">'+r.dz.map((d,di)=>'<div class="sh"><div><div class="n">'+d.role+' +'+d.n+' · '+rub(d.sum)+'</div><div class="m">'+d.why+' · '+d.byFio+' · '+d.t+'</div></div><div class="r">'+(conMe.admin?'':'<span class="muted">ждёт</span>')+'</div></div>'+(conMe.admin?'<div class="acts" style="margin:0 0 12px"><button class="btn" onclick="dzDecide('+di+',true)">Подтвердить дозаказ</button><button class="btn sec" onclick="dzDecide('+di+',false)">Отклонить</button></div>':'')).join('')+'</div>';
     h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+(r.days&&r.days.length>1?' · '+ruDay(r.day):'')+'</small></div>'+
        '<div class="tile"><b>'+st.came+' / '+st.limit+'</b><small>вышло из лимита</small></div>'+
        '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
        '<div class="tile"><b'+(st.plan-st.fact<0?' class="bad"':'')+'>'+(st.plan-st.fact<0?'+':'')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход к плану')+'</small></div></div>';
-    h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · окно регистрации '+ev.qrFrom+'–'+ev.regTo+', уход до '+ev.qrTo+'</div>';
+    h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · без подтверждения приход до '+ev.regTo+', уход до '+ev.qrTo+'</div>';
     const wins={};(r.windows||[]).forEach(w=>{(wins[w.role]=wins[w.role]||[]).push(w)});
     h+='<div class="sec-h"><h2>Категории</h2><button class="qbtn noprint" onclick="legendToggle()" aria-label="Обозначения">?</button></div><div class="tiles">'+st.cats.map((c,ci)=>{const ws=wins[c.name]||[];const sh=r.shifts.filter(x=>x.role===c.name);const w=ws.length===1?ws[0]:null;
       // «не вышел» красный только после начала окна категории; при лимите больше 12 хвост сворачивается в «+N»
@@ -660,24 +661,29 @@ function timeline(r){
       '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(2,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+(nowIn?'<div class="nowl" style="left:'+px(r.now)+'%"></div>':'')+'</div></div>'}).join('')+'</div>';
 }
 function shortFio(f){const p=String(f||'').split(/\s+/);return p.length>1?p[0]+' '+p.slice(1).map(x=>x[0]+'.').join(''):f}
+/* кнопки решения по карточке «ждёт»: левая — как по правилу (снимает ожидание), правая — исключение в пользу человека */
+function pendBtns(x){
+  const early=/ранний/.test(x.pending||'');
+  const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="conAct(\''+act+'\','+x.inRow+')"><span>'+t+'</span><small>'+sub+'</small></button>';
+  return '<div class="acts pb" style="margin:0 0 10px">'+(early?b('sec','ack','Пришёл рано','с начала окна')+b('','early','Работал','с прихода'):b('sec','ack','Опоздал','часы с прихода')+b('','confirm','Вызывали','минимум за выход'))+'</div>';
+}
 function openShift(i){
   const x=conData.shifts[i],ev=conData.event;if(!x)return;
   const kv=(k,v,c)=>'<div class="kv"><span class="k">'+k+'</span><b'+(c?' class="'+c+'"':'')+'>'+v+'</b></div>';
   const step=x.open?'в смене':(x.step||'');
   let h='';
-  const sb=x.open?(x.pending?['pend','Ждёт подтверждения: '+x.pending]:['ok','В смене с '+x.in]):(x.kicked?['bad','Выгнан менеджером · '+x.kickWhy]:x.rejected?['bad','Отклонено менеджером']:x.auto?['bad','Автозакрытие: не отметил уход, ½ минимума']:['mut','Закрыта · '+step]);
+  const sb=x.open?(x.pending?['pend','Ждёт решения: '+x.pending]:['ok','В смене с '+(x.first||x.in)+((x.outs||1)>1?' · '+x.outs+'-й выход с '+x.in:'')]):(x.kicked?['bad','Выгнан менеджером · '+x.kickWhy]:x.rejected?['bad','Отклонено менеджером']:x.auto?['bad','Автозакрытие: не отметил уход, ½ минимума']:['mut','Закрыта · '+step]);
   h+='<div class="stepbox '+sb[0]+'">'+sb[1]+'</div>';
   const g=(conData.windows||[]).filter(w=>w.key===x.win)[0];
   if(g)h+=kv('Группа','к '+g.start+', до '+g.end);
   h+=kv('Приход',(x.in||'—')+(x.early?(x.confirmed?' · зачтено с прихода':' · раньше плана, зачёт с начала окна'):''))+kv('Уход',x.out||'—')+(x.open?kv('В смене',h2(x.factH)):kv('Факт',h2(x.factH)))+kv('Минимум за выход',x.min+' ч')+kv('Ставка',x.rate+' ₽/ч')+(x.open?kv('Зачтено и сумма','после закрытия'):kv('Зачтено к оплате',h2(x.payH))+(x.sum!=null?kv('Сумма',rub(x.sum)):kv('Сумма','подрядчик, не показывается')))+(x.flag?kv('Флаг',x.flag,'bad'):'')+kv('Отметка через',x.via==='APP'?'приложение':(x.via||'чат'));
   const ph=(x.photoIn?'<button class="btn sec" onclick="openPhoto('+i+',\'in\')">Фото входа</button>':'')+(x.photoOut?'<button class="btn sec" onclick="openPhoto('+i+',\'out\')">Фото выхода</button>':'');
   if(ph)h+='<div class="acts" style="margin-top:14px">'+ph+'</div>';
-  const pr=(x.pending&&x.open&&!/ранний/.test(x.pending)?'<button class="btn wide" onclick="closeDrawer();conAct(\'confirm\','+x.inRow+')">Подтвердить приход</button>':'')+
-     (x.open&&x.early&&!x.confirmed?'<button class="btn wide" onclick="closeDrawer();conAct(\'early\','+x.inRow+')">Зачесть с прихода</button>':'');
-  if(pr)h+='<div class="acts" style="margin-top:10px">'+pr+'</div>';
-  if(x.open&&x.early&&!x.confirmed)h+='<p class="muted" style="margin-top:8px">Пришёл раньше окна. Если ничего не нажимать, зачёт с начала окна.</p>';
-  if(x.pending&&x.open&&!/ранний/.test(x.pending))h+='<p class="muted" style="margin-top:8px">Пришёл позже окна. Без подтверждения оплата по факту, без минимума.</p>';
+  if((x.its||[]).length>1)h+='<h2 style="margin-top:12px">Выходы за день</h2><div class="card">'+x.its.map(t=>'<div class="kv"><span class="k">'+t.in+'–'+(t.out||'…')+(t.rej?' · не зачтён':t.via==='менеджер'?' · закрыл менеджер':t.via==='авто'?' · автозакрытие':'')+'</span><b>'+(t.out?h2(t.h):'идёт')+'</b></div>').join('')+'<div class="kv"><span class="k">Итого факт</span><b>'+h2(x.factH)+'</b></div></div>';
+  if(x.pending&&x.open){h+='<p class="muted" style="margin-top:10px">'+(/ранний/.test(x.pending)?'Пришёл раньше окна. Пока часы идут с начала окна.':'Пришёл позже окна. Пока оплата по факту, без минимума.')+'</p>';h+=pendBtns(x).replace('margin:0 0 10px','margin:8px 0 0')}
+  else if(x.open&&x.early&&!x.confirmed)h+='<div class="acts" style="margin-top:10px"><button class="btn wide" onclick="closeDrawer();conAct(\'early\','+x.inRow+')"><span>Работал</span><small>с прихода</small></button></div>';
   if(x.open)h+='<div class="acts" style="margin-top:16px"><button class="btn sec" onclick="releaseAsk('+i+')">Отпустить сейчас</button><button class="btn red" onclick="kickAsk('+i+')">Выгнать</button></div>';
+  if(x.kicked&&conMe&&conMe.admin)h+='<div class="acts" style="margin-top:12px"><button class="btn sec" onclick="ask(\'Вернуть на смену? Пометка «выгнан» снимется, смена снова откроется, стоп-лист снимется.\').then(ok=>{if(ok){closeDrawer();conAct(\'unkick\','+x.inRow+')}})">Вернуть на смену</button></div>';
   h+='<p class="muted" style="margin-top:12px">Правка часов в таблице, лист 07: каждая правка попадает в журнал.</p>';
   openDrawer(h,x.fio,x.role+' · '+ev.name);
 }
@@ -687,7 +693,7 @@ function openCat(ci){ // индекс категории, а не имя: зна
   const sh=r.shifts.map((x,i)=>Object.assign({i:i},x)).filter(x=>x.role===name);
   const on=sh.filter(x=>x.open),off=sh.filter(x=>!x.open);
   const row=x=>'<div class="sh" onclick="openShift('+x.i+')"><div><div class="n"><span class="dot'+(x.open?(x.pending?' pend':' on'):x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+
-    (x.open?'с '+x.in+' · идёт '+h2(x.factH)+(x.pending?' · ждёт: '+x.pending:''):x.in+' → '+x.out+' · зачтено '+h2(x.payH)+(x.auto?' · автозакрытие':'')+(x.kicked?' · выгнан':x.rejected?' · отклонено':'')+(x.released&&!x.relMin?' · отпущен':''))+'</div></div>'+
+    (x.open?'с '+(x.first||x.in)+' · идёт '+h2(x.factH)+((x.outs||1)>1?' · '+x.outs+'-й выход с '+x.in:'')+(x.pending?' · ждёт: '+x.pending:''):(x.first||x.in)+'–'+x.out+' · зачтено '+h2(x.payH)+((x.outs||1)>1?' · выходов: '+x.outs:'')+(x.auto?' · автозакрытие':'')+(x.kicked?' · выгнан':x.rejected?' · отклонено':'')+(x.released&&!x.relMin?' · отпущен':''))+'</div></div>'+
     '<div class="r">›</div></div>';
   let h='<div class="kv"><span class="k">Не вышли · свободных мест</span><b>'+c.free+' из '+c.limit+'</b></div>';
   if(ws.length>1)h+='<h2 style="margin-top:8px">Группы</h2><div class="card">'+ws.map(g=>{const gs=sh.filter(x=>x.win===g.key);const on=gs.filter(x=>x.open).length;return '<div class="kv"><span class="k">к '+g.start+', до '+g.end+(g.dz?' · дозаказ':'')+'</span><b>'+gs.length+' из '+g.count+(on?' · на объекте '+on:'')+'</b></div>'}).join('')+'<p class="muted" style="margin:6px 0 0">Человек относится к группе, чьё начало ближе к его приходу. Лимит общий на категорию.</p></div>';
