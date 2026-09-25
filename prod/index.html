@@ -366,9 +366,10 @@ async function init(){
   document.getElementById('btn-scan').style.display=(tg&&tg.showScanQrPopup&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.4'))?'block':'none';
   try{me=JSON.parse(localStorage.getItem('me')||'null')}catch(e){me=null}
   if(!me)me={phone:false,fio:'',open:null};
+  me={phone:me.phone,fio:me.fio,staff:me.staff,open:null,last:null}; // из памяти только имя: карточка смены рисуется только по свежему ответу сервера
   renderMe();show('s-home');
-  document.getElementById('hi-sub').textContent+=' · обновляю…';
-  document.body.classList.add('stale'); // до ответа сервера карточка из кэша: кнопки не нажимаются
+  document.getElementById('hi-sub').textContent='Обновляю данные…';document.getElementById('in-card').style.display='none';
+  document.body.classList.add('stale'); // до ответа сервера кнопки не нажимаются
   try{
     me=await api('me',null,true);
     saveMe();
