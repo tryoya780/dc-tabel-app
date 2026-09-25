@@ -129,6 +129,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 #modal.on{display:flex}
 #modal .box{background:var(--card);border:1px solid var(--brass);border-radius:16px;padding:18px 16px;width:100%;max-width:420px;margin:auto 0}
 #modal textarea{width:100%;min-height:80px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);border-radius:10px;padding:12px;font-size:16px;font-family:inherit;box-sizing:border-box;margin-top:8px}
+#modal .ph-wrap{margin:10px 0;min-height:80px;text-align:center}#modal .ph-img{width:100%;max-height:70vh;object-fit:contain;border-radius:10px;background:#000}
 #modal label.ck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}
 #modal label.ck input{width:20px;height:20px;margin-top:1px}
 </style>
@@ -613,7 +614,7 @@ async function conOpen(id,day,quiet){
     if(r.days&&r.days.length>1)h+='<div class="abar" style="margin:0 0 10px">'+r.days.map((d,k)=>'<button class="btn'+(d===r.day?'':' sec')+'" onclick="conDay('+k+')">'+ruDay(d)+'</button>').join('')+'</div>';
     // главное для менеджера на площадке: подтверждения и дозаказы сразу под кнопками
     const pend=r.shifts.filter(x=>x.pending&&x.open);
-    if(pend.length)h+='<h2>Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>{const i=r.shifts.indexOf(x);return '<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div></div><div class="r"><a class="lnk" href="#" onclick="openShift('+i+');return false">карточка ›</a></div></div><div class="acts" style="margin:0 0 12px">'+(/ранний/.test(x.pending)?'<button class="btn" onclick="conAct(\'early\','+x.inRow+')">Зачесть с прихода</button>':'<button class="btn" onclick="conAct(\'confirm\','+x.inRow+')">Подтвердить приход</button>')+'<button class="btn red" onclick="kickAsk('+i+')">Выгнать</button>'+(x.photoIn?'<button class="btn sec wide" onclick="openL(\''+x.photoIn+'\')">Фото входа</button>':'')+'</div>'}).join('')+(pend.length>1?'<button class="btn sec" onclick="ask(\'Подтвердить всех: '+pend.length+' чел.? Видели каждого лично?\').then(ok=>{if(ok)conAct(\'confirmAll\')})">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
+    if(pend.length)h+='<h2>Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>{const i=r.shifts.indexOf(x);return '<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div></div><div class="r"><a class="lnk" href="#" onclick="openShift('+i+');return false">карточка ›</a></div></div><div class="acts" style="margin:0 0 12px">'+(/ранний/.test(x.pending)?'<button class="btn" onclick="conAct(\'early\','+x.inRow+')">Зачесть с прихода</button>':'<button class="btn" onclick="conAct(\'confirm\','+x.inRow+')">Подтвердить приход</button>')+'<button class="btn red" onclick="kickAsk('+i+')">Выгнать</button>'+(x.photoIn?'<button class="btn sec wide" onclick="openPhoto('+i+',\'in\')">Фото входа</button>':'')+'</div>'}).join('')+(pend.length>1?'<button class="btn sec" onclick="ask(\'Подтвердить всех: '+pend.length+' чел.? Видели каждого лично?\').then(ok=>{if(ok)conAct(\'confirmAll\')})">Подтвердить всех ('+pend.length+')</button>':'')+'</div>';
     if((r.dz||[]).length)h+='<h2 id="dz-block">Запросы дозаказа · '+r.dz.length+'</h2><div class="card">'+r.dz.map((d,di)=>'<div class="sh"><div><div class="n">'+d.role+' +'+d.n+' · '+rub(d.sum)+'</div><div class="m">'+d.why+' · '+d.byFio+' · '+d.t+'</div></div><div class="r">'+(conMe.admin?'':'<span class="muted">ждёт</span>')+'</div></div>'+(conMe.admin?'<div class="acts" style="margin:0 0 12px"><button class="btn" onclick="dzDecide('+di+',true)">Подтвердить дозаказ</button><button class="btn sec" onclick="dzDecide('+di+',false)">Отклонить</button></div>':'')).join('')+'</div>';
     h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+(r.days&&r.days.length>1?' · '+ruDay(r.day):'')+'</small></div>'+
        '<div class="tile"><b>'+st.came+' / '+st.limit+'</b><small>вышло из лимита</small></div>'+
@@ -669,7 +670,7 @@ function openShift(i){
   const g=(conData.windows||[]).filter(w=>w.key===x.win)[0];
   if(g)h+=kv('Группа','к '+g.start+', до '+g.end);
   h+=kv('Приход',(x.in||'—')+(x.early?(x.confirmed?' · зачтено с прихода':' · раньше плана, зачёт с начала окна'):''))+kv('Уход',x.out||'—')+(x.open?kv('В смене',h2(x.factH)):kv('Факт',h2(x.factH)))+kv('Минимум за выход',x.min+' ч')+kv('Ставка',x.rate+' ₽/ч')+(x.open?kv('Зачтено и сумма','после закрытия'):kv('Зачтено к оплате',h2(x.payH))+(x.sum!=null?kv('Сумма',rub(x.sum)):kv('Сумма','подрядчик, не показывается')))+(x.flag?kv('Флаг',x.flag,'bad'):'')+kv('Отметка через',x.via==='APP'?'приложение':(x.via||'чат'));
-  const ph=(x.photoIn?'<button class="btn sec" onclick="openL(\''+x.photoIn+'\')">Фото входа</button>':'')+(x.photoOut?'<button class="btn sec" onclick="openL(\''+x.photoOut+'\')">Фото выхода</button>':'');
+  const ph=(x.photoIn?'<button class="btn sec" onclick="openPhoto('+i+',\'in\')">Фото входа</button>':'')+(x.photoOut?'<button class="btn sec" onclick="openPhoto('+i+',\'out\')">Фото выхода</button>':'');
   if(ph)h+='<div class="acts" style="margin-top:14px">'+ph+'</div>';
   const pr=(x.pending&&x.open&&!/ранний/.test(x.pending)?'<button class="btn wide" onclick="closeDrawer();conAct(\'confirm\','+x.inRow+')">Подтвердить приход</button>':'')+
      (x.open&&x.early&&!x.confirmed?'<button class="btn wide" onclick="closeDrawer();conAct(\'early\','+x.inRow+')">Зачесть с прихода</button>':'');
@@ -699,6 +700,13 @@ function openCat(ci){ // индекс категории, а не имя: зна
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');updBack()}
 /* панель: липкая шапка с заголовком и крестиком, тело ниже */
 function openDrawer(html,title,sub){document.getElementById('dr-title').innerHTML=title||'';document.getElementById('dr-sub').innerHTML=sub||'';document.getElementById('dr-body').innerHTML=html;document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');document.getElementById('drawer').scrollTop=0;updBack()}
+/* селфи внутри приложения: сервер отдаёт картинку по ссылке из листа 06, на Диск никого не отправляем */
+async function openPhoto(i,kind){
+  const x=conData&&conData.shifts[i];if(!x)return;const ref=kind==='out'?x.photoOut:x.photoIn;if(!ref)return;
+  modalOpen('<div class="mh">'+(kind==='out'?'Фото выхода':'Фото входа')+' · '+x.fio+'</div><div class="ph-wrap"><div class="muted">Загружаю фото…</div></div><div class="acts"><button class="btn sec" onclick="modalClose()">Закрыть</button></div>');
+  try{const r=await api('photo',{ref:unesc(ref)},true);const w=document.querySelector('#modal .ph-wrap');if(w)w.innerHTML='<img class="ph-img" src="'+r.data+'" alt=""><div class="muted" style="margin-top:6px">'+escS(r.at||'')+'</div>'}
+  catch(e){const w=document.querySelector('#modal .ph-wrap');if(w)w.innerHTML='<div class="muted bad">'+escS(e.msg||'Не удалось загрузить фото')+'</div>'}
+}
 function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
 const SHOW_RELEASE_CAT=false; // «Отпустить бригаду» (минимум всем) скрыта по решению 22.09, сервер её поддерживает
 let conActErr='';
