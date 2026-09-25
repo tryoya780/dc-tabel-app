@@ -163,6 +163,13 @@ body.busy .btn{pointer-events:none;opacity:.6}
   </div>
 </div>
 
+<div id="s-consent" class="scr">
+  <h1>Согласие на обработку персональных данных</h1>
+  <div class="card" id="consent-text" style="white-space:pre-wrap;font-size:15px;line-height:1.45"></div>
+  <p class="sub" id="consent-link"></p>
+  <label class="ck" style="display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px"><input type="checkbox" id="consent-ck" onchange="document.getElementById('consent-btn').disabled=!this.checked"><span>Я прочитал и даю согласие на обработку моих персональных данных, включая фотографию, для учёта рабочего времени и расчёта оплаты.</span></label>
+  <button class="btn wide" id="consent-btn" disabled onclick="consentGo()">Продолжить</button>
+</div>
 <div id="s-cats" class="scr">
   <h1 id="ev-name"></h1>
   <p class="sub" id="ev-sub"></p>
@@ -230,7 +237,7 @@ let me=null,ev=null,cats=[],cat='',fio='',mode='in',camBack='s-cats',stream=null
 
 function show(id){const el=document.getElementById(id);const same=el.classList.contains('on');document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));el.classList.add('on');if(!same)window.scrollTo(0,0);updBack()}
 /* навигация «назад»: одна системная кнопка Telegram вместо кнопок на экранах. Порядок: модалка → карточка → родительский экран */
-const PARENT={'s-cats':()=>show('s-home'),'s-contact':()=>show('s-cats'),'s-fio':()=>show('s-cats'),'s-cam':()=>{stopCam();show(camBack)},'s-con':()=>show('s-home'),'s-conev':()=>conList(),'s-done':()=>init()};
+const PARENT={'s-consent':()=>show('s-home'),'s-cats':()=>show('s-home'),'s-contact':()=>show('s-cats'),'s-fio':()=>show('s-cats'),'s-cam':()=>{stopCam();show(camBack)},'s-con':()=>show('s-home'),'s-conev':()=>conList(),'s-done':()=>init()};
 function goBack(){
   if(document.getElementById('modal').classList.contains('on'))return modalClose();
   if(document.getElementById('drawer').classList.contains('on'))return closeDrawer();
@@ -376,6 +383,7 @@ async function init(){
     me=await api('me',null,true);
     saveMe();
     renderMe();
+    if(me.consent===false){showConsent();return} // без согласия дальше не идём; после «Продолжить» init() запускается заново
     document.getElementById('btn-con').style.display=me.staff?'block':'none';
     const sp=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||QS.get('p');
     if(QS.get('con')&&me.staff&&!window._conShown){window._conShown=1;deepRow=+QS.get('row')||0;deepDz=!!QS.get('dz');conOpen(QS.get('con'))}
@@ -390,6 +398,13 @@ function authWhy_(msg){
   const ad=+(tg.initDataUnsafe&&tg.initDataUnsafe.auth_date)||0,age=ad?Math.round((Date.now()/1000-ad)/3600):-1;
   return (msg||'')+' Данные входа: '+tg.initData.length+' зн., возраст '+(age<0?'?':age+' ч')+', '+(tg.platform||'?')+' '+(tg.version||'?')+'.';
 }
+/* экран согласия: текст и ссылка приходят из листа 09 (CONSENT_TEXT, CONSENT_URL), версия — CONSENT_VERSION; отметка хранится на сервере */
+function showConsent(){
+  document.getElementById('consent-text').textContent=me.consentText||'Для учёта рабочего времени и расчёта оплаты мы сохраняем ваши фамилию, имя, отчество, номер телефона, Telegram и селфи при приходе и уходе.';
+  const l=document.getElementById('consent-link');l.innerHTML=me.consentUrl?'<a class="lnk" href="#" onclick="openL(\''+escS(me.consentUrl)+'\');return false">Политика обработки персональных данных</a>':'';
+  document.getElementById('consent-ck').checked=false;document.getElementById('consent-btn').disabled=true;show('s-consent');
+}
+async function consentGo(){try{await api('consent',{});me.consent=true;saveMe();init()}catch(e){toast(e.msg||'Не удалось сохранить согласие')}}
 function saveMe(){try{localStorage.setItem('me',JSON.stringify(me))}catch(e){}}
 /* вернулись в приложение: главный экран перечитывает профиль тихо, чтобы не показать закрытую смену как открытую */
 document.addEventListener('visibilitychange',async()=>{
