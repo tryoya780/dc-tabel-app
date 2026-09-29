@@ -128,10 +128,11 @@ h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text
 .tl .nowl{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--bad)}
 .drawer{position:fixed;inset:auto 0 0 0;max-height:85vh;overflow:auto;background:var(--card);border-top:1px solid var(--brass);border-radius:18px 18px 0 0;padding:0 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s;z-index:30}
 .drawer.on{transform:none}
-.drawer .dh{position:sticky;top:0;z-index:1;background:var(--card);padding:8px 0 8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:1px solid var(--line)}
+.drawer .dh{position:sticky;top:0;z-index:1;background:var(--card);padding:14px 0 8px;touch-action:pan-x;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:1px solid var(--line)}
 .drawer .dh h1{margin:8px 0 2px;font-size:20px}
 .drawer .dh .muted{font-size:14px}
-.drawer .grip{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 4px}
+.drawer .grip{position:absolute;top:6px;left:50%;width:40px;height:4px;border-radius:2px;background:var(--line);transform:translateX(-50%)}
+.drawer.drag{transition:none}
 .drawer .x{flex:none;width:44px;height:44px;border-radius:50%;background:none;border:0;color:var(--mut);font-size:28px;line-height:1;margin-top:4px;cursor:pointer}
 .drawer .x:active{background:var(--line)}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
@@ -263,7 +264,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 
 <div class="toast" id="toast"></div>
 <div class="scrim" id="scrim" onclick="closeDrawer()"></div>
-<aside class="drawer" id="drawer"><div class="dh"><div><div class="grip"></div><h1 id="dr-title"></h1><div class="muted" id="dr-sub"></div></div><button class="x" onclick="closeDrawer()" aria-label="Закрыть">×</button></div><div id="dr-body"></div></aside>
+<aside class="drawer" id="drawer"><div class="dh"><div class="grip"></div><div><h1 id="dr-title"></h1><div class="muted" id="dr-sub"></div></div><button class="x" onclick="closeDrawer()" aria-label="Закрыть">×</button></div><div id="dr-body"></div></aside>
 <div id="modal"><div class="box" id="modal-box"></div></div>
 <div id="busy"><div class="spin"></div><div class="t" id="busy-t">Загружаю…</div><div class="s" id="busy-s"></div></div>
 
@@ -899,6 +900,13 @@ async function ntfToggle(key,el){
   try{const r=await api('con.act',{act:'prefs',off:off},true);if(!r||!r.ok)throw r||{}}
   catch(e){x.on=was;el.checked=was;toast(e.msg||'Не удалось сохранить')}
 }
+/* смахнуть шторку вниз за шапку: тянется за пальцем, при сдвиге больше 70 px закрывается */
+(function(){const d=document.getElementById('drawer'),h=d.querySelector('.dh');let y0=null,dy=0;
+  h.addEventListener('touchstart',e=>{if(innerWidth>=700||e.target.closest('button'))return;y0=e.touches[0].clientY;dy=0;d.classList.add('drag')},{passive:true});
+  h.addEventListener('touchmove',e=>{if(y0===null)return;dy=Math.max(0,e.touches[0].clientY-y0);d.style.transform='translateY('+dy+'px)'},{passive:true});
+  const end=()=>{if(y0===null)return;d.classList.remove('drag');d.style.transform='';if(dy>70)closeDrawer();y0=null;dy=0};
+  h.addEventListener('touchend',end);h.addEventListener('touchcancel',end);
+})();
 function openDrawer(html,title,sub){document.getElementById('dr-title').innerHTML=title||'';document.getElementById('dr-sub').innerHTML=sub||'';document.getElementById('dr-body').innerHTML=html;document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');document.getElementById('drawer').scrollTop=0;updBack()}
 /* селфи внутри приложения: сервер отдаёт картинку по ссылке из листа 06, на Диск никого не отправляем */
 async function openPhoto(i,kind){
