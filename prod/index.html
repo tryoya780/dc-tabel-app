@@ -149,6 +149,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 #modal .ph-wrap{margin:10px 0;min-height:80px;text-align:center}#modal .ph-img{width:100%;max-height:70vh;object-fit:contain;border-radius:10px;background:#000}
 #modal label.ck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}
 #modal label.ck input{width:20px;height:20px;margin-top:1px}
+.ntf{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.ntf:last-child{border-bottom:0}.ntf input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--brass)}.ntf .t{font-size:16px}.ntf .d{font-size:13px;color:var(--mut);margin-top:2px}
 .acts.pb .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;line-height:1.15;min-height:64px;text-wrap:balance}.acts.pb .btn small,.btn small{font-size:12px;font-weight:400;opacity:.75}
 </style>
 </head>
@@ -232,7 +233,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 </div>
 
 <div id="s-con" class="scr wrap">
-  <div class="top"><div><h1 style="margin:0">Консоль</h1><div class="muted" id="con-me"></div></div><button class="btn sec" onclick="show('s-home')">Отметиться</button></div>
+  <div class="top"><div><h1 style="margin:0">Консоль</h1><div class="muted" id="con-me"></div></div><div style="display:flex;gap:8px"><button class="btn sec" onclick="ntfOpen()">Уведомления</button><button class="btn sec" onclick="show('s-home')">Отметиться</button></div></div>
   <div class="segs noprint" id="con-tabs"><button data-t="events" onclick="conTabGo('events')">Мероприятия</button><button data-t="flags" onclick="conTabGo('flags')">Флаги<span class="badge" id="fl-badge"></span></button></div>
   <div id="con-list"></div>
 </div>
@@ -367,7 +368,7 @@ function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
 function h2(n){const m=Math.round((+n||0)*60),h=Math.floor(m/60),r=m%60;return h?(r?h+' ч '+r+' мин':h+' ч'):m+' мин'}
 
 const QS=new URLSearchParams(location.search);
-const BUSY_TXT={'con.act':'Выполняю…',me:'Загружаю профиль…',event:'Ищу мероприятие…',contact:'Подтверждаю номер…',checkin:'Отправляю фото и открываю смену…',checkout:'Отправляю фото и закрываю смену…','con.events':'Загружаю мероприятия…','con.event':'Загружаю карточку…','con.flags':'Загружаю флаги…'};
+const BUSY_TXT={'con.act':'Выполняю…','con.prefs':'Загружаю настройки…',me:'Загружаю профиль…',event:'Ищу мероприятие…',contact:'Подтверждаю номер…',checkin:'Отправляю фото и открываю смену…',checkout:'Отправляю фото и закрываю смену…','con.events':'Загружаю мероприятия…','con.event':'Загружаю карточку…','con.flags':'Загружаю флаги…'};
 let busyN=0,busyTimer=null;
 function busy(t){busyN++;document.getElementById('busy-t').textContent=t||'Загружаю…';document.getElementById('busy-s').textContent='';document.getElementById('busy').classList.add('on');document.body.classList.add('busy');
   clearTimeout(busyTimer);busyTimer=setTimeout(()=>{document.getElementById('busy-s').textContent='Сервер отвечает медленно, ждём…'},8000)}
@@ -388,7 +389,7 @@ async function api(action,data,quiet,toMs){
     return j;
   }catch(e){
     // запросы чтения безопасно повторить один раз: холодный старт сервера иногда даёт мусор или таймаут
-    const readOnly=['me','event','con.events','con.event','con.flags'].indexOf(action)>=0;
+    const readOnly=['me','event','con.events','con.event','con.flags','con.prefs'].indexOf(action)>=0;
     if(readOnly&&!quiet&&!data?._retry&&(e.error==='bad'||e.error==='net')){document.getElementById('busy-s').textContent='Сервер просыпается, повторяю запрос…';return api(action,Object.assign({},data||{},{_retry:1}),quiet)}
     throw e;
   }finally{if(!quiet)unbusy()}
@@ -881,6 +882,21 @@ function openCat(ci){ // индекс категории, а не имя: зна
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');updBack()}
 /* панель: липкая шапка с заголовком и крестиком, тело ниже */
+/* настройки уведомлений в чате бота: список типов с переключателями, сохранение сразу; обязательные показаны серым */
+let ntfData=null;
+async function ntfOpen(){
+  try{ntfData=await api('con.prefs',{});}catch(e){return toast(e.msg||'Не удалось загрузить настройки')}
+  const rows=ntfData.types.map(x=>'<label class="ntf"><input type="checkbox" '+(x.on?'checked':'')+' onchange="ntfToggle(\''+x.key+'\',this)"><div><div class="t">'+escS(x.title)+'</div><div class="d">'+escS(x.desc)+'</div></div></label>').join('');
+  const locked='<div class="card" style="margin-top:14px"><div class="sub" style="margin-bottom:6px">Приходят всегда</div>'+ntfData.locked.map(x=>'<div class="muted" style="font-size:14px;padding:3px 0">'+escS(x)+'</div>').join('')+'</div><p class="muted" style="font-size:13px;margin-top:10px">Выключенное не копится и позже не приходит: события остаются в консоли и в таблице.</p>';
+  openDrawer('<div class="card" style="padding:4px 14px">'+rows+'</div>'+locked,'Уведомления','что присылать в чат бота');
+}
+async function ntfToggle(key,el){
+  const x=ntfData.types.filter(y=>y.key===key)[0];if(!x)return;
+  const was=x.on;x.on=el.checked;
+  const off=ntfData.types.filter(y=>!y.on).map(y=>y.key);
+  try{const r=await api('con.act',{act:'prefs',off:off},true);if(!r||!r.ok)throw r||{}}
+  catch(e){x.on=was;el.checked=was;toast(e.msg||'Не удалось сохранить')}
+}
 function openDrawer(html,title,sub){document.getElementById('dr-title').innerHTML=title||'';document.getElementById('dr-sub').innerHTML=sub||'';document.getElementById('dr-body').innerHTML=html;document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');document.getElementById('drawer').scrollTop=0;updBack()}
 /* селфи внутри приложения: сервер отдаёт картинку по ссылке из листа 06, на Диск никого не отправляем */
 async function openPhoto(i,kind){
