@@ -524,7 +524,7 @@ async function contactFromChat(){
 function afterFio(){fio=document.getElementById('fio').value.trim();if(fio.split(/\s+/).length<2)return toast('Нужны фамилия и имя');if(/[A-Za-z]/.test(fio))return toast('Пишите кириллицей');startIn()}
 function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').innerHTML=escS(ev.name)+' · <b>'+escS(cat)+escS(winLabel())+'</b> · <a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">сменить</a>'+(lateTo?'<br><span class="bad">Поздний приход: плановая регистрация закрылась в '+escS(lateTo)+'. Смена уйдёт менеджеру на подтверждение.</span>':'');openCam()}
 let outEv='';
-function startOut(){mode='out';camBack='s-home';outEv=me&&me.open?me.open.ev:'';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').innerHTML='Смена закроется после отправки. Снимите так, чтобы за спиной был виден зал или площадка.';openCam()}
+function startOut(){mode='out';camBack='s-home';outEv=me&&me.open?me.open.ev:'';document.getElementById('cam-title').textContent='Селфи на выходе';const rl=String(me&&me.open&&me.open.role||'');document.getElementById('cam-sub').innerHTML='Смена закроется после отправки. '+(/грузчик/i.test(rl)?'Снимите там, где заканчиваете работу: у машины, на складе или на площадке.':'Снимите так, чтобы за спиной был виден зал или площадка.');openCam()}
 
 async function openCam(){
   stopCam();photoB64='';document.getElementById('shot').style.display='none';document.getElementById('video').style.display='block';document.getElementById('cam-box').classList.remove('nocam');
@@ -700,10 +700,10 @@ function flBtns(ref,x){
   const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
   const ok=(t,sub)=>b('sec','ok',t||'Всё верно',sub||(h2(x.pay)+' остаётся'));
   let h='';
-  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Указать время ухода','пересчёт, запрос администратору');
-  else if(x.main==='early')h=ok('Всё верно','по факту')+b('','min','Зачесть минимум','мин. '+x.min+' ч, запрос администратору');
-  else if(x.main==='late')h=ok('Опоздал','по факту, как сейчас')+b('','min','Вызывали','зачесть мин. '+x.min+' ч, запрос администратору');
-  else if(x.main==='long')h=ok('Всё верно')+b('','until','Указать время ухода','пересчёт, запрос администратору');
+  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Время ухода','пересчёт, запрос админу');
+  else if(x.main==='early')h=ok('Всё верно','по факту')+b('','min','Минимум',x.min+' ч, запрос админу');
+  else if(x.main==='late')h=ok('Опоздал','по факту, как сейчас')+b('','min','Вызывали','минимум '+x.min+' ч, запрос админу');
+  else if(x.main==='long')h=ok('Всё верно')+b('','until','Время ухода','пересчёт, запрос админу');
   else h=ok().replace('class="btn sec"','class="btn sec wide"');
   return '<div class="acts pb">'+h+'</div>';
 }
