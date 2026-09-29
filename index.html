@@ -829,7 +829,7 @@ function openShift(i){
   else if(x.open&&x.early&&!x.confirmed)h+='<div class="acts" style="margin-top:10px"><button class="btn wide" onclick="closeDrawer();conAct(\'early\','+x.inRow+')"><span>Работал</span><small>с прихода</small></button></div>';
   if(x.open)h+='<div class="acts" style="margin-top:16px"><button class="btn sec" onclick="releaseAsk('+i+')">Отпустить сейчас</button><button class="btn red" onclick="kickAsk('+i+')">Выгнать</button></div>';
   if(x.kicked&&conMe&&conMe.admin)h+='<div class="acts" style="margin-top:12px"><button class="btn sec" onclick="ask(\'Вернуть на смену? Пометка «выгнан» снимется, смена снова откроется, стоп-лист снимется.\').then(ok=>{if(ok){closeDrawer();conAct(\'unkick\','+x.inRow+')}})">Вернуть на смену</button></div>';
-  h+='<p class="muted" style="margin-top:12px">'+(x.open?'Часы и сумма появятся после закрытия смены.':x.flg?'Если часы неверные — кнопки в блоке «Флаг»: запрос уйдёт администратору.':'Флагов нет, всё посчитано по правилам.')+'</p>';
+  h+='<p class="muted" style="margin-top:12px">'+(x.open?'Часы и сумма появятся после закрытия смены.':x.flg?({open:'Если часы неверные — кнопки в блоке «Флаг»: запрос уйдёт администратору.',ask:'Запрос правки ждёт администратора.',done:'Флаг разобран. Спорный случай — к администратору.'})[x.flg.state]:'Флагов нет, всё посчитано по правилам.')+'</p>';
   openDrawer(h,x.fio,x.role+' · '+ev.name);
 }
 function openCat(ci){ // индекс категории, а не имя: значения из данных в inline-обработчики не попадают
