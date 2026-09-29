@@ -666,7 +666,11 @@ function flState_(ref,x){
   if(x.state==='open')return flBtns(ref,x);
   if(x.state==='ask'){const a=x.ask||{};return '<p class="flask warn">Запрос: '+h2(a.h)+' · '+a.why+' · '+a.by+', '+a.t+'</p>'+
     (conMe&&conMe.admin?'<div class="acts"><button class="btn" onclick="flDo('+ref+',\'apply\')"><span>Применить</span><small>'+h2(a.h)+(x.own?' · '+rub(Math.round(a.h*x.rate)):'')+'</small></button><button class="btn sec" onclick="flDo('+ref+',\'reject\')">Отклонить</button></div>':'<p class="flask muted">Ждёт администратора.</p>')}
-  return '<p class="flask muted">'+String(x.review||'поправлено администратором').split(' · ').slice(0,3).join(' · ')+'</p>';
+  return '<p class="flask muted">'+flDone(x.review)+'</p>';
+}
+function flDone(r){
+  const p=String(r||'').split(' · '),w={'ок':'Всё верно','поправлено':'Поправлено','отклонено':'Правка отклонена'}[p[0]];
+  return w?[w].concat(p.slice(1,3)).join(' · ')+(p[0]==='поправлено'&&p[3]?' · '+p[3]:''):'Поправлено администратором';
 }
 function flBtns(ref,x){
   const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
@@ -758,7 +762,7 @@ async function conOpen(id,day,quiet){
        '<div class="tile"><b>'+st.came+' / '+st.limit+'</b><small>вышло из лимита</small></div>'+
        '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
        '<div class="tile"><b'+(st.plan-st.fact<0?' class="bad"':'')+'>'+(st.plan-st.fact<0?'+':'')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход к плану')+'</small></div></div>';
-    h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана · без подтверждения приход до '+ev.regTo+', уход до '+ev.qrTo+'</div>';
+    h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана'+(ev.status==='Закрыто'?'':' · без подтверждения приход до '+ev.regTo+', уход до '+ev.qrTo)+'</div>';
     const wins={};(r.windows||[]).forEach(w=>{(wins[w.role]=wins[w.role]||[]).push(w)});
     h+='<div class="sec-h"><h2>Категории</h2><button class="qbtn noprint" onclick="legendToggle()" aria-label="Обозначения">?</button></div><div class="tiles">'+st.cats.map((c,ci)=>{const ws=wins[c.name]||[];const sh=r.shifts.filter(x=>x.role===c.name);const w=ws.length===1?ws[0]:null;
       // «не вышел» красный только после начала окна категории; при лимите больше 12 хвост сворачивается в «+N»
@@ -825,7 +829,7 @@ function openShift(i){
   else if(x.open&&x.early&&!x.confirmed)h+='<div class="acts" style="margin-top:10px"><button class="btn wide" onclick="closeDrawer();conAct(\'early\','+x.inRow+')"><span>Работал</span><small>с прихода</small></button></div>';
   if(x.open)h+='<div class="acts" style="margin-top:16px"><button class="btn sec" onclick="releaseAsk('+i+')">Отпустить сейчас</button><button class="btn red" onclick="kickAsk('+i+')">Выгнать</button></div>';
   if(x.kicked&&conMe&&conMe.admin)h+='<div class="acts" style="margin-top:12px"><button class="btn sec" onclick="ask(\'Вернуть на смену? Пометка «выгнан» снимется, смена снова откроется, стоп-лист снимется.\').then(ok=>{if(ok){closeDrawer();conAct(\'unkick\','+x.inRow+')}})">Вернуть на смену</button></div>';
-  h+='<p class="muted" style="margin-top:12px">Правка часов в таблице, лист 07: каждая правка попадает в журнал.</p>';
+  h+='<p class="muted" style="margin-top:12px">'+(x.open?'Часы и сумма появятся после закрытия смены.':x.flg?'Если часы неверные — кнопки в блоке «Флаг»: запрос уйдёт администратору.':'Флагов нет, всё посчитано по правилам.')+'</p>';
   openDrawer(h,x.fio,x.role+' · '+ev.name);
 }
 function openCat(ci){ // индекс категории, а не имя: значения из данных в inline-обработчики не попадают
@@ -882,7 +886,7 @@ function actionBar(ev,m,st){
   let b='';
   if(open)b+='<button class="btn" onclick="dzAsk()">Дозаказ</button>';
   if(m.admin&&!open&&!closed)b+=(st&&st.limit?'<button class="btn" onclick="ask(\'Открыть мероприятие? Персонал сможет отмечаться, выпустятся QR и код.\').then(ok=>{if(ok)conAct(\'open\')})">Открыть и выпустить QR</button>':'<button class="btn" disabled title="В наряде нет строк со статусом «Согласован»">Наряд не согласован</button>');
-  if(ev.code)b+='<button class="btn sec" onclick="conAct(\'qr\')">QR-листы</button>';
+  if(ev.code&&!closed)b+='<button class="btn sec" onclick="conAct(\'qr\')">QR-листы</button>';
   if(closed&&m.admin)b+='<button class="btn sec" onclick="conAct(\'report\')">Отчёт</button>';
   if(m.admin)b+='<button class="btn sec" onclick="moreAsk()">Ещё…</button>';
   return b?'<div class="abar noprint">'+b+'</div>':'';
