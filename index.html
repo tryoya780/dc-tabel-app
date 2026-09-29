@@ -325,7 +325,7 @@ async function releaseCatAsk(ci){
 }
 async function releaseAsk(i){
   const x=conData.shifts[i];if(!x)return;
-  if(!(await ask('Отпустить '+unesc(x.fio)+' сейчас? Смена закроется, зачтено по факту.')))return;
+  if(!(await ask('Отпустить '+unesc(x.fio)+' сейчас? Смена закроется. Если до конца окна больше 2 ч — по факту, если меньше — не меньше минимума.')))return;
   closeDrawer();conAct('release',x.inRow);
 }
 function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
