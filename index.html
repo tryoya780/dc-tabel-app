@@ -490,6 +490,8 @@ function showWins(c){
   show('s-win');
 }
 function winLabel(){if(!win)return '';const c=cats.filter(x=>x.name===cat)[0],w=c&&c.wins?c.wins.filter(x=>x.key===win)[0]:null;return w?' · к '+w.start:''}
+/* пока менеджер не решил: ранний приход считается с начала окна, поздний — по факту без минимума */
+function pendText(p,payFrom){return /ранний/.test(p)?'Вы пришли раньше планового начала. Пока менеджер не решил, часы считаются с начала окна'+(payFrom?' ('+escS(payFrom)+')':'')+'. Если менеджер подтвердит, что вас вызвали раньше, зачтут с фактического прихода.':'Вы пришли позже планового начала. Пока менеджер не решил, часы считаются с фактического прихода, минимум за выход не применяется. Если менеджер подтвердит, что вас вызвали позже, зачтут минимум.'}
 function afterCat(){
   if(!cat)return;
   if(!me.phone)return show('s-contact');
@@ -521,7 +523,8 @@ async function contactFromChat(){
 }
 function afterFio(){fio=document.getElementById('fio').value.trim();if(fio.split(/\s+/).length<2)return toast('Нужны фамилия и имя');if(/[A-Za-z]/.test(fio))return toast('Пишите кириллицей');startIn()}
 function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').innerHTML=escS(ev.name)+' · <b>'+escS(cat)+escS(winLabel())+'</b> · <a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">сменить</a>'+(lateTo?'<br><span class="bad">Поздний приход: плановая регистрация закрылась в '+escS(lateTo)+'. Смена уйдёт менеджеру на подтверждение.</span>':'');openCam()}
-function startOut(){mode='out';camBack='s-home';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').innerHTML='Смена закроется после отправки. Снимите так, чтобы за спиной был виден зал или площадка.';openCam()}
+let outEv='';
+function startOut(){mode='out';camBack='s-home';outEv=me&&me.open?me.open.ev:'';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').innerHTML='Смена закроется после отправки. Снимите так, чтобы за спиной был виден зал или площадка.';openCam()}
 
 async function openCam(){
   stopCam();photoB64='';document.getElementById('shot').style.display='none';document.getElementById('video').style.display='block';document.getElementById('cam-box').classList.remove('nocam');
@@ -596,14 +599,17 @@ async function sendShot(){
     if(mode==='in'){
       const r=await apiRetry('checkin',{eventId:ev.id,token:ev.token,role:unesc(cat),win:win,fio:fio,photo:photoB64});
       const o=r.open,dt=document.getElementById('done-title');dt.textContent='Смена открыта';dt.className=r.pending?'pend':'ok';
-      document.getElementById('done-card').innerHTML=(r.pending?'<div class="stepbox pend" style="margin:0 0 10px">Ждёт подтверждения менеджера: '+escS(r.pending)+'</div>':'')+'<div class="row"><span>Мероприятие</span><b>'+escS(o.evName)+'</b></div><div class="row"><span>Категория</span><b>'+escS(o.role)+'</b></div><div class="row"><span>Приход</span><b>'+escS(o.since)+(o.payFrom?' · зачёт с '+escS(o.payFrom):'')+'</b></div><div class="row"><span>Минимум за выход</span><b>'+escS(o.min)+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">Вы отметились вне планового окна. Менеджер подтвердит по фото, до этого часы не зачтутся.</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Закрыть смену», иначе утром смена закроется на половину минимума.</p>';
+      document.getElementById('done-card').innerHTML=(r.pending?'<div class="stepbox pend" style="margin:0 0 10px">Ждёт подтверждения менеджера: '+escS(r.pending)+'</div>':'')+'<div class="row"><span>Мероприятие</span><b>'+escS(o.evName)+'</b></div><div class="row"><span>Категория</span><b>'+escS(o.role)+'</b></div><div class="row"><span>Приход</span><b>'+escS(o.since)+(o.payFrom?' · зачёт с '+escS(o.payFrom):'')+'</b></div><div class="row"><span>Минимум за выход</span><b>'+escS(o.min)+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">'+pendText(r.pending,o.payFrom)+'</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Закрыть смену», иначе утром смена закроется на половину минимума.</p>';
     }else{
-      const r=await apiRetry('checkout',{photo:photoB64});const c=r.closed;
-      const dt=document.getElementById('done-title');dt.textContent='Смена закрыта';dt.className='';
-      document.getElementById('done-card').innerHTML=!c?'<p class="sub">Уход записан с прошлой попытки. Часы и сумма — в квитанции в чате бота.</p>':'<div class="row"><span>Сотрудник</span><b>'+escS(c.fio)+'</b></div><div class="row"><span>Категория</span><b>'+escS(c.role)+'</b></div><div class="row"><span>Мероприятие</span><b>'+escS(c.evName)+'</b></div><div class="row"><span>Дата</span><b>'+escS(c.date)+'</b></div><div class="row"><span>Время</span><b>'+escS(c.since)+' → '+escS(c.till)+'</b></div>'+(c.count>1?'<div class="row"><span>Выходов за день</span><b>'+c.count+'</b></div>':'')+'<div class="row"><span>Факт</span><b>'+h2(c.factH)+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(c.payH)+(c.step&&c.step.indexOf('минимум')>=0?' · минимум':'')+'</b></div>'+(c.note?'<div class="stepbox bad" style="margin:10px 0 0">'+escS(c.note)+' Вопросы к координатору.</div>':'')+(c.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(c.sum)+'</div><p class="sub">Если цифра не сходится, скажите сегодня, а не в конце месяца.</p>');
+      const r=await apiRetry('checkout',{photo:photoB64});let c=r.closed,lost=false;
+      if(!c){ // «открытых смен нет» после повтора: успех показываем только если сервер подтверждает закрытую смену по этому мероприятию
+        try{const m=await api('me',{},true);if(!m.open&&m.last&&m.last.till&&(!outEv||m.last.ev===outEv))c=Object.assign({count:1,factH:m.last.payH,step:'',note:''},m.last);else lost=true}catch(_){lost=true}
+      }
+      const dt=document.getElementById('done-title');dt.textContent=lost?'Уход не подтверждён':'Смена закрыта';dt.className=lost?'bad':'';
+      document.getElementById('done-card').innerHTML=lost?'<p class="sub bad">Сервер не нашёл ни открытой смены, ни записи об уходе. Проверьте квитанцию в чате бота; если её нет, скажите менеджеру на площадке прямо сейчас.</p>':'<div class="row"><span>Сотрудник</span><b>'+escS(c.fio)+'</b></div><div class="row"><span>Категория</span><b>'+escS(c.role)+'</b></div><div class="row"><span>Мероприятие</span><b>'+escS(c.evName)+'</b></div><div class="row"><span>Дата</span><b>'+escS(c.date)+'</b></div><div class="row"><span>Время</span><b>'+escS(c.since)+' → '+escS(c.till)+'</b></div>'+(c.count>1?'<div class="row"><span>Выходов за день</span><b>'+c.count+'</b></div>':'')+'<div class="row"><span>Факт</span><b>'+h2(c.factH)+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(c.payH)+(c.step&&c.step.indexOf('минимум')>=0?' · минимум':'')+'</b></div>'+(c.note?'<div class="stepbox bad" style="margin:10px 0 0">'+escS(c.note)+' Вопросы к координатору.</div>':'')+(c.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(c.sum)+'</div><p class="sub">Если цифра не сходится, скажите сегодня, а не в конце месяца.</p>');
     }
     try{localStorage.removeItem('me')}catch(e){}
-    if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
+    if(tg&&tg.HapticFeedback&&!(mode==='out'&&document.getElementById('done-title').className==='bad'))tg.HapticFeedback.notificationOccurred('success');
     show('s-done');
   }catch(e){
     if(e.error==='need_contact')return show('s-contact');
