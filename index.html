@@ -331,7 +331,7 @@ function evCreateAsk(){
   const mg=(conMeta&&conMeta.managers)||[];
   // у полей даты и времени iOS не показывает placeholder, поэтому подпись над полем
   const inp=(id,ph,type)=>(type==='date'||type==='time'?'<label class="flab" for="'+id+'">'+ph+'</label>':'')+'<input id="'+id+'" class="fld" type="'+(type||'text')+'" placeholder="'+ph+'"'+(type==='date'?' value="'+new Date().toISOString().slice(0,10)+'"':'')+'>';
-  modalOpen('<div class="mh">Новое мероприятие</div>'+inp('ev-name','Название')+inp('ev-date','Дата мероприятия','date')+inp('ev-venue','Площадка')+
+  modalOpen('<div class="mh">Новое мероприятие</div><p class="muted" style="margin:0 0 6px;font-size:13px">Номер вида DC-ГГММДД-NN присвоится автоматически по дате. Название — как в смете, его видят сотрудники.</p>'+inp('ev-name','Название')+inp('ev-date','Дата мероприятия','date')+inp('ev-venue','Площадка')+
     '<div style="display:flex;gap:8px"><div style="flex:1 1 0;min-width:0">'+inp('ev-start','Начало','time')+'</div><div style="flex:1 1 0;min-width:0">'+inp('ev-end','Окончание','time')+'</div></div>'+inp('ev-guests','Гостей','number')+
     '<select id="ev-mgr" class="fld"><option value="">Менеджер не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
     '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
