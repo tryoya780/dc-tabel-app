@@ -193,6 +193,14 @@ body.busy .btn{pointer-events:none;opacity:.6}
   <button class="btn sec navback" onclick="show('s-home')">Назад</button>
 </div>
 
+<div id="s-win" class="scr">
+  <h1>К какому времени вы вызваны?</h1>
+  <p class="sub" id="win-sub"></p>
+  <p class="sub" style="color:var(--txt)">В этой категории несколько групп с разным временем. Выберите свою: по ней считаются минимум и окно прихода.</p>
+  <div id="wins"></div>
+  <button class="btn sec navback" onclick="show('s-cats')">Назад</button>
+</div>
+
 <div id="s-contact" class="scr">
   <h1>Подтвердите номер</h1>
   <p class="sub">Telegram передаст ваш номер телефона. Это нужно один раз.</p>
@@ -213,7 +221,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 <div id="s-cam" class="scr">
   <h1 id="cam-title">Селфи</h1>
   <p class="sub" id="cam-sub">Снимок делается камерой прямо сейчас</p>
-  <div class="cam" id="cam-box"><video id="video" autoplay playsinline muted></video><img id="shot" style="display:none"><div class="cam-msg">Камера внутри приложения недоступна. Нажмите «Сделать фото», откроется камера телефона.</div></div>
+  <div class="cam" id="cam-box"><video id="video" autoplay playsinline muted></video><img id="shot" style="display:none"><div class="cam-msg">Камера недоступна. Без селфи с камеры отметиться нельзя: разрешите Telegram доступ к камере в настройках телефона и откройте приложение заново или обратитесь к менеджеру на площадке.</div></div>
   <input type="file" id="file" accept="image/*" capture="user" style="display:none">
   <button class="btn" id="btn-shot" onclick="takeShot()">Сделать фото</button>
   <button class="btn" id="btn-send" style="display:none" onclick="sendShot()">Отправить</button>
@@ -257,11 +265,11 @@ body.busy .btn{pointer-events:none;opacity:.6}
 <script>
 const API='https://script.google.com/macros/s/AKfycbyPd_656FGUQs8kCA9silxZXttqHBHrvKaOm5tWyL5DdMRlhpkuFR5pNhahqfCXZGhC/exec';
 const tg=window.Telegram&&window.Telegram.WebApp;
-let me=null,ev=null,cats=[],cat='',fio='',mode='in',camBack='s-cats',stream=null,photoB64='',lateTo='';
+let me=null,ev=null,cats=[],cat='',win='',fio='',mode='in',camBack='s-cats',stream=null,photoB64='',lateTo='';
 
 function show(id){const el=document.getElementById(id);const same=el.classList.contains('on');document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));el.classList.add('on');if(!same)window.scrollTo(0,0);updBack()}
 /* навигация «назад»: одна системная кнопка Telegram вместо кнопок на экранах. Порядок: модалка → карточка → родительский экран */
-const PARENT={'s-consent':()=>show('s-home'),'s-cats':()=>show('s-home'),'s-contact':()=>show('s-cats'),'s-fio':()=>show('s-cats'),'s-cam':()=>{stopCam();show(camBack)},'s-con':()=>show('s-home'),'s-conev':()=>conBack(),'s-arch':()=>conList(),'s-done':()=>init()};
+const PARENT={'s-consent':()=>show('s-home'),'s-cats':()=>show('s-home'),'s-win':()=>show('s-cats'),'s-contact':()=>show('s-cats'),'s-fio':()=>show('s-cats'),'s-cam':()=>{stopCam();show(camBack)},'s-con':()=>show('s-home'),'s-conev':()=>conBack(),'s-arch':()=>conList(),'s-done':()=>init()};
 function goBack(){
   if(document.getElementById('modal').classList.contains('on'))return modalClose();
   if(document.getElementById('drawer').classList.contains('on'))return closeDrawer();
@@ -454,23 +462,31 @@ function byCode(){const c=document.getElementById('code').value.trim();if(!/^\d{
 async function loadEvent(q){
   try{
     const r=await api('event',q);
-    ev=r.event;cats=r.cats;cat='';lateTo=r.regOpen?'':r.regTo;
+    ev=r.event;cats=r.cats;cat='';win='';lateTo=r.regOpen?'':r.regTo;
     document.getElementById('ev-name').textContent=ev.name;
     document.getElementById('ev-sub').textContent=(ev.venue?ev.venue+' · ':'')+ev.date+(r.regOpen?'':' · позже планового начала, нужно подтверждение менеджера');
     const box=document.getElementById('cats');box.innerHTML='';
     cats.forEach(c=>{
       const d=document.createElement('div');d.className='cat'+(c.free?'':' full');
       d.innerHTML='<div><b>'+escS(c.name)+'</b><br><small>'+(c.free?'свободно '+c.free+' из '+c.limit+' · мин. '+c.min+' ч':'мест нет · обратитесь к координатору')+'</small></div><div>'+(c.free?'›':'занято')+'</div>';
-      if(c.free)d.onclick=()=>{cat=c.name;document.querySelectorAll('.cat').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');afterCat()};
+      if(c.free)d.onclick=()=>{cat=c.name;win='';document.querySelectorAll('.cat').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');if(c.wins&&c.wins.length>1)showWins(c);else afterCat()};
       box.appendChild(d);
       if(r.preCat&&r.preCat===c.name&&c.free){cat=c.name;d.classList.add('sel')}
     });
     if(!r.regOpen){toast('Вы позже планового начала (после '+r.regTo+'). Отметка пройдёт, менеджер получит запрос на подтверждение.','warn');}
-    if(cat&&r.autoCat&&me.phone&&me.fio){startIn();return}
+    if(cat&&r.autoCat&&me.phone&&me.fio){const c0=cats.filter(x=>x.name===cat)[0];if(c0&&c0.wins&&c0.wins.length>1)showWins(c0);else startIn();return}
     if(r.preCat&&r.autoCat&&!cat)toast('Мест в вашей категории нет. Выберите другую или обратитесь к координатору.','warn');
     show('s-cats');
   }catch(e){toast(e.msg||'Ошибка')}
 }
+/* несколько групп (времён вызова) в категории: человек выбирает свою (решение владельца 29.09) */
+function showWins(c){
+  document.getElementById('win-sub').textContent=ev.name+' · '+c.name;
+  const box=document.getElementById('wins');box.innerHTML='';
+  c.wins.forEach(w=>{const d=document.createElement('div');d.className='cat';d.innerHTML='<div><b>к '+escS(w.start)+'</b><br><small>смена '+escS(w.start)+'–'+escS(w.end)+' · '+(+w.count||0)+' чел.</small></div><div>›</div>';d.onclick=()=>{win=w.key;afterCat()};box.appendChild(d)});
+  show('s-win');
+}
+function winLabel(){if(!win)return '';const c=cats.filter(x=>x.name===cat)[0],w=c&&c.wins?c.wins.filter(x=>x.key===win)[0]:null;return w?' · к '+w.start:''}
 function afterCat(){
   if(!cat)return;
   if(!me.phone)return show('s-contact');
@@ -501,7 +517,7 @@ async function contactFromChat(){
   catch(e){st.textContent=e.msg||'Не удалось проверить номер'}
 }
 function afterFio(){fio=document.getElementById('fio').value.trim();if(fio.split(/\s+/).length<2)return toast('Нужны фамилия и имя');if(/[A-Za-z]/.test(fio))return toast('Пишите кириллицей');startIn()}
-function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').innerHTML=escS(ev.name)+' · <b>'+escS(cat)+'</b> · <a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">сменить</a>'+(lateTo?'<br><span class="bad">Поздний приход: плановая регистрация закрылась в '+escS(lateTo)+'. Смена уйдёт менеджеру на подтверждение.</span>':'');openCam()}
+function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').innerHTML=escS(ev.name)+' · <b>'+escS(cat)+escS(winLabel())+'</b> · <a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">сменить</a>'+(lateTo?'<br><span class="bad">Поздний приход: плановая регистрация закрылась в '+escS(lateTo)+'. Смена уйдёт менеджеру на подтверждение.</span>':'');openCam()}
 function startOut(){mode='out';camBack='s-home';document.getElementById('cam-title').textContent='Селфи на выходе';document.getElementById('cam-sub').innerHTML='Смена закроется после отправки. Снимите так, чтобы за спиной был виден зал или площадка.';openCam()}
 
 async function openCam(){
@@ -516,17 +532,14 @@ async function openCam(){
     stream=s;const v=document.getElementById('video');v.srcObject=stream;
     v.onloadedmetadata=()=>{bshot.disabled=false};setTimeout(()=>{bshot.disabled=false},2500);
   }catch(e){
-    // камера в webview недоступна — системная камера через выбор файла с capture
+    // камера недоступна: выбор файла из галереи не предлагаем (решение владельца 29.09) — только камера приложения
     stream=null;document.getElementById('video').style.display='none';document.getElementById('cam-box').classList.add('nocam');
-    bshot.onclick=()=>document.getElementById('file').click();bshot.disabled=false;
+    bshot.disabled=true;bshot.style.display='none';
   }
 }
 function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
-document.getElementById('file').addEventListener('change',function(){
-  const f=this.files[0];if(!f)return;const img=new Image();img.onload=()=>{gotImage(img);URL.revokeObjectURL(img.src)};img.src=URL.createObjectURL(f);this.value='';
-});
 function takeShot(){
-  if(!stream)return document.getElementById('file').click();
+  if(!stream)return toast('Камера недоступна, без селфи отметиться нельзя.','warn');
   const v=document.getElementById('video');const c=document.createElement('canvas');
   const w=v.videoWidth,h=v.videoHeight,k=Math.min(1,900/Math.max(w,h));c.width=Math.round(w*k);c.height=Math.round(h*k);
   const g=c.getContext('2d');g.translate(c.width,0);g.scale(-1,1);g.drawImage(v,0,0,c.width,c.height);finishShot(c);
@@ -578,7 +591,7 @@ async function sendShot(){
   const b=document.getElementById('btn-send');b.disabled=true;b.textContent='Отправляю…';
   try{
     if(mode==='in'){
-      const r=await apiRetry('checkin',{eventId:ev.id,token:ev.token,role:unesc(cat),fio:fio,photo:photoB64});
+      const r=await apiRetry('checkin',{eventId:ev.id,token:ev.token,role:unesc(cat),win:win,fio:fio,photo:photoB64});
       const o=r.open,dt=document.getElementById('done-title');dt.textContent='Смена открыта';dt.className=r.pending?'pend':'ok';
       document.getElementById('done-card').innerHTML=(r.pending?'<div class="stepbox pend" style="margin:0 0 10px">Ждёт подтверждения менеджера: '+escS(r.pending)+'</div>':'')+'<div class="row"><span>Мероприятие</span><b>'+escS(o.evName)+'</b></div><div class="row"><span>Категория</span><b>'+escS(o.role)+'</b></div><div class="row"><span>Приход</span><b>'+escS(o.since)+(o.payFrom?' · зачёт с '+escS(o.payFrom):'')+'</b></div><div class="row"><span>Минимум за выход</span><b>'+escS(o.min)+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">Вы отметились вне планового окна. Менеджер подтвердит по фото, до этого часы не зачтутся.</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Закрыть смену», иначе утром смена закроется на половину минимума.</p>';
     }else{
@@ -592,6 +605,7 @@ async function sendShot(){
   }catch(e){
     if(e.error==='need_contact')return show('s-contact');
     if(e.error==='need_fio')return show('s-fio');
+    if(e.error==='consent'){stopCam();try{me=Object.assign(me||{},await api('me',{},true))}catch(_){}me.consent=false;showConsent();return} // сервер требует согласие (кэш профиля устарел или текст обновили)
     toast(e.msg||'Ошибка отправки');
     // повтор бессмыслен: смена уже открыта/закрыта, мероприятие закрыто, человек выгнан, мест нет — домой с обновлением профиля
     if(['open','noshift','closed','kicked','stop','full','token','notfound'].indexOf(e.error)>=0){stopCam();try{localStorage.removeItem('me')}catch(_){}init()}
