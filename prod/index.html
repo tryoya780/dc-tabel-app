@@ -655,7 +655,7 @@ async function conEvents(quiet){
     const box=document.getElementById('con-list');box.innerHTML='';
     if(!r.events.length)box.innerHTML='<p class="muted">Текущих мероприятий нет.</p>';
     r.events.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='list';conOpen(e.id)};box.appendChild(d)});
-    const a=document.createElement('button');a.className='btn sec';a.innerHTML='Архив · '+(r.archiveN||0)+' ›';a.onclick=()=>conArch();box.appendChild(a);
+    if(r.archiveN){const a=document.createElement('button');a.className='btn sec';a.innerHTML='Архив · '+r.archiveN+' ›';a.onclick=()=>conArch();box.appendChild(a)} // пустой архив не показываем
     if(r.me.admin){const b=document.createElement('button');b.className='btn';b.textContent='Новое мероприятие';b.onclick=evCreateAsk;box.appendChild(b)}
     const u=document.createElement('p');u.className='muted';u.style.textAlign='center';u.textContent='обновлено '+stampNow()+'';box.appendChild(u);
     show('s-con');
