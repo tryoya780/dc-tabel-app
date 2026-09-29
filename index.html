@@ -75,7 +75,9 @@ body.tgback .navback{display:none}
 .abar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
 .abar .btn{flex:1 1 auto;width:auto;margin:0;padding:12px 14px;font-size:15px}
 .lnk{color:var(--brass);text-decoration:none;font-size:15px;display:inline-block;padding:10px 6px;margin:-10px -6px;line-height:24px}
-.fld{width:100%;margin-top:8px;padding:12px;font-size:16px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);box-sizing:border-box;letter-spacing:0;text-align:left}
+.fld{width:100%;min-width:0;margin-top:8px;padding:12px;font-size:16px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);box-sizing:border-box;letter-spacing:0;text-align:left;display:block}
+input[type=date].fld,input[type=time].fld{-webkit-appearance:none;appearance:none;min-height:46px;-webkit-min-logical-width:0} /* iOS: у date/time своя внутренняя ширина, иначе поле вылезает за модалку */
+.flab{display:block;margin:10px 0 -4px;font-size:13px;color:var(--mut)}
 .mh{font-size:20px;font-weight:600;margin:0 0 4px}
 .segs{display:flex;gap:4px;background:#0f0d0b;border:1px solid var(--line);border-radius:12px;padding:4px;margin:0 0 14px}
 .segs button{flex:1;border:0;background:transparent;color:var(--mut);font-size:15px;font-weight:600;padding:10px 6px;border-radius:9px;cursor:pointer}
@@ -327,9 +329,10 @@ async function dzGo(){
 /* создание мероприятия администратором */
 function evCreateAsk(){
   const mg=(conMeta&&conMeta.managers)||[];
-  const inp=(id,ph,type)=>'<input id="'+id+'" class="fld" type="'+(type||'text')+'" placeholder="'+ph+'">';
-  modalOpen('<div class="mh">Новое мероприятие</div>'+inp('ev-name','Название')+inp('ev-date','Дата','date')+inp('ev-venue','Площадка')+
-    '<div style="display:flex;gap:8px">'+inp('ev-start','Начало','time')+inp('ev-end','Конец','time')+'</div>'+inp('ev-guests','Гостей','number')+
+  // у полей даты и времени iOS не показывает placeholder, поэтому подпись над полем
+  const inp=(id,ph,type)=>(type==='date'||type==='time'?'<label class="flab" for="'+id+'">'+ph+'</label>':'')+'<input id="'+id+'" class="fld" type="'+(type||'text')+'" placeholder="'+ph+'"'+(type==='date'?' value="'+new Date().toISOString().slice(0,10)+'"':'')+'>';
+  modalOpen('<div class="mh">Новое мероприятие</div>'+inp('ev-name','Название')+inp('ev-date','Дата мероприятия','date')+inp('ev-venue','Площадка')+
+    '<div style="display:flex;gap:8px"><div style="flex:1 1 0;min-width:0">'+inp('ev-start','Начало','time')+'</div><div style="flex:1 1 0;min-width:0">'+inp('ev-end','Окончание','time')+'</div></div>'+inp('ev-guests','Гостей','number')+
     '<select id="ev-mgr" class="fld"><option value="">Менеджер не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
     '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
 }
@@ -617,9 +620,8 @@ function pct(a,b){return b?Math.round(a/b*100):0}
 function pillCls(st){return st==='Открыто'?'open':st==='Закрыто'?'closed':'new'}
 let conSeq=0; // номер запроса: старый ответ не перекрывает новый
 /* консоль: вкладки «Мероприятия» и «Флаги»; последняя выбранная запоминается */
-let conTab='events',conFrom='list',flState='open',flData=null,archData=null;
-try{conTab=localStorage.getItem('conTab')||'events'}catch(e){}
-function conTabGo(t){conTab=t;try{localStorage.setItem('conTab',t)}catch(e){}lastJson='';conList()}
+let conTab='events',conFrom='list',flState='open',flData=null,archData=null; // вкладка не запоминается между открытиями: консоль всегда начинается с «Мероприятий» (замечание 29.09)
+function conTabGo(t){conTab=t;lastJson='';conList()}
 function conTabsDraw(){document.querySelectorAll('#con-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===conTab))}
 /* бейдж: менеджеру — не разобранные, администратору — ещё и запросы правки (их решает он) */
 function flBadge(open,askN){const n=(open||0)+(conMe&&conMe.admin?(askN||0):0);document.getElementById('fl-badge').textContent=n?String(n):''}
@@ -692,10 +694,10 @@ function flBtns(ref,x){
   const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
   const ok=(t,sub)=>b('sec','ok',t||'Всё верно',sub||(h2(x.pay)+' остаётся'));
   let h='';
-  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Работал до…','через админа');
-  else if(x.main==='early')h=ok('Всё верно','по факту')+b('','min','Минимум '+x.min+' ч','через админа');
-  else if(x.main==='late')h=ok('Опоздал','по факту')+b('','min','Вызывали',x.min+' ч, через админа');
-  else if(x.main==='long')h=ok('Всё верно')+b('','until','Ушёл в…','через админа');
+  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Указать время ухода','пересчёт, запрос администратору');
+  else if(x.main==='early')h=ok('Всё верно','по факту')+b('','min','Зачесть минимум','мин. '+x.min+' ч, запрос администратору');
+  else if(x.main==='late')h=ok('Опоздал','по факту, как сейчас')+b('','min','Вызывали','зачесть мин. '+x.min+' ч, запрос администратору');
+  else if(x.main==='long')h=ok('Всё верно')+b('','until','Указать время ухода','пересчёт, запрос администратору');
   else h=ok().replace('class="btn sec"','class="btn sec wide"');
   return '<div class="acts pb">'+h+'</div>';
 }
@@ -703,7 +705,7 @@ function flOpen(gi,ii){const x=flData.groups[gi].items[ii];conFrom='flags';deepP
 let flCur=null;
 async function flDo(x,act){
   if(act==='until'){flCur=x;return modalOpen('<div class="mh">'+(x.main==='long'?'Когда ушёл':'До скольки работал')+'</div><p class="muted" style="margin:0 0 6px">'+x.fio+' · пришёл '+x.in+'. Бот посчитает часы по обычным правилам и отправит запрос администратору.</p>'+
-    '<input type="time" class="fld" id="fl-till" value=""><input class="fld" id="fl-why" placeholder="Комментарий (необязательно)"><div class="ferr" id="m-err"></div>'+
+    '<label class="flab" for="fl-till">'+(x.main==='long'?'Время ухода':'Работал до')+'</label><input type="time" class="fld" id="fl-till" value=""><input class="fld" id="fl-why" placeholder="Комментарий (необязательно)"><div class="ferr" id="m-err"></div>'+
     '<div class="acts"><button class="btn" onclick="flUntilGo()">Отправить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>')}
   if(act==='min'&&!(await ask(x.fio+': попросить администратора зачесть минимум '+x.min+' ч?')))return;
   if(act==='apply'&&!(await ask('Применить: '+x.fio+' → '+h2(x.ask.h)+(x.own?', '+rub(Math.round(x.ask.h*x.rate)):'')+'?')))return;
