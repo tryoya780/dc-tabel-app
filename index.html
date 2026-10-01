@@ -1075,8 +1075,8 @@ async function conAct(act,row,role,extra){
       openDrawer('<div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+escS(q.role)+'</figcaption></figure>').join('')+'</div><button class="btn wide noprint" style="margin-top:12px" onclick="conAct(\'qrSend\')">Отправить в чат бота</button><p class="muted noprint">QR-лист и код придут вам сообщением от бота: оттуда их можно переслать или сохранить. На компьютере лист можно распечатать: Ctrl+P.</p>','QR-листы','код '+escS(r.code));
       return true;
     }
-    if(act==='qrSend'){toast(r.msg||'Отправлено',true);return true} // панель с QR остаётся открытой
-    if(act==='report'){openDrawer('<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:0">'+r.text.replace(/</g,'&lt;')+'</pre>','Отчёт',escS(unesc(conData.event.name)));return true}
+    if(act==='qrSend'||act==='reportSend'){toast(r.msg||'Отправлено',true);return true} // панель с QR остаётся открытой
+    if(act==='report'){openDrawer('<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:0">'+r.text.replace(/</g,'&lt;')+'</pre><button class="btn wide noprint" style="margin-top:14px" onclick="conAct(\'reportSend\')">Отправить в чат бота</button><p class="muted noprint" style="font-size:13px">Отчёт придёт вам сообщением от бота: оттуда его можно переслать. Таблица с тем же отчётом — лист 08.</p>','Отчёт',escS(unesc(conData.event.name)));return true}
     toast(r.msg||'Готово',true);
     if(r.url)openL(r.url);
     if(act==='evCreate'){await conList();return true}
