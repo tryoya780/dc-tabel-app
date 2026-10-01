@@ -81,7 +81,17 @@ body.tgback .navback{display:none}
 input[type=date].fld,input[type=time].fld{-webkit-appearance:none;appearance:none;min-height:46px;-webkit-min-logical-width:0} /* iOS: у date/time своя внутренняя ширина, иначе поле вылезает за модалку */
 .flab{display:block;margin:10px 0 -4px;font-size:13px;color:var(--mut)}
 .mh{font-size:20px;font-weight:600;margin:0 0 4px}
-.oeg{border:1px solid var(--line);border-radius:12px;padding:2px 10px 10px;margin-top:10px}.oeh{display:flex;gap:8px;align-items:flex-end}.oeh .fld{flex:1 1 0}.oeh .qbtn{flex:0 0 auto;margin-bottom:4px}.oe4{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.ocat{padding:14px 16px}.oct{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.ocn{font-size:17px;font-weight:600;color:var(--brass)}
+.oln{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px;cursor:pointer}.oln small{color:var(--mut);font-size:13px}
+.oed{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:2px 10px 10px;margin:8px 0}
+.oe3{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:0 8px}.oe3 .fld{padding:12px 10px}.oe3 input[type=time]::-webkit-calendar-picker-indicator{display:none}
+.oef{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;font-size:14px;flex-wrap:wrap}
+.obar{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);margin:18px -16px 0;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.obar .btn{width:auto;margin:0;padding:13px 20px;flex:0 0 auto}
+.fsec{margin:18px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass)}
+.g2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 8px}.g2.eq{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.stp{display:flex;align-items:center;justify-content:space-between;margin-top:8px;border:1px solid var(--brass);border-radius:10px;background:var(--bg);min-height:46px}
+.stp button{border:0;background:transparent;color:var(--txt);font-size:22px;width:46px;height:44px;cursor:pointer}.stp b{font-size:17px;font-weight:600}
 .segs{display:flex;gap:4px;background:#0f0d0b;border:1px solid var(--line);border-radius:12px;padding:4px;margin:0 0 14px}
 .segs button{flex:1;border:0;background:transparent;color:var(--mut);font-size:15px;font-weight:600;padding:10px 6px;border-radius:9px;cursor:pointer}
 .segs button.on{background:var(--card);color:var(--txt);box-shadow:0 0 0 1px var(--line)}
@@ -257,6 +267,13 @@ body.busy .btn{pointer-events:none;opacity:.6}
   <div id="ce-body"></div>
 </div>
 
+<div id="s-ord" class="scr wrap">
+  <div class="top"><button class="btn sec navback" onclick="ordBack()">‹ Назад</button><span class="muted" id="ord-ev"></span></div>
+  <h1 style="margin-top:4px">Наряд</h1>
+  <div id="ord-body"></div>
+  <div class="obar" id="ord-bar"></div>
+</div>
+
 <div id="s-done" class="scr">
   <h1 id="done-title"></h1>
   <div class="card" id="done-card"></div>
@@ -276,7 +293,7 @@ let me=null,ev=null,cats=[],cat='',win='',fio='',mode='in',camBack='s-cats',stre
 
 function show(id){const el=document.getElementById(id);const same=el.classList.contains('on');document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));el.classList.add('on');if(!same)window.scrollTo(0,0);updBack()}
 /* навигация «назад»: одна системная кнопка Telegram вместо кнопок на экранах. Порядок: модалка → карточка → родительский экран */
-const PARENT={'s-consent':()=>show('s-home'),'s-cats':()=>show('s-home'),'s-win':()=>show('s-cats'),'s-contact':()=>show('s-cats'),'s-fio':()=>show('s-cats'),'s-cam':()=>{stopCam();show(camBack)},'s-con':()=>show('s-home'),'s-conev':()=>conBack(),'s-arch':()=>conList(),'s-done':()=>init()};
+const PARENT={'s-consent':()=>show('s-home'),'s-cats':()=>show('s-home'),'s-win':()=>show('s-cats'),'s-contact':()=>show('s-cats'),'s-fio':()=>show('s-cats'),'s-cam':()=>{stopCam();show(camBack)},'s-con':()=>show('s-home'),'s-conev':()=>conBack(),'s-ord':()=>ordBack(),'s-arch':()=>conList(),'s-done':()=>init()};
 function goBack(){
   if(document.getElementById('modal').classList.contains('on'))return modalClose();
   if(document.getElementById('drawer').classList.contains('on'))return closeDrawer();
@@ -332,7 +349,7 @@ async function dzGo(){
   if(await conAct('dzRequest',0,role,{n:n,why:why}))modalClose();else mErr(conActErr);
 }
 /* ── наряд: категория → группы (начало, часы, окончание, люди). Ставка из справочника, план считает сервер ── */
-let ordEd=[],ordMulti=false;
+let ordEd=[];
 const hrs=h=>String(Math.round((+h||0)*100)/100).replace('.',',')+' ч';
 function hmAdd(st,h){const m=String(st||'').match(/^(\d{1,2}):(\d{2})$/);if(!m||!(h>0))return '';const t=(+m[1]*60+ +m[2]+Math.round(h*60))%1440;return ('0'+Math.floor(t/60)).slice(-2)+':'+('0'+t%60).slice(-2)}
 function hmDiff(st,en){const a=String(st||'').match(/^(\d{1,2}):(\d{2})$/),b=String(en||'').match(/^(\d{1,2}):(\d{2})$/);if(!a||!b)return '';let d=(+b[1]*60+ +b[2])-(+a[1]*60+ +a[2]);if(d<=0)d+=1440;return Math.round(d/60*4)/4}
@@ -341,83 +358,136 @@ function ordCard(r){
   const o=r.order;if(!o)return '';
   const ev=r.event,own=o.rows.filter(x=>!x.dz),stT={empty:'<span class="warn">не заполнен</span>',pending:'<span class="warn">ждёт согласования</span>',ok:'согласован'}[o.state]||'';
   let h='<div class="sec-h"><h2>Наряд</h2><span class="muted">'+stT+'</span></div><div class="card">';
-  if(!own.length)h+='<p class="muted" style="margin:0">Групп пока нет. Укажите категории, время прихода и число людей.</p>';
-  else{let sum=0,n=0;h+=own.map(x=>{const m=x.hours*x.n*x.rate;sum+=m;n+=x.n;return '<div class="row"><span>'+x.role+' · '+x.n+' чел.<br><span class="muted" style="font-size:13px">'+(x.day!==ev.date?ruDay(x.day)+' · ':'')+x.start+'–'+x.end+' · '+hrs(x.hours)+' × '+rub(x.rate)+'</span></span><b>'+rub(m)+'</b></div>'}).join('')+
-    '<div class="row"><span class="muted">Всего '+n+' чел.</span><b>'+rub(sum)+'</b></div>'}
+  if(!own.length)h+='<p class="muted" style="margin:0">Наряд пока пуст. Укажите, кто нужен, к какому времени и сколько человек.</p>';
+  else{
+    const multi=(r.days||[]).length>1,day=multi?r.day:'',mine=own.filter(x=>!day||x.day===day),by={},order=[];
+    mine.forEach(x=>{if(!by[x.role]){by[x.role]={n:0,sum:0,t:[]};order.push(x.role)}const c=by[x.role];c.n+=x.n;c.sum+=x.hours*x.n*x.rate;c.t.push('к '+x.start+' до '+x.end+' · '+x.n+' чел.')});
+    let sum=0,n=0;
+    h+=order.map(k=>{const c=by[k];sum+=c.sum;n+=c.n;return '<div class="row"><span>'+k+' · '+c.n+' чел.<br><span class="muted" style="font-size:13px">'+c.t.join('<br>')+'</span></span><b>'+rub(c.sum)+'</b></div>'}).join('');
+    if(!order.length)h+='<p class="muted" style="margin:0">На '+ruDay(day)+' в наряде никого нет.</p>';
+    else h+='<div class="row"><span class="muted">'+(multi?'Всего за '+ruDay(day):'Всего')+' · '+n+' чел.</span><b>'+rub(sum)+'</b></div>';
+    if(multi){const all=own.reduce((m,x)=>m+x.hours*x.n*x.rate,0);h+='<div class="row"><span class="muted">За все дни ('+r.days.length+')</span><b>'+rub(all)+'</b></div>'}
+  }
   let b='';
   if(o.canApprove)b+='<button class="btn" onclick="ask(\'Согласовать наряд? После этого мероприятие можно открывать.\').then(ok=>{if(ok)conAct(\'ordApprove\')})">Согласовать</button>';
   if(o.canEdit)b+='<button class="btn sec'+(o.canApprove?'':' wide')+'" onclick="ordEdit()">'+(own.length?'Изменить наряд':'Заполнить наряд')+'</button>';
   else if(ev.status==='Открыто')h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Мероприятие открыто: добавить людей можно через «Дозаказ».</p>';
   return h+(b?'<div class="acts noprint">'+b+'</div>':'')+'</div>';
 }
+/* ── экран наряда: день → категория (карточка) → время прихода (строка). Раскрыта для правки одна строка. ── */
+let ordDays=[],ordDay='',ordOpen=-1,ordDirty=false,ordEndEdit=false;
+const MON=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const dayLbl=d=>{const m=String(d).match(/^\d{4}-(\d{2})-(\d{2})/);return m?+m[2]+' '+MON[+m[1]-1]:d};
+const dayAdd=(d,n)=>{const t=new Date(d+'T12:00:00');t.setDate(t.getDate()+n);return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2)};
+const ordNum=v=>parseFloat(String(v).replace(',','.'))||0;
 function ordEdit(){
-  const o=conData.order;ordMulti=false;
-  ordEd=o.rows.filter(x=>!x.dz).map(x=>({role:unesc(x.role),day:x.day,start:x.start,hours:x.hours||hmDiff(x.start,x.end)||'',end:x.end,n:x.n}));
-  if(!ordEd.length)ordEdAdd(true);
-  ordEdDraw();
+  const o=conData.order,ev=conData.event,used={};(o.used||[]).forEach(u=>used[unesc(u)]=1);
+  ordEd=o.rows.filter(x=>!x.dz).map(x=>{const role=unesc(x.role);return{role:role,day:x.day,start:x.start,hours:x.hours||hmDiff(x.start,x.end)||'',end:x.end,n:x.n,locked:!!used[role+'|'+x.day+'|'+x.start+'|'+x.end]}});
+  const set={};for(let k=0;k<(+ev.days||1);k++)set[dayAdd(ev.date,k)]=1;ordEd.forEach(x=>set[x.day]=1);
+  ordDays=Object.keys(set).sort();ordDay=ordDays.indexOf(ceDay)>=0?ceDay:ordDays[0];ordOpen=-1;ordDirty=false;ordEndEdit=false;
+  document.getElementById('ord-ev').innerHTML=ev.name;
+  ordDraw();show('s-ord');
 }
-function ordEdAdd(silent){
-  const ev=conData.event,roles=conData.order.roles||[],last=ordEd[ordEd.length-1];
-  const role=last?last.role:(roles[0]?unesc(roles[0].role):''),R=ordRole(role),h=last&&+last.hours>0?+last.hours:(R&&R.min?R.min:8),st=last?last.start:ev.start;
-  ordEd.push({role:role,day:last?last.day:ev.date,start:st,hours:h,end:hmAdd(st,h),n:''});
-  if(!silent)ordEdDraw();
+async function ordBack(){if(ordDirty&&!(await ask('Выйти без сохранения? Изменения наряда пропадут.')))return;ordDirty=false;conOpen(ceId,ceDay)}
+function ordPickDay(k){ordDay=ordDays[k];ordOpen=-1;ordEndEdit=false;ordDraw()}
+function ordAddDay(){const d=dayAdd(ordDays[ordDays.length-1],1);ordDays.push(d);ordDay=d;ordOpen=-1;ordDraw()}
+function ordCopyDay(from){ordEd.filter(x=>x.day===from).forEach(x=>ordEd.push({role:x.role,day:ordDay,start:x.start,hours:x.hours,end:x.end,n:x.n,locked:false}));ordDirty=true;ordDraw()}
+function ordAddRow(role){
+  const ev=conData.event,R=ordRole(role),same=ordEd.filter(x=>x.day===ordDay&&x.role===role).pop(),h=same&&ordNum(same.hours)>0?ordNum(same.hours):(R&&R.min?R.min:8),st=same?same.start:ev.start;
+  ordEd.push({role:role,day:ordDay,start:st,hours:h,end:hmAdd(st,h),n:'',locked:false});ordOpen=ordEd.length-1;ordEndEdit=false;ordDirty=true;modalClose();ordDraw();
+  setTimeout(()=>{const e=document.getElementById('oe-n');if(e)e.focus()},60);
 }
-function ordEdDel(i){ordEd.splice(i,1);ordEdDraw()}
-function ordEdSet(i,k,v){
-  const x=ordEd[i];if(!x)return;const setv=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val};
-  if(k==='role'){const was=ordRole(x.role),R=ordRole(v);x.role=v;if(R&&R.min&&(!(+x.hours>0)||(was&&+x.hours===was.min))){x.hours=R.min;x.end=hmAdd(x.start,R.min);setv('oe-h-'+i,x.hours);setv('oe-end-'+i,x.end)}}
-  if(k==='day')x.day=v;
+function ordAddCat(){
+  const have={};ordEd.forEach(x=>{if(x.day===ordDay)have[x.role]=1});
+  const free=(conData.order.roles||[]).filter(q=>!have[unesc(q.role)]);
+  modalOpen('<div class="mh">Какая категория нужна?</div>'+free.map(q=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordAddRow(unesc(this.dataset.r))" data-r="'+q.role+'">'+q.role+'<span class="muted" style="float:right">'+rub(q.rate)+' в час</span></button>').join('')+'<button class="btn sec" style="margin-top:14px" onclick="modalClose()">Отмена</button>');
+}
+function ordOpenRow(i){ordOpen=i;ordEndEdit=false;ordDraw()}
+function ordCloseRow(){ordOpen=-1;ordEndEdit=false;ordDraw()}
+function ordDelRow(i){ordEd.splice(i,1);ordOpen=-1;ordDirty=true;ordDraw()}
+function ordEndToggle(){ordEndEdit=true;ordDraw();setTimeout(()=>{const e=document.getElementById('oe-end');if(e)e.focus()},60)}
+function ordSet(k,v){
+  const x=ordEd[ordOpen];if(!x)return;ordDirty=true;
   if(k==='n')x.n=v;
-  if(k==='start'){x.start=v;const h=parseFloat(String(x.hours).replace(',','.'));if(v&&h>0){x.end=hmAdd(v,h);setv('oe-end-'+i,x.end)}}
-  if(k==='hours'){x.hours=v;const h=parseFloat(String(v).replace(',','.'));if(x.start&&h>0){x.end=hmAdd(x.start,h);setv('oe-end-'+i,x.end)}}
-  if(k==='end'){x.end=v;if(x.start&&v){x.hours=hmDiff(x.start,v);setv('oe-h-'+i,x.hours)}}
-  ordEdTotal();
+  if(k==='start'){x.start=v;if(v&&ordNum(x.hours)>0)x.end=hmAdd(v,ordNum(x.hours))}
+  if(k==='hours'){x.hours=v;if(x.start&&ordNum(v)>0)x.end=hmAdd(x.start,ordNum(v))}
+  if(k==='end'){x.end=v;if(x.start&&v){x.hours=hmDiff(x.start,v);const e=document.getElementById('oe-h');if(e)e.value=x.hours}}
+  const c=document.getElementById('oe-cap');if(c)c.textContent='работают до '+(x.end||'—');
+  ordBar();
 }
-function ordEdTotal(){
-  let n=0,sum=0;ordEd.forEach(x=>{const R=ordRole(x.role),h=parseFloat(String(x.hours).replace(',','.'))||0,k=parseInt(x.n,10)||0;n+=k;sum+=h*k*(R?R.rate:0)});
-  const e=document.getElementById('oe-total');if(e)e.innerHTML='Всего <b style="color:var(--txt)">'+n+' чел.</b> · план <b style="color:var(--txt)">'+rub(sum)+'</b>';
+function ordSum(rows){let n=0,sum=0;rows.forEach(x=>{const R=ordRole(x.role),k=parseInt(x.n,10)||0;n+=k;sum+=ordNum(x.hours)*k*(R?R.rate:0)});return{n:n,sum:sum}}
+function ordBar(){
+  const d=ordSum(ordEd.filter(x=>x.day===ordDay)),all=ordSum(ordEd),multi=ordDays.length>1;
+  document.getElementById('ord-bar').innerHTML='<div style="min-width:0"><b style="white-space:nowrap">'+d.n+' чел. · '+rub(d.sum)+'</b>'+(multi?'<div class="muted" style="font-size:13px">'+dayLbl(ordDay)+' · за все дни '+rub(all.sum)+'</div>':'')+'</div><button class="btn" onclick="ordGo()">Сохранить</button>';
+  ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role));e.textContent=t.n+' чел. · '+rub(t.sum)}});
 }
-function ordEdDraw(){
-  const o=conData.order,ev=conData.event,multi=ordMulti||(conData.days||[]).length>1||ordEd.some(x=>x.day!==ev.date);
-  const opt=r=>(o.roles||[]).map(q=>'<option'+(unesc(q.role)===r?' selected':'')+'>'+q.role+'</option>').join('');
-  const f=(i,id,lab,type,val,k,extra)=>'<div><label class="flab" for="oe-'+id+'-'+i+'">'+lab+'</label><input class="fld" id="oe-'+id+'-'+i+'" type="'+type+'" value="'+escS(val)+'" '+(extra||'')+' oninput="ordEdSet('+i+',\''+k+'\',this.value)"></div>';
-  let h='<div class="mh">Наряд</div><p class="muted" style="margin:0 0 4px;font-size:13px">'+ev.name+'. Одна группа — люди одной категории к одному времени. Окончание считается от начала и часов, его можно поправить.</p>';
-  ordEd.forEach((x,i)=>{h+='<div class="oeg"><div class="oeh"><select class="fld" aria-label="Категория" onchange="ordEdSet('+i+',\'role\',this.value)">'+opt(x.role)+'</select>'+(ordEd.length>1?'<button class="qbtn" onclick="ordEdDel('+i+')" aria-label="Удалить группу">×</button>':'')+'</div>'+
-    (multi?f(i,'day','День','date',x.day,'day','min="'+ev.date+'"'):'')+
-    '<div class="oe4">'+f(i,'st','Начало','time',x.start,'start')+f(i,'h','Плановые часы','number',x.hours,'hours','inputmode="decimal" step="0.25" min="0.5" max="24"')+f(i,'end','Окончание','time',x.end,'end')+f(i,'n','Людей','number',x.n,'n','inputmode="numeric" min="1" max="300" placeholder="0"')+'</div></div>'});
-  h+='<button class="btn sec wide" style="margin-top:10px" onclick="ordEdAdd()">+ Группа</button>'+
-    (multi?'':'<p style="margin:8px 0 0;font-size:13px"><a class="lnk" href="#" onclick="ordMulti=true;ordEdDraw();return false">Мероприятие на несколько дней</a></p>')+
-    '<div class="muted" id="oe-total" style="margin-top:12px"></div><p class="muted" style="font-size:13px;margin:6px 0 0">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':'После сохранения наряд уйдёт администратору на согласование.')+'</p>'+
-    '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="ordEdGo()">Сохранить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>';
-  modalOpen(h);ordEdTotal();
+const ordCatId=role=>((conData.order.roles||[]).findIndex(q=>unesc(q.role)===role));
+function ordDraw(){
+  const o=conData.order,multi=ordDays.length>1;
+  let h='';
+  if(multi)h+='<div class="segs" style="margin-top:10px">'+ordDays.map((d,k)=>'<button class="'+(d===ordDay?'on':'')+'" onclick="ordPickDay('+k+')">'+dayLbl(d)+'</button>').join('')+'<button onclick="ordAddDay()" aria-label="Добавить день">+ день</button></div>';
+  const rows=ordEd.map((x,i)=>({x:x,i:i})).filter(r=>r.x.day===ordDay);
+  const cats=(o.roles||[]).map(q=>unesc(q.role)).filter(r=>rows.some(y=>y.x.role===r));
+  if(!cats.length){
+    const prev=ordDays.filter(d=>d<ordDay&&ordEd.some(x=>x.day===d)).pop();
+    h+='<div class="card" style="margin-top:12px"><p class="muted" style="margin:0">На '+dayLbl(ordDay)+' пока никого. Добавьте категорию: кто нужен, к какому времени и сколько человек.</p>'+(prev?'<button class="btn sec" onclick="ordCopyDay(\''+prev+'\')">Скопировать из '+dayLbl(prev)+'</button>':'')+'</div>';
+  }
+  cats.forEach(role=>{
+    const R=ordRole(role),mine=rows.filter(r=>r.x.role===role).sort((a,b)=>a.x.start<b.x.start?-1:a.x.start>b.x.start?1:0);
+    h+='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">'+escS(role)+'</span><span class="muted" id="oc-'+ordCatId(role)+'"></span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">'+rub(R?R.rate:0)+' в час</div>';
+    mine.forEach(r=>{const x=r.x,i=r.i;
+      if(i!==ordOpen){h+='<div class="oln" onclick="ordOpenRow('+i+')"><span>к '+(x.start||'—')+' до '+(x.end||'—')+(x.locked?' <small>· есть отметки</small>':'')+'</span><span>'+(parseInt(x.n,10)>0?parseInt(x.n,10)+' чел.':'<span class="warn">сколько человек?</span>')+'</span></div>';return}
+      const dis=x.locked?' disabled':'';
+      h+='<div class="oed"><div class="oe3">'+
+        '<div><label class="flab" for="oe-st">Приходят к</label><input class="fld" id="oe-st" type="time" value="'+escS(x.start)+'"'+dis+' oninput="ordSet(\'start\',this.value)"></div>'+
+        '<div><label class="flab" for="oe-h">Часов</label><input class="fld" id="oe-h" type="number" inputmode="decimal" step="0.25" min="0.5" max="24" value="'+escS(x.hours)+'"'+dis+' oninput="ordSet(\'hours\',this.value)"></div>'+
+        '<div><label class="flab" for="oe-n">Человек</label><input class="fld" id="oe-n" type="number" inputmode="numeric" min="1" max="300" value="'+escS(x.n)+'" oninput="ordSet(\'n\',this.value)"></div></div>'+
+        (ordEndEdit&&!x.locked?'<label class="flab" for="oe-end">Работают до</label><input class="fld" id="oe-end" type="time" value="'+escS(x.end)+'" oninput="ordSet(\'end\',this.value)">':'')+
+        '<div class="oef">'+(x.locked?'<span class="muted">В этой группе уже есть отметки: время менять нельзя</span>':(ordEndEdit?'<span class="muted" id="oe-cap">работают до '+(x.end||'—')+'</span>':'<a class="lnk" href="#" id="oe-cap" onclick="ordEndToggle();return false">работают до '+(x.end||'—')+'</a>'))+
+        '<span style="margin-left:auto;display:flex;gap:18px">'+(x.locked?'':'<a class="lnk" href="#" style="color:var(--bad)" onclick="ordDelRow('+i+');return false">Удалить</a>')+'<a class="lnk" href="#" style="font-weight:600" onclick="ordCloseRow();return false">Готово</a></span></div></div>';
+    });
+    h+='<div style="padding-top:12px"><a class="lnk" href="#" data-r="'+escS(role)+'" onclick="ordAddRow(this.dataset.r);return false">+ время прихода</a></div></div>';
+  });
+  const have={};rows.forEach(r=>have[r.x.role]=1);
+  if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn sec" onclick="ordAddCat()">+ Категория</button>';
+  if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
+  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':'После сохранения наряд уйдёт администратору на согласование.')+'</p>';
+  document.getElementById('ord-body').innerHTML=h;ordBar();
 }
-async function ordEdGo(){
+async function ordGo(){
   const rows=[];
-  for(const x of ordEd){
-    const h=parseFloat(String(x.hours).replace(',','.')),n=parseInt(x.n,10);
-    if(!x.role){mErr('Выберите категорию');return}
-    if(!x.start){mErr(x.role+': укажите начало');return}
-    if(!(h>=0.5&&h<=24)){mErr(x.role+': плановые часы от 0,5 до 24');return}
-    if(!(n>=1)||String(n)!==String(x.n).trim()){mErr(x.role+': укажите число людей');return}
+  for(let i=0;i<ordEd.length;i++){const x=ordEd[i],h=ordNum(x.hours),n=parseInt(x.n,10);
+    const bad=!x.start?'укажите время прихода':!(h>=0.5&&h<=24)?'часов должно быть от 0,5 до 24':(!(n>=1)||String(n)!==String(x.n).trim())?'укажите, сколько человек':'';
+    if(bad){ordDay=x.day;ordOpen=i;ordEndEdit=false;ordDraw();toast(x.role+': '+bad);const e=document.querySelector('#ord-body .oed');if(e)e.scrollIntoView({block:'center'});return}
     rows.push({role:x.role,day:x.day,start:x.start,hours:h,end:x.end,n:n});
   }
-  mErr('');
-  if(await conAct('ordSave',0,'',{rows:rows}))modalClose();else mErr(conActErr);
+  if(!rows.length){toast('Добавьте хотя бы одну категорию');return}
+  if(await conAct('ordSave',0,'',{rows:rows}))ordDirty=false;
 }
 /* создание мероприятия администратором */
+let evcN=1;
+function evcTill(){
+  const d=document.getElementById('evc-date').value,e=document.getElementById('evc-till');document.getElementById('evc-days').textContent=evcN;
+  if(e)e.textContent=evcN>1&&d?'по '+dayLbl(dayAdd(d,evcN-1))+' включительно':'';
+}
+function evcDays(k){evcN=Math.max(1,Math.min(14,evcN+k));evcTill()}
 function evCreateAsk(){
-  const mg=(conMeta&&conMeta.managers)||[];
-  // у полей даты и времени iOS не показывает placeholder, поэтому подпись над полем
-  const inp=(id,ph,type)=>(type==='date'||type==='time'?'<label class="flab" for="'+id+'">'+ph+'</label>':'')+'<input id="'+id+'" class="fld" type="'+(type||'text')+'" placeholder="'+ph+'"'+(type==='date'?' value="'+new Date().toISOString().slice(0,10)+'"':'')+'>';
-  modalOpen('<div class="mh">Новое мероприятие</div><p class="muted" style="margin:0 0 6px;font-size:13px">Номер вида DC-ГГММДД-NN присвоится автоматически по дате. Название — как в смете, его видят сотрудники.</p>'+inp('evc-name','Название')+inp('evc-bx','Номер сделки в Битрикс','number')+inp('evc-date','Дата мероприятия','date')+inp('evc-venue','Площадка')+
-    '<div style="display:flex;gap:8px"><div style="flex:1 1 0;min-width:0">'+inp('evc-start','Начало','time')+'</div><div style="flex:1 1 0;min-width:0">'+inp('evc-end','Окончание','time')+'</div></div>'+inp('evc-guests','Гостей','number')+
-    '<select id="evc-mgr" class="fld"><option value="">Менеджер не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
-    '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
+  const mg=(conMeta&&conMeta.managers)||[];evcN=1;
+  const f=(id,lab,type,extra)=>'<div><label class="flab" for="'+id+'">'+lab+'</label><input id="'+id+'" class="fld" type="'+(type||'text')+'" '+(extra||'')+'></div>';
+  modalOpen('<div class="mh">Новое мероприятие</div><p class="muted" style="margin:0 0 4px;font-size:13px">Номер вида DC-ГГММДД-NN присвоится сам.</p>'+
+    f('evc-name','Название (как в смете, его видят сотрудники)')+f('evc-bx','Номер сделки в Битрикс','number','inputmode="numeric"')+
+    '<div class="fsec">Когда</div><div class="g2">'+f('evc-date','Первый день','date','value="'+new Date().toISOString().slice(0,10)+'" onchange="evcTill()"')+
+      '<div><span class="flab">Сколько дней</span><div class="stp"><button type="button" onclick="evcDays(-1)" aria-label="Меньше дней">−</button><b id="evc-days">1</b><button type="button" onclick="evcDays(1)" aria-label="Больше дней">+</button></div></div></div>'+
+    '<div class="muted" id="evc-till" style="font-size:13px;margin-top:6px"></div>'+
+    '<div class="g2 eq">'+f('evc-start','Начало','time')+f('evc-end','Окончание','time')+'</div>'+
+    '<div class="fsec">Где и сколько гостей</div><div class="g2">'+f('evc-venue','Площадка')+f('evc-guests','Гостей','number','inputmode="numeric"')+'</div>'+
+    '<div class="fsec">Кто ведёт</div><label class="flab" for="evc-mgr">Менеджер</label><select id="evc-mgr" class="fld"><option value="">Не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
+    '<div class="ferr" id="m-err"></div><div class="acts" style="margin-top:16px"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
 }
 async function evCreateGo(){
   const g=id=>document.getElementById(id).value.trim();
-  const d={name:g('evc-name'),date:g('evc-date'),venue:g('evc-venue'),start:g('evc-start'),end:g('evc-end'),guests:g('evc-guests'),mgr:g('evc-mgr'),bx:g('evc-bx')};
-  if(!d.name||!d.date||!d.start||!d.end){mErr('Заполните название, дату, начало и конец');return}
+  const d={name:g('evc-name'),date:g('evc-date'),venue:g('evc-venue'),start:g('evc-start'),end:g('evc-end'),guests:g('evc-guests'),mgr:g('evc-mgr'),bx:g('evc-bx'),days:evcN};
+  if(!d.name||!d.date||!d.start||!d.end){mErr('Заполните название, первый день, начало и окончание');return}
   mErr('');
   if(await conAct('evCreate',0,'',d))modalClose();else mErr(conActErr);
 }
@@ -859,7 +929,7 @@ async function conOpen(id,day,quiet){
     const ev=r.event,st=r.stats;
     document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
     document.getElementById('ce-name').innerHTML=ev.name;
-    document.getElementById('ce-sub').innerHTML=[ruDate(ev.date),ev.venue&&ev.venue!==ev.name?ev.venue:'',ev.start+'–'+ev.end,ev.guests?'гостей '+ev.guests:'',ev.bx?'сделка '+ev.bx:(r.me.admin?'<a class="lnk" href="#" onclick="bxAsk();return false">указать номер сделки</a>':''),ev.mgr?'менеджер '+ev.mgr:'',ev.code?'код <b style="color:var(--txt)">'+ev.code+'</b>':''].filter(Boolean).join(' · ');
+    document.getElementById('ce-sub').innerHTML=[(r.days&&r.days.length>1?ruDay(r.days[0])+'–'+ruDay(r.days[r.days.length-1])+' · '+r.days.length+' дн.':ruDate(ev.date)),ev.venue&&ev.venue!==ev.name?ev.venue:'',ev.start+'–'+ev.end,ev.guests?'гостей '+ev.guests:'',ev.bx?'сделка '+ev.bx:(r.me.admin?'<a class="lnk" href="#" onclick="bxAsk();return false">указать номер сделки</a>':''),ev.mgr?'менеджер '+ev.mgr:'',ev.code?'код <b style="color:var(--txt)">'+ev.code+'</b>':''].filter(Boolean).join(' · ');
     conData=r;
     let h=actionBar(ev,conMe,st);
     const preOpen=ev.status!=='Открыто'&&ev.status!=='Закрыто';
