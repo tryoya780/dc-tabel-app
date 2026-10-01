@@ -378,7 +378,6 @@ function busy(t){busyN++;document.getElementById('busy-t').textContent=t||'За�
 function unbusy(){busyN=Math.max(0,busyN-1);if(!busyN){document.getElementById('busy').classList.remove('on');document.body.classList.remove('busy');clearTimeout(busyTimer)}}
 async function api(action,data,quiet,toMs){
   const body=Object.assign({action:action,initData:tg?tg.initData:''},data||{});
-  if(QS.get('k')&&QS.get('tg')){body.testKey=QS.get('k');body.tgId=QS.get('tg')} // тестовый вход (только песочница)
   if(!quiet)busy(BUSY_TXT[action]);
   const TO=toMs||(quiet?15000:40000); // тихий опрос: короткий тайм-аут, без повтора, ошибки не показываются
   try{
@@ -388,7 +387,7 @@ async function api(action,data,quiet,toMs){
     clearTimeout(to);
     let j;try{j=await r.json()}catch(e){throw{ok:false,error:'bad',msg:'Сервер вернул непонятный ответ. Попробуйте ещё раз.'}}
     if(!j.ok)throw j;
-    if(action==='con.event'||action==='con.events'||action==='con.flags')escDeep(j,['text']); // всё, что рисуется в разметку, экранируется один раз на входе
+    if(action==='con.event'||action==='con.events'||action==='con.flags')escDeep(j,[]); // всё, что рисуется в разметку, экранируется один раз на входе (включая text флагов: туда попадает причина от менеджера)
     return j;
   }catch(e){
     // запросы чтения безопасно повторить один раз: холодный старт сервера иногда даёт мусор или таймаут

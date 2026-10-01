@@ -14,7 +14,7 @@ h1{font-size:22px;margin:0 0 4px;font-weight:600}
 .brand{font-size:12px;letter-spacing:.2em;color:var(--brass);text-transform:uppercase;margin-bottom:14px}
 .sub{color:var(--mut);font-size:14px;margin:0 0 16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
-.row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}.row b{white-space:nowrap}
 .row:last-child{border-bottom:0}
 .row b{font-weight:600}
 .big{font-size:34px;font-weight:600;letter-spacing:-.01em;margin:6px 0}
@@ -81,6 +81,7 @@ body.tgback .navback{display:none}
 input[type=date].fld,input[type=time].fld{-webkit-appearance:none;appearance:none;min-height:46px;-webkit-min-logical-width:0} /* iOS: у date/time своя внутренняя ширина, иначе поле вылезает за модалку */
 .flab{display:block;margin:10px 0 -4px;font-size:13px;color:var(--mut)}
 .mh{font-size:20px;font-weight:600;margin:0 0 4px}
+.oeg{border:1px solid var(--line);border-radius:12px;padding:2px 10px 10px;margin-top:10px}.oeh{display:flex;gap:8px;align-items:flex-end}.oeh .fld{flex:1 1 0}.oeh .qbtn{flex:0 0 auto;margin-bottom:4px}.oe4{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
 .segs{display:flex;gap:4px;background:#0f0d0b;border:1px solid var(--line);border-radius:12px;padding:4px;margin:0 0 14px}
 .segs button{flex:1;border:0;background:transparent;color:var(--mut);font-size:15px;font-weight:600;padding:10px 6px;border-radius:9px;cursor:pointer}
 .segs button.on{background:var(--card);color:var(--txt);box-shadow:0 0 0 1px var(--line)}
@@ -330,19 +331,92 @@ async function dzGo(){
   mErr('');
   if(await conAct('dzRequest',0,role,{n:n,why:why}))modalClose();else mErr(conActErr);
 }
+/* ── наряд: категория → группы (начало, часы, окончание, люди). Ставка из справочника, план считает сервер ── */
+let ordEd=[],ordMulti=false;
+const hrs=h=>String(Math.round((+h||0)*100)/100).replace('.',',')+' ч';
+function hmAdd(st,h){const m=String(st||'').match(/^(\d{1,2}):(\d{2})$/);if(!m||!(h>0))return '';const t=(+m[1]*60+ +m[2]+Math.round(h*60))%1440;return ('0'+Math.floor(t/60)).slice(-2)+':'+('0'+t%60).slice(-2)}
+function hmDiff(st,en){const a=String(st||'').match(/^(\d{1,2}):(\d{2})$/),b=String(en||'').match(/^(\d{1,2}):(\d{2})$/);if(!a||!b)return '';let d=(+b[1]*60+ +b[2])-(+a[1]*60+ +a[2]);if(d<=0)d+=1440;return Math.round(d/60*4)/4}
+function ordRole(name){return ((conData&&conData.order&&conData.order.roles)||[]).filter(q=>unesc(q.role)===name)[0]}
+function ordCard(r){
+  const o=r.order;if(!o)return '';
+  const ev=r.event,own=o.rows.filter(x=>!x.dz),stT={empty:'<span class="warn">не заполнен</span>',pending:'<span class="warn">ждёт согласования</span>',ok:'согласован'}[o.state]||'';
+  let h='<div class="sec-h"><h2>Наряд</h2><span class="muted">'+stT+'</span></div><div class="card">';
+  if(!own.length)h+='<p class="muted" style="margin:0">Групп пока нет. Укажите категории, время прихода и число людей.</p>';
+  else{let sum=0,n=0;h+=own.map(x=>{const m=x.hours*x.n*x.rate;sum+=m;n+=x.n;return '<div class="row"><span>'+x.role+' · '+x.n+' чел.<br><span class="muted" style="font-size:13px">'+(x.day!==ev.date?ruDay(x.day)+' · ':'')+x.start+'–'+x.end+' · '+hrs(x.hours)+' × '+rub(x.rate)+'</span></span><b>'+rub(m)+'</b></div>'}).join('')+
+    '<div class="row"><span class="muted">Всего '+n+' чел.</span><b>'+rub(sum)+'</b></div>'}
+  let b='';
+  if(o.canApprove)b+='<button class="btn" onclick="ask(\'Согласовать наряд? После этого мероприятие можно открывать.\').then(ok=>{if(ok)conAct(\'ordApprove\')})">Согласовать</button>';
+  if(o.canEdit)b+='<button class="btn sec'+(o.canApprove?'':' wide')+'" onclick="ordEdit()">'+(own.length?'Изменить наряд':'Заполнить наряд')+'</button>';
+  else if(ev.status==='Открыто')h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Мероприятие открыто: добавить людей можно через «Дозаказ».</p>';
+  return h+(b?'<div class="acts noprint">'+b+'</div>':'')+'</div>';
+}
+function ordEdit(){
+  const o=conData.order;ordMulti=false;
+  ordEd=o.rows.filter(x=>!x.dz).map(x=>({role:unesc(x.role),day:x.day,start:x.start,hours:x.hours||hmDiff(x.start,x.end)||'',end:x.end,n:x.n}));
+  if(!ordEd.length)ordEdAdd(true);
+  ordEdDraw();
+}
+function ordEdAdd(silent){
+  const ev=conData.event,roles=conData.order.roles||[],last=ordEd[ordEd.length-1];
+  const role=last?last.role:(roles[0]?unesc(roles[0].role):''),R=ordRole(role),h=last&&+last.hours>0?+last.hours:(R&&R.min?R.min:8),st=last?last.start:ev.start;
+  ordEd.push({role:role,day:last?last.day:ev.date,start:st,hours:h,end:hmAdd(st,h),n:''});
+  if(!silent)ordEdDraw();
+}
+function ordEdDel(i){ordEd.splice(i,1);ordEdDraw()}
+function ordEdSet(i,k,v){
+  const x=ordEd[i];if(!x)return;const setv=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val};
+  if(k==='role'){const was=ordRole(x.role),R=ordRole(v);x.role=v;if(R&&R.min&&(!(+x.hours>0)||(was&&+x.hours===was.min))){x.hours=R.min;x.end=hmAdd(x.start,R.min);setv('oe-h-'+i,x.hours);setv('oe-end-'+i,x.end)}}
+  if(k==='day')x.day=v;
+  if(k==='n')x.n=v;
+  if(k==='start'){x.start=v;const h=parseFloat(String(x.hours).replace(',','.'));if(v&&h>0){x.end=hmAdd(v,h);setv('oe-end-'+i,x.end)}}
+  if(k==='hours'){x.hours=v;const h=parseFloat(String(v).replace(',','.'));if(x.start&&h>0){x.end=hmAdd(x.start,h);setv('oe-end-'+i,x.end)}}
+  if(k==='end'){x.end=v;if(x.start&&v){x.hours=hmDiff(x.start,v);setv('oe-h-'+i,x.hours)}}
+  ordEdTotal();
+}
+function ordEdTotal(){
+  let n=0,sum=0;ordEd.forEach(x=>{const R=ordRole(x.role),h=parseFloat(String(x.hours).replace(',','.'))||0,k=parseInt(x.n,10)||0;n+=k;sum+=h*k*(R?R.rate:0)});
+  const e=document.getElementById('oe-total');if(e)e.innerHTML='Всего <b style="color:var(--txt)">'+n+' чел.</b> · план <b style="color:var(--txt)">'+rub(sum)+'</b>';
+}
+function ordEdDraw(){
+  const o=conData.order,ev=conData.event,multi=ordMulti||(conData.days||[]).length>1||ordEd.some(x=>x.day!==ev.date);
+  const opt=r=>(o.roles||[]).map(q=>'<option'+(unesc(q.role)===r?' selected':'')+'>'+q.role+'</option>').join('');
+  const f=(i,id,lab,type,val,k,extra)=>'<div><label class="flab" for="oe-'+id+'-'+i+'">'+lab+'</label><input class="fld" id="oe-'+id+'-'+i+'" type="'+type+'" value="'+escS(val)+'" '+(extra||'')+' oninput="ordEdSet('+i+',\''+k+'\',this.value)"></div>';
+  let h='<div class="mh">Наряд</div><p class="muted" style="margin:0 0 4px;font-size:13px">'+ev.name+'. Одна группа — люди одной категории к одному времени. Окончание считается от начала и часов, его можно поправить.</p>';
+  ordEd.forEach((x,i)=>{h+='<div class="oeg"><div class="oeh"><select class="fld" aria-label="Категория" onchange="ordEdSet('+i+',\'role\',this.value)">'+opt(x.role)+'</select>'+(ordEd.length>1?'<button class="qbtn" onclick="ordEdDel('+i+')" aria-label="Удалить группу">×</button>':'')+'</div>'+
+    (multi?f(i,'day','День','date',x.day,'day','min="'+ev.date+'"'):'')+
+    '<div class="oe4">'+f(i,'st','Начало','time',x.start,'start')+f(i,'h','Плановые часы','number',x.hours,'hours','inputmode="decimal" step="0.25" min="0.5" max="24"')+f(i,'end','Окончание','time',x.end,'end')+f(i,'n','Людей','number',x.n,'n','inputmode="numeric" min="1" max="300" placeholder="0"')+'</div></div>'});
+  h+='<button class="btn sec wide" style="margin-top:10px" onclick="ordEdAdd()">+ Группа</button>'+
+    (multi?'':'<p style="margin:8px 0 0;font-size:13px"><a class="lnk" href="#" onclick="ordMulti=true;ordEdDraw();return false">Мероприятие на несколько дней</a></p>')+
+    '<div class="muted" id="oe-total" style="margin-top:12px"></div><p class="muted" style="font-size:13px;margin:6px 0 0">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':'После сохранения наряд уйдёт администратору на согласование.')+'</p>'+
+    '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="ordEdGo()">Сохранить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>';
+  modalOpen(h);ordEdTotal();
+}
+async function ordEdGo(){
+  const rows=[];
+  for(const x of ordEd){
+    const h=parseFloat(String(x.hours).replace(',','.')),n=parseInt(x.n,10);
+    if(!x.role){mErr('Выберите категорию');return}
+    if(!x.start){mErr(x.role+': укажите начало');return}
+    if(!(h>=0.5&&h<=24)){mErr(x.role+': плановые часы от 0,5 до 24');return}
+    if(!(n>=1)||String(n)!==String(x.n).trim()){mErr(x.role+': укажите число людей');return}
+    rows.push({role:x.role,day:x.day,start:x.start,hours:h,end:x.end,n:n});
+  }
+  mErr('');
+  if(await conAct('ordSave',0,'',{rows:rows}))modalClose();else mErr(conActErr);
+}
 /* создание мероприятия администратором */
 function evCreateAsk(){
   const mg=(conMeta&&conMeta.managers)||[];
   // у полей даты и времени iOS не показывает placeholder, поэтому подпись над полем
   const inp=(id,ph,type)=>(type==='date'||type==='time'?'<label class="flab" for="'+id+'">'+ph+'</label>':'')+'<input id="'+id+'" class="fld" type="'+(type||'text')+'" placeholder="'+ph+'"'+(type==='date'?' value="'+new Date().toISOString().slice(0,10)+'"':'')+'>';
-  modalOpen('<div class="mh">Новое мероприятие</div><p class="muted" style="margin:0 0 6px;font-size:13px">Номер вида DC-ГГММДД-NN присвоится автоматически по дате. Название — как в смете, его видят сотрудники.</p>'+inp('ev-name','Название')+inp('ev-date','Дата мероприятия','date')+inp('ev-venue','Площадка')+
+  modalOpen('<div class="mh">Новое мероприятие</div><p class="muted" style="margin:0 0 6px;font-size:13px">Номер вида DC-ГГММДД-NN присвоится автоматически по дате. Название — как в смете, его видят сотрудники.</p>'+inp('ev-name','Название')+inp('ev-bx','Номер сделки в Битрикс','number')+inp('ev-date','Дата мероприятия','date')+inp('ev-venue','Площадка')+
     '<div style="display:flex;gap:8px"><div style="flex:1 1 0;min-width:0">'+inp('ev-start','Начало','time')+'</div><div style="flex:1 1 0;min-width:0">'+inp('ev-end','Окончание','time')+'</div></div>'+inp('ev-guests','Гостей','number')+
     '<select id="ev-mgr" class="fld"><option value="">Менеджер не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
     '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
 }
 async function evCreateGo(){
   const g=id=>document.getElementById(id).value.trim();
-  const d={name:g('ev-name'),date:g('ev-date'),venue:g('ev-venue'),start:g('ev-start'),end:g('ev-end'),guests:g('ev-guests'),mgr:g('ev-mgr')};
+  const d={name:g('ev-name'),date:g('ev-date'),venue:g('ev-venue'),start:g('ev-start'),end:g('ev-end'),guests:g('ev-guests'),mgr:g('ev-mgr'),bx:g('ev-bx')};
   if(!d.name||!d.date||!d.start||!d.end){mErr('Заполните название, дату, начало и конец');return}
   mErr('');
   if(await conAct('evCreate',0,'',d))modalClose();else mErr(conActErr);
@@ -388,7 +462,7 @@ async function api(action,data,quiet,toMs){
     clearTimeout(to);
     let j;try{j=await r.json()}catch(e){throw{ok:false,error:'bad',msg:'Сервер вернул непонятный ответ. Попробуйте ещё раз.'}}
     if(!j.ok)throw j;
-    if(action==='con.event'||action==='con.events'||action==='con.flags')escDeep(j,['text']); // всё, что рисуется в разметку, экранируется один раз на входе
+    if(action==='con.event'||action==='con.events'||action==='con.flags')escDeep(j,[]); // всё, что рисуется в разметку, экранируется один раз на входе (включая text флагов: туда попадает причина от менеджера)
     return j;
   }catch(e){
     // запросы чтения безопасно повторить один раз: холодный старт сервера иногда даёт мусор или таймаут
@@ -640,7 +714,7 @@ function conList(quiet){conTabsDraw();return conTab==='flags'?conFlags(quiet):co
 function evCard(e){
   const d=document.createElement('div');d.className='card evc';
   d.innerHTML='<div class="top" style="margin:0 0 4px"><h3>'+e.name+'</h3><span class="pill '+pillCls(e.status)+'">'+e.status+'</span></div>'+
-    '<div class="muted">'+[ruDate(e.date),e.venue&&e.venue!==e.name?e.venue:'',e.start+'–'+e.end,e.mgr||''].filter(Boolean).join(' · ')+'</div>'+
+    '<div class="muted">'+[ruDate(e.date),e.venue&&e.venue!==e.name?e.venue:'',e.start+'–'+e.end,e.bx?'сделка '+e.bx:'',e.mgr||''].filter(Boolean).join(' · ')+'</div>'+
     (e.limit?'<div class="bar'+(e.fact>e.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(e.fact,e.plan))+'%"></i></div>'+
     '<div class="muted">факт '+rub(e.fact)+' из '+rub(e.plan)+' · вышло '+e.came+' из '+e.limit+(e.status==='Закрыто'?'':' · на объекте '+e.on)+
     (e.flagsOpen||e.flagsAsk?' · <span class="warn">флагов: '+(e.flagsOpen+e.flagsAsk)+'</span>':'')+'</div>':'<div class="muted">наряд не согласован</div>');
@@ -780,14 +854,16 @@ async function conOpen(id,day,quiet){
   try{
     const r=await api('con.event',{id:id,day:ceDay||''},quiet);if(seq!==conSeq)return;conMe=r.me;ceDay=r.day||'';
     // часы открытой смены (factH) идут от текущего времени и меняются каждый опрос: в ключ сравнения не входят
-    const key='E'+JSON.stringify([r.stats,r.shifts.map(x=>Object.assign({},x,{factH:0})),r.orders,r.dz,r.journal,r.event.status,r.day]);if(quiet&&key===lastJson)return;lastJson=key;
+    const key='E'+JSON.stringify([r.stats,r.shifts.map(x=>Object.assign({},x,{factH:0})),r.orders,r.dz,r.journal,r.event.status,r.day,r.order,r.event.bx]);if(quiet&&key===lastJson)return;lastJson=key;
     const keepY=quiet?window.scrollY:0;
     const ev=r.event,st=r.stats;
     document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
     document.getElementById('ce-name').innerHTML=ev.name;
-    document.getElementById('ce-sub').innerHTML=[ruDate(ev.date),ev.venue&&ev.venue!==ev.name?ev.venue:'',ev.start+'–'+ev.end,ev.guests?'гостей '+ev.guests:'',ev.mgr?'менеджер '+ev.mgr:'',ev.code?'код <b style="color:var(--txt)">'+ev.code+'</b>':''].filter(Boolean).join(' · ');
+    document.getElementById('ce-sub').innerHTML=[ruDate(ev.date),ev.venue&&ev.venue!==ev.name?ev.venue:'',ev.start+'–'+ev.end,ev.guests?'гостей '+ev.guests:'',ev.bx?'сделка '+ev.bx:(r.me.admin?'<a class="lnk" href="#" onclick="bxAsk();return false">указать номер сделки</a>':''),ev.mgr?'менеджер '+ev.mgr:'',ev.code?'код <b style="color:var(--txt)">'+ev.code+'</b>':''].filter(Boolean).join(' · ');
     conData=r;
     let h=actionBar(ev,conMe,st);
+    const preOpen=ev.status!=='Открыто'&&ev.status!=='Закрыто';
+    if(preOpen)h+=ordCard(r); // до открытия наряд — главное дело в карточке
     if(r.days&&r.days.length>1)h+='<div class="abar" style="margin:0 0 10px">'+r.days.map((d,k)=>'<button class="btn'+(d===r.day?'':' sec')+'" onclick="conDay('+k+')">'+ruDay(d)+'</button>').join('')+'</div>';
     // главное для менеджера на площадке: подтверждения и дозаказы сразу под кнопками
     const pend=r.shifts.filter(x=>x.pending&&x.open);
@@ -807,6 +883,7 @@ async function conOpen(id,day,quiet){
       '<div class="legend'+(legendOn?' on':'')+'" id="legend"><span><span class="tok on"></span>на объекте</span><span><span class="tok left"></span>ушёл</span><span><span class="tok pend"></span>ждёт подтверждения</span><span><span class="tok no"></span>не вышел</span><span><span class="tok no late"></span>не вышел, окно началось</span><span><i class="lg" style="background:var(--brass)"></i>смена закрыта</span><span><i class="lg" style="background:var(--ok)"></i>в смене сейчас</span><span><i class="lg" style="background:#d9a03c"></i>ждёт подтверждения</span><span><i class="lg" style="background:var(--bad)"></i>автозакрытие</span><span><i class="lg" style="background:rgba(201,169,97,.25);border:1px dashed var(--brass)"></i>плановое окно</span><span><i class="lg" style="width:2px;background:var(--txt)"></i>набран минимум</span><span><i class="lg" style="width:2px;background:var(--bad)"></i>сейчас</span></div>';
     h+=timeline(r);
     if(r.orders.length)h+='<h2>Дозаказы</h2><div class="card">'+r.orders.map(o=>{const p=o.why.split(' · подтвердил ');return '<div class="row"><span>'+o.role+' +'+o.n+' · '+p[0]+(p[1]?'<br><span class="muted" style="font-size:13px">подтвердил '+p[1]+'</span>':'')+'</span><b>'+rub(o.sum)+'</b></div>'}).join('')+'</div>';
+    if(!preOpen)h+=ordCard(r);
     // общий список смен убран: его заменяют лента и панели категорий
 
     const fl=r.shifts.filter(x=>x.flg);
@@ -942,7 +1019,7 @@ function actionBar(ev,m,st){
   const open=ev.status==='Открыто',closed=ev.status==='Закрыто';
   let b='';
   if(open)b+='<button class="btn" onclick="dzAsk()">Дозаказ</button>';
-  if(m.admin&&!open&&!closed)b+=(st&&st.limit?'<button class="btn" onclick="ask(\'Открыть мероприятие? Персонал сможет отмечаться, выпустятся QR и код.\').then(ok=>{if(ok)conAct(\'open\')})">Открыть и выпустить QR</button>':'<button class="btn" disabled title="В наряде нет строк со статусом «Согласован»">Наряд не согласован</button>');
+  if(m.admin&&!open&&!closed)b+=(st&&st.limit?'<button class="btn" onclick="ask(\'Открыть мероприятие? Персонал сможет отмечаться, выпустятся QR и код.\').then(ok=>{if(ok)conAct(\'open\')})">Открыть и выпустить QR</button>':'<button class="btn" disabled title="Заполните и согласуйте наряд ниже">Наряд не согласован</button>');
   if(ev.code&&!closed)b+='<button class="btn sec" onclick="conAct(\'qr\')">QR-листы</button>';
   if(closed&&m.admin)b+='<button class="btn sec" onclick="conAct(\'report\')">Отчёт</button>';
   if(m.admin)b+='<button class="btn sec" onclick="moreAsk()">Ещё…</button>';
@@ -953,11 +1030,26 @@ function moreAsk(){
   const it=(t,fn,cls)=>'<button class="btn '+(cls||'sec')+'" style="margin-top:8px" onclick="modalClose();'+fn+'">'+t+'</button>';
   let h='<div class="mh">'+ev.name+'</div><p class="muted" style="margin:0 0 6px">Действия администратора</p>';
   h+=it('Отчёт',"conAct('report')");
+  h+=it('Номер сделки Битрикс',"bxAsk()");
   h+=it('Реестр подрядчику',"conAct('registry')")+it('Наличная ведомость',"conAct('cashsheet')");
   if(ev.code)h+=it('Перевыпустить QR',"ask('Перевыпустить QR? Старые листы и код перестанут работать.').then(ok=>{if(ok)conAct('reissue')})");
   if(open)h+=it('Закрыть мероприятие',"conClose()",'red');
   h+=it('Отмена',"",'sec');
   modalOpen(h);
+}
+/* номер сделки Битрикс у существующего мероприятия: связывает его с вкладкой проекта в книге бухгалтерии */
+function bxAsk(){
+  const ev=conData.event;
+  modalOpen('<div class="mh">Номер сделки Битрикс</div><p class="muted" style="margin:0 0 6px;font-size:13px">'+ev.name+' · '+ev.id+'. По номеру сделки мероприятие связано с таблицей бухгалтерии. Пустое поле убирает номер.</p>'+
+    '<input id="bx-val" class="fld" type="number" inputmode="numeric" placeholder="Номер сделки, только цифры" value="'+escS(ev.bx||'')+'">'+
+    '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="bxGo()">Сохранить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
+  setTimeout(()=>{const e=document.getElementById('bx-val');if(e)e.focus()},50);
+}
+async function bxGo(){
+  const v=document.getElementById('bx-val').value.trim();
+  if(v&&!/^\d{1,10}$/.test(v)){mErr('Только цифры, до 10 знаков');return}
+  mErr('');
+  if(await conAct('bxSet',0,'',{bx:v}))modalClose();else mErr(conActErr);
 }
 function conClose(){
   const n=conData.shifts.filter(x=>x.open).length;
