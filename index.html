@@ -1001,9 +1001,10 @@ async function conAct(act,row,role,extra){
   try{
     const r=await api('con.act',Object.assign({id:ceId,act:act,row:row||0,role:role||''},extra||{}));
     if(act==='qr'){ // в панели: тихое обновление карточки её не стирает, печать печатает только её
-      openDrawer('<div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+escS(q.role)+'</figcaption></figure>').join('')+'</div><p class="muted noprint">Откройте на компьютере и распечатайте: Ctrl+P. Или перешлите картинки из чата бота.</p>','QR-листы','код '+escS(r.code));
+      openDrawer('<div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+escS(q.role)+'</figcaption></figure>').join('')+'</div><button class="btn wide noprint" style="margin-top:12px" onclick="conAct(\'qrSend\')">Отправить в чат бота</button><p class="muted noprint">QR-лист и код придут вам сообщением от бота: оттуда их можно переслать или сохранить. На компьютере лист можно распечатать: Ctrl+P.</p>','QR-листы','код '+escS(r.code));
       return true;
     }
+    if(act==='qrSend'){toast(r.msg||'Отправлено',true);return true} // панель с QR остаётся открытой
     if(act==='report'){openDrawer('<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:0">'+r.text.replace(/</g,'&lt;')+'</pre>','Отчёт',escS(unesc(conData.event.name)));return true}
     toast(r.msg||'Готово',true);
     if(r.url)openL(r.url);
