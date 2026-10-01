@@ -86,7 +86,8 @@ input[type=date].fld,input[type=time].fld{-webkit-appearance:none;appearance:non
 .oed{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:2px 10px 10px;margin:8px 0}
 .oe3{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:0 8px}.oe3 .fld{padding:12px 10px}.oe3 input[type=time]::-webkit-calendar-picker-indicator{display:none}
 .oef{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;font-size:14px;flex-wrap:wrap}
-.obar{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);margin:18px -16px 0;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.obar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:12px}
+#ord-body{padding-bottom:110px}
 .obar .btn{width:auto;margin:0;padding:13px 20px;flex:0 0 auto}
 .fsec{margin:18px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass)}
 .g2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 8px}.g2.eq{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
