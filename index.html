@@ -401,7 +401,7 @@ function ordAddRow(role){
 function ordAddCat(){
   const have={};ordEd.forEach(x=>{if(x.day===ordDay)have[x.role]=1});
   const free=(conData.order.roles||[]).filter(q=>!have[unesc(q.role)]);
-  modalOpen('<div class="mh">Какая категория нужна?</div>'+free.map(q=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordAddRow(unesc(this.dataset.r))" data-r="'+q.role+'">'+q.role+'<span class="muted" style="float:right">'+rub(q.rate)+' в час</span></button>').join('')+'<button class="btn sec" style="margin-top:14px" onclick="modalClose()">Отмена</button>');
+  modalOpen('<div class="mh">Какая категория нужна?</div>'+free.map(q=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordAddRow(unesc(this.dataset.r))" data-r="'+q.role+'">'+q.role+'<span class="muted" style="float:right">'+(ordMax(unesc(q.role))?'до '+ordMax(unesc(q.role))+' чел. · ':'')+rub(q.rate)+' в час</span></button>').join('')+'<button class="btn sec" style="margin-top:14px" onclick="modalClose()">Отмена</button>');
 }
 function ordOpenRow(i){ordOpen=i;ordEndEdit=false;ordDraw()}
 function ordCloseRow(){ordOpen=-1;ordEndEdit=false;ordDraw()}
@@ -420,8 +420,9 @@ function ordSum(rows){let n=0,sum=0;rows.forEach(x=>{const R=ordRole(x.role),k=p
 function ordBar(){
   const d=ordSum(ordEd.filter(x=>x.day===ordDay)),all=ordSum(ordEd),multi=ordDays.length>1;
   document.getElementById('ord-bar').innerHTML='<div style="min-width:0"><b style="white-space:nowrap">'+d.n+' чел. · '+rub(d.sum)+'</b>'+(multi?'<div class="muted" style="font-size:13px">'+dayLbl(ordDay)+' · за все дни '+rub(all.sum)+'</div>':'')+'</div><button class="btn" onclick="ordGo()">Сохранить</button>';
-  ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role));e.textContent=t.n+' чел. · '+rub(t.sum)}});
+  ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role)),m=ordMax(x.role);e.textContent=t.n+(m?' из '+m:'')+' чел. · '+rub(t.sum);e.className=m&&t.n>m?'warn':'muted'}});
 }
+const ordMax=role=>{const b=conData.order.book;return b&&b.found&&b.max&&b.max[role]>0?b.max[role]:0};
 const ordCatId=role=>((conData.order.roles||[]).findIndex(q=>unesc(q.role)===role));
 function ordDraw(){
   const o=conData.order,multi=ordDays.length>1;
@@ -435,7 +436,7 @@ function ordDraw(){
   }
   cats.forEach(role=>{
     const R=ordRole(role),mine=rows.filter(r=>r.x.role===role).sort((a,b)=>a.x.start<b.x.start?-1:a.x.start>b.x.start?1:0);
-    h+='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">'+escS(role)+'</span><span class="muted" id="oc-'+ordCatId(role)+'"></span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">'+rub(R?R.rate:0)+' в час</div>';
+    h+='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">'+escS(role)+'</span><span class="muted" id="oc-'+ordCatId(role)+'"></span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">'+rub(R?R.rate:0)+' в час'+(ordMax(role)?' · по смете не больше '+ordMax(role)+' чел.':'')+'</div>';
     mine.forEach(r=>{const x=r.x,i=r.i;
       if(i!==ordOpen){h+='<div class="oln" onclick="ordOpenRow('+i+')"><span>к '+(x.start||'—')+' до '+(x.end||'—')+(x.locked?' <small>· есть отметки</small>':'')+'</span><span>'+(parseInt(x.n,10)>0?parseInt(x.n,10)+' чел.':'<span class="warn">сколько человек?</span>')+'</span></div>';return}
       const dis=x.locked?' disabled':'';
@@ -452,7 +453,8 @@ function ordDraw(){
   const have={};rows.forEach(r=>have[r.x.role]=1);
   if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn sec" onclick="ordAddCat()">+ Категория</button>';
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
-  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':'После сохранения наряд уйдёт администратору на согласование.')+'</p>';
+  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'В пределах максимума из сметы бухгалтерии наряд согласуется сам; если максимум в смете не указан, наряд уйдёт администратору.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
+    (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
   document.getElementById('ord-body').innerHTML=h;ordBar();
 }
 async function ordGo(){
