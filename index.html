@@ -925,7 +925,7 @@ async function conOpen(id,day,quiet){
   try{
     const r=await api('con.event',{id:id,day:ceDay||''},quiet);if(seq!==conSeq)return;conMe=r.me;ceDay=r.day||'';
     // часы открытой смены (factH) идут от текущего времени и меняются каждый опрос: в ключ сравнения не входят
-    const key='E'+JSON.stringify([r.stats,r.shifts.map(x=>Object.assign({},x,{factH:0})),r.orders,r.dz,r.journal,r.event.status,r.day,r.order,r.event.bx]);if(quiet&&key===lastJson)return;lastJson=key;
+    const key='E'+JSON.stringify([r.stats,r.shifts.map(x=>Object.assign({},x,{factH:0})),r.orders,r.dz,r.journal,r.event.status,r.day,r.order,r.event.bx,r.pay]);if(quiet&&key===lastJson)return;lastJson=key;
     const keepY=quiet?window.scrollY:0;
     const ev=r.event,st=r.stats;
     document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
@@ -961,7 +961,8 @@ async function conOpen(id,day,quiet){
     const stT={open:'<span class="warn">не разобрано</span>',ask:'<span class="warn">запрос правки</span>',done:'разобрано'};
     if(fl.length)h+='<h2>Флаги · '+fl.filter(x=>x.flg.state!=='done').length+' из '+fl.length+'</h2><div class="card">'+fl.map(x=>'<div class="sh" onclick="openShift('+r.shifts.indexOf(x)+')"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.flg.text+'</div></div><div class="r"><div class="m">'+stT[x.flg.state]+'</div>›</div></div>').join('')+'</div>';
     const own=r.shifts.filter(x=>!x.open&&x.own&&x.sum!=null),sub=r.shifts.filter(x=>!x.open&&!x.own);
-    h+='<h2>Реестры на оплату</h2><div class="tiles"><div class="tile"><b>'+rub(own.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>свои · наличная ведомость · '+own.length+' чел.</small></div><div class="tile"><b>'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>подрядчик · безнал · '+sub.length+' чел.</small></div></div>';
+    const pay=r.pay||[],paySum=pay.reduce((n,x)=>n+x.sum,0),payDone=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0);
+    h+='<h2>Реестры на оплату</h2><div class="tiles"><div class="tile evc" onclick="payOpen()"><b>'+rub(paySum)+'</b><small>свои · наличными · '+pay.length+' чел.'+(pay.length?' · выдано '+rub(payDone):'')+' ›</small></div><div class="tile"><b>'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>подрядчик · безнал · '+sub.length+' чел.</small></div></div>';
     if(r.journal.length)h+='<h2>Журнал</h2><div class="card">'+r.journal.slice().reverse().map(j=>'<div class="sh"><div><div class="n">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</div><div class="m">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</div></div></div>').join('')+'</div>';
     h+='<p class="muted noprint" style="text-align:center;margin-top:18px">обновлено '+stampNow()+' · <a class="lnk" href="#" onclick="conOpen(ceId,ceDay);return false">обновить</a></p>';
     document.getElementById('ce-body').innerHTML=h;
@@ -1103,7 +1104,7 @@ function moreAsk(){
   let h='<div class="mh">'+ev.name+'</div><p class="muted" style="margin:0 0 6px">Действия администратора</p>';
   h+=it('Отчёт',"conAct('report')");
   h+=it('Номер сделки Битрикс',"bxAsk()");
-  h+=it('Реестр подрядчику',"conAct('registry')")+it('Наличная ведомость',"conAct('cashsheet')");
+  h+=it('Выплаты наличными',"payOpen()")+it('Реестр подрядчику',"conAct('registry')");
   if(ev.code)h+=it('Перевыпустить QR',"ask('Перевыпустить QR? Старые листы и код перестанут работать.').then(ok=>{if(ok)conAct('reissue')})");
   if(open)h+=it('Закрыть мероприятие',"conClose()",'red');
   h+=it('Отмена',"",'sec');
@@ -1122,6 +1123,28 @@ async function bxGo(){
   if(v&&!/^\d{1,10}$/.test(v)){mErr('Только цифры, до 10 знаков');return}
   mErr('');
   if(await conAct('bxSet',0,'',{bx:v}))modalClose();else mErr(conActErr);
+}
+/* выплаты наличными: поимённый список по закрытым сменам своих, отметка «выдано» */
+function payOpen(){
+  const ev=conData.event,pay=conData.pay||[],multi=(conData.days||[]).length>1;
+  const sum=pay.reduce((n,x)=>n+x.sum,0),done=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0),openN=conData.shifts.filter(x=>x.open&&x.own).length;
+  let h='<div class="tiles" style="margin-top:0"><div class="tile"><b>'+rub(sum-done)+'</b><small>осталось выдать</small></div><div class="tile"><b>'+rub(done)+'</b><small>выдано из '+rub(sum)+'</small></div></div>';
+  if(openN)h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Ещё в смене: '+openN+' чел. Они появятся в списке после ухода.</p>';
+  if(!pay.length)h+='<p class="muted" style="margin:12px 0 0">Закрытых смен своего персонала пока нет.</p>';
+  let cat='';
+  pay.forEach((x,i)=>{
+    if(x.role!==cat){cat=x.role;h+='<h2 style="margin-top:18px">'+x.role+'</h2>'}
+    h+='<div class="row" style="align-items:center"><span>'+x.fio+'<br><span class="muted" style="font-size:13px">'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</span></span>'+
+      '<span style="display:flex;align-items:center;gap:10px;flex:0 0 auto"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' sec':'')+'" style="width:auto;margin:0;padding:10px 14px;font-size:14px" onclick="payToggle('+i+')">'+(x.paid?'Выдано ✓':'Выдать')+'</button></span></div>';
+  });
+  h+='<p class="muted" style="font-size:13px;margin:14px 0 0">Список и отметки видны администратору и в таблице, лист 08. Подрядчику платят по безналу, его здесь нет.</p>';
+  openDrawer(h,'Выплаты наличными',ev.name);
+}
+async function payToggle(i){
+  const x=(conData.pay||[])[i];if(!x)return;
+  if(x.paid&&!(await ask('Снять отметку «выдано» у '+unesc(x.fio)+'?')))return;
+  try{const r=await api('con.act',{id:ceId,act:'paySet',key:unesc(x.key),on:!x.paid});x.paid=!!r.paid;toast(r.msg||'Готово',true);const y=document.getElementById('drawer').scrollTop;payOpen();document.getElementById('drawer').scrollTop=y}
+  catch(e){toast(e.msg||'Не удалось сохранить')}
 }
 function conClose(){
   const n=conData.shifts.filter(x=>x.open).length;
