@@ -355,6 +355,15 @@ const hrs=h=>String(Math.round((+h||0)*100)/100).replace('.',',')+' ч';
 function hmAdd(st,h){const m=String(st||'').match(/^(\d{1,2}):(\d{2})$/);if(!m||!(h>0))return '';const t=(+m[1]*60+ +m[2]+Math.round(h*60))%1440;return ('0'+Math.floor(t/60)).slice(-2)+':'+('0'+t%60).slice(-2)}
 function hmDiff(st,en){const a=String(st||'').match(/^(\d{1,2}):(\d{2})$/),b=String(en||'').match(/^(\d{1,2}):(\d{2})$/);if(!a||!b)return '';let d=(+b[1]*60+ +b[2])-(+a[1]*60+ +a[2]);if(d<=0)d+=1440;return Math.round(d/60*4)/4}
 function ordRole(name){return ((conData&&conData.order&&conData.order.roles)||[]).filter(q=>unesc(q.role)===name)[0]}
+/* менеджеры с фиксированной оплатой: читаются из сметы бухгалтерии, в приложении только показываются */
+function mgrBlock(o){
+  const b=o&&o.book;if(!b||!b.found)return '';
+  const list=(b.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0));
+  let h='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">Менеджеры</span><span class="muted">'+(list.length?rub(list.reduce((n,x)=>n+(x.sum||x.rate*x.people),0)):'')+'</span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">фиксированная оплата · из сметы бухгалтерии</div>';
+  h+=list.length?list.map(x=>'<div class="oln" style="cursor:default"><span>'+x.label+(x.people>1?' · '+x.people+' чел.':'')+'</span><span>'+rub(x.sum||x.rate*x.people)+'</span></div>').join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">В смете суммы менеджерам пока не указаны.</p>';
+  if(b.pm||b.bm)h+='<p class="muted" style="margin:10px 0 0;font-size:13px">'+[b.pm?'менеджер проекта '+b.pm:'',b.bm?'банкетный менеджер '+b.bm:''].filter(Boolean).join(' · ')+'</p>';
+  return h+'</div>';
+}
 function ordCard(r){
   const o=r.order;if(!o)return '';
   const ev=r.event,own=o.rows.filter(x=>!x.dz),stT={empty:'<span class="warn">не заполнен</span>',pending:'<span class="warn">ждёт согласования</span>',ok:'согласован'}[o.state]||'';
@@ -369,6 +378,9 @@ function ordCard(r){
     else h+='<div class="row"><span class="muted">'+(multi?'Всего за '+ruDay(day):'Всего')+' · '+n+' чел.</span><b>'+rub(sum)+'</b></div>';
     if(multi){const all=own.reduce((m,x)=>m+x.hours*x.n*x.rate,0);h+='<div class="row"><span class="muted">За все дни ('+r.days.length+')</span><b>'+rub(all)+'</b></div>'}
   }
+  {const bk=o.book,ml=bk&&bk.found?(bk.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0)):[];
+    if(ml.length)h+='<div class="row"><span class="muted">Менеджеры (фикс из сметы) · '+ml.length+'</span><b>'+rub(ml.reduce((n,x)=>n+(x.sum||x.rate*x.people),0))+'</b></div>';
+    if(o.pushed)h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Факт выгружен в бухгалтерию '+o.pushed.slice(8,10)+'.'+o.pushed.slice(5,7)+' в '+o.pushed.slice(11,16)+'</p>'}
   let b='';
   if(o.canApprove)b+='<button class="btn" onclick="ask(\'Согласовать наряд? После этого мероприятие можно открывать.\').then(ok=>{if(ok)conAct(\'ordApprove\')})">Согласовать</button>';
   if(o.canEdit)b+='<button class="btn sec'+(o.canApprove?'':' wide')+'" onclick="ordEdit()">'+(own.length?'Изменить наряд':'Заполнить наряд')+'</button>';
@@ -452,6 +464,7 @@ function ordDraw(){
   });
   const have={};rows.forEach(r=>have[r.x.role]=1);
   if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn sec" onclick="ordAddCat()">+ Категория</button>';
+  h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
   h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'В пределах максимума из сметы бухгалтерии наряд согласуется сам; если максимум в смете не указан, наряд уйдёт администратору.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
     (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
@@ -1086,7 +1099,7 @@ async function conAct(act,row,role,extra){
     await conOpen(ceId,ceDay);
     return true;
   }catch(e){
-    if(e.error==='flags'&&act==='registry'){if(await ask(e.msg))return conAct(act,row,role,Object.assign({},extra||{},{force:1}));return false}
+    if(e.error==='flags'&&(act==='registry'||act==='bookPush')){if(await ask(e.msg))return conAct(act,row,role,Object.assign({},extra||{},{force:1}));return false}
     conActErr=e.msg||'Ошибка';toast(conActErr);return false}
 }
 /* панель действий наверху карточки: только то, что нужно сейчас; остальное в «Ещё» */
@@ -1107,6 +1120,7 @@ function moreAsk(){
   h+=it('Отчёт',"conAct('report')");
   h+=it('Номер сделки Битрикс',"bxAsk()");
   h+=it('Выплаты наличными',"payOpen()")+it('Реестр подрядчику',"conAct('registry')");
+  if(ev.bx)h+=it(conData.order&&conData.order.pushed?'Выгрузить в бухгалтерию ещё раз':'Выгрузить в бухгалтерию',"conAct('bookPush')");
   if(ev.code)h+=it('Перевыпустить QR',"ask('Перевыпустить QR? Старые листы и код перестанут работать.').then(ok=>{if(ok)conAct('reissue')})");
   if(open)h+=it('Закрыть мероприятие',"conClose()",'red');
   h+=it('Отмена',"",'sec');
