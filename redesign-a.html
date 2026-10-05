@@ -164,6 +164,38 @@ body[data-v=a][data-t=dark]{--bg:#101010;--sf:#101010;--sf2:#1d1d1d;--tx:#ededed
 .a-field label{display:block;font-size:13px;color:var(--mut);margin-bottom:8px}
 .a-field input{width:100%;height:56px;border:0;border-radius:var(--rs);background:var(--sf2);color:var(--tx);font:inherit;font-size:18px;padding:0 16px}
 .a-field small{display:block;font-size:13px;color:var(--mut);margin-top:8px}
+.a-tabs{display:flex;gap:24px;border-bottom:1px solid var(--ln);margin-top:18px}
+.a-tabs button{background:none;border:0;padding:10px 0 11px;margin-bottom:-1px;font-size:16px;font-weight:550;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer}
+.a-tabs button.on{color:var(--tx);border-color:var(--tx)}
+.a-tabs button em{font-style:normal;color:var(--warn);margin-left:5px}
+.a-ib{width:44px;height:44px;margin:-10px -10px -10px 0;border:0;background:none;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx)}
+.a-ib svg{width:22px;height:22px}
+.a-ev{display:block;width:100%;text-align:left;background:var(--sf2);border:0;border-radius:18px;padding:14px 16px 16px;margin-top:8px;cursor:pointer;transition:filter .15s}
+.a-ev:active{filter:brightness(.96)}.a-ev:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.a-evs{margin:14px -8px 0}.a-mon+.a-evs{margin-top:4px}
+.st.fill i{background:none;box-shadow:inset 0 0 0 1.5px var(--tx);animation:fillp 1.6s ease-in-out infinite}
+@keyframes fillp{0%,100%{box-shadow:inset 0 0 0 1.5px var(--tx)}50%{box-shadow:inset 0 0 0 4px var(--tx)}}
+@media (prefers-reduced-motion:reduce){.st.fill i{animation:none}}
+.a-ev .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.a-ev .h b{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.a-ev .m{font-size:14px;color:var(--mut);margin-top:3px}
+.a-ev .meter{margin:12px 0 0;height:3px;background:color-mix(in srgb,var(--tx) 10%,transparent)}
+.a-ev .sum{white-space:nowrap;font-weight:600;font-size:15.5px}
+.a-chips{display:flex;gap:6px;margin:16px -24px 0;padding:0 24px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.a-chips::-webkit-scrollbar{display:none}.a-chips button{flex:none;white-space:nowrap}
+.a-chips button{border:0;background:var(--sf2);color:var(--mut);border-radius:999px;padding:8px 13px;font-size:14px;font-weight:550;cursor:pointer}
+.a-chips button.on{background:var(--tx);color:var(--bg)}
+.a-grp{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding-top:16px}
+.a-grp{width:100%;background:none;border:0;text-align:left;cursor:pointer;padding-left:0;padding-right:0}.a-who{display:inline-flex;align-items:center;gap:2px}.a-grp b svg{display:inline-block;vertical-align:-3px;margin-left:2px}.a-grp svg,.a-who svg{width:16px;height:16px;color:var(--mut);flex:none}
+.a-who{background:none;border:0;padding:0;cursor:pointer;font-size:17px;font-weight:600;color:var(--tx);text-align:left}.a-grp:focus-visible,.a-who:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.a-grp b{font-size:15.5px;font-weight:600}.a-grp span{font-size:13px;color:var(--mut);white-space:nowrap}
+.a-box.fl{margin-top:14px}.a-box.fl .a-q{padding-top:14px}
+.a-q .who .pay{text-align:right;white-space:nowrap;font-size:14.5px;font-weight:600}
+.a-search{position:relative;margin-top:16px}
+.a-search svg{position:absolute;left:14px;top:14px;width:20px;height:20px;color:var(--mut)}
+.a-search input{width:100%;height:48px;border:0;border-radius:var(--rs);background:var(--sf2);color:var(--tx);font:inherit;padding:0 14px 0 44px}
+.a-search input::placeholder{color:var(--mut)}
+.a-mon{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 0;font-size:13px;color:var(--mut)}
+.a-mon b{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 .a-note{font-size:14.5px;color:var(--mut);margin-top:16px}
 .a-warn{margin-top:18px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--warn) 11%,transparent);font-size:14.5px}
 .a-warn .st{margin-bottom:6px}
@@ -190,6 +222,8 @@ const I={
   cam:sv('<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
   back:sv('<path d="m15 6-6 6 6 6"/>'),
   next:sv('<path d="m9 6 6 6-6 6"/>'),
+  bell:sv('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'),
+  find:sv('<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>'),
   dia:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 0l6 6-6 6-6-6z" fill="currentColor"/></svg>'
 };
 const st=(k,t)=>'<span class="st '+k+'"><i></i>'+t+'</span>';
@@ -351,11 +385,50 @@ const P3=[
   <button class="btn">Далее</button></div>`]
 ];
 
+/* ===== пачка 4: консоль ===== */
+const conHead=(tab)=>`<div class="a-top">${brand()}<div style="display:flex;align-items:center;gap:14px"><button class="lnk">Отметиться</button><button class="a-ib" aria-label="Уведомления">${I.bell}</button></div></div>
+  <h1 class="h1 sm" style="margin-top:22px">Консоль</h1><p class="mut" style="font-size:14.5px">Смирнова Анна · администратор</p>
+  <div class="a-tabs"><button class="${tab==='ev'?'on':''}">Мероприятия</button><button class="${tab==='fl'?'on':''}">Флаги<em>3</em></button></div>`;
+const evRow=(n,stt,m,l,pct)=>`<button class="a-ev"><div class="h"><b>${n}</b>${stt}</div><div class="m">${m}</div><div class="m">${l}</div>${pct?'<div class="meter"><i style="width:'+pct+'%"></i></div>':''}</button>`;
+const flItem=(tag,who,role,pay,why,a,b)=>`<div class="a-q">${st('warn',tag)}<div class="who"><button class="a-who">${who}</button><span class="pay">${pay}</span></div><p>${role}. ${why}</p>
+    <div class="two"><button class="btn duo sec"><span>${a[0]}</span><small>${a[1]}</small></button><button class="btn duo"><span>${b[0]}</span><small>${b[1]}</small></button></div></div>`;
+const arRow=(n,m,sum,plan,bad)=>`<button class="a-ev"><div class="h"><b>${n}</b><span class="sum"${bad?' style="color:var(--bad)"':''}>${sum}</span></div><div class="h"><span class="m">${m}</span><span class="m">из ${plan}</span></div></button>`;
+const P4=[
+ ['Консоль · мероприятия',`<div class="a">${conHead('ev')}
+  <div class="a-evs">${evRow(EV.name,st('ok','Открыто'),'Сегодня · '+EV.venue+' · '+EV.time,'На объекте 32 · вышло 38 из 42 · <span style="color:var(--warn)">требуют решения 4</span>',90)}
+  ${evRow('Конференция «Финтех-день»',st('fill','Заполняется'),'6 окт, вт · Конгресс-холл «Заря» · 09:00–19:00','Наряд: 28 человек · план 164 000 ₽')}
+  ${evRow('Свадьба · усадьба «Белый сад»',st('off','Создано'),'10 окт, сб · усадьба «Белый сад» · 15:00–23:00','<span style="color:var(--warn)">Наряд не согласован</span>')}</div>
+  <div class="grow"></div>
+  <button class="btn txt" style="margin-bottom:6px">Архив · 14</button>
+  <button class="btn">Новое мероприятие</button></div>`],
+ ['Консоль · флаги',`<div class="a">${conHead('fl')}
+  <div class="a-chips"><button class="on">Не разобрано · 3</button><button>Запрос правки · 1</button><button>Разобрано</button></div>
+  <div class="a-box fl"><button class="a-grp"><b>${EV.name}</b><span>2 окт · 1 флаг</span></button>
+    ${flItem('Ранний уход','Морозов Денис','Грузчики · 09:10–14:10','5 ч · 2 500 ₽','Ушёл почти на 3 ч раньше конца окна.',['Оставить факт','5 ч · 2 500 ₽'],['Зачесть минимум','8 ч · 4 000 ₽'])}</div>
+  <div class="a-box fl"><button class="a-grp"><b>Фуршет · конгресс-холл «Заря»</b><span>27 сен · 2 флага</span></button>
+    ${flItem('Автозакрытие','Харитонова Ольга','Официанты DC · приход 10:02','5 ч · 2 500 ₽','Не отметила уход, зачтена половина минимума.',['Всё верно','5 ч остаётся'],['Время ухода','указать и пересчитать'])}
+    ${flItem('Долгая смена','Назаров Руслан','Официанты Хорека · 09:40–02:00','16 ч 20 мин','В смене дольше 16 часов. Сумму считает подрядчик.',['Всё верно','16 ч 20 мин остаётся'],['Время ухода','указать и пересчитать'])}</div>
+  <p class="foot" style="margin-top:22px">Обновлено в 17:40</p></div>`],
+ ['Архив',`<div class="a">
+  <button class="lnk" style="color:var(--mut)">${I.back}Консоль</button>
+  <h1 class="h1 sm">Архив</h1><p class="mut" style="font-size:14.5px">Закрытые мероприятия за 3 месяца. Старше — в таблице.</p>
+  <div class="a-search">${I.find}<input placeholder="Название или номер" aria-label="Поиск по архиву"></div>
+  <div class="a-mon"><b>Сентябрь 2026</b><span>3 · факт 512 400 ₽</span></div>
+  <div class="a-evs">${arRow('Фуршет · конгресс-холл «Заря»','27 сен · <span style="color:var(--warn)">флагов 2</span>','96 500 ₽','104 000 ₽')}
+  ${arRow('Свадьба · усадьба «Белый сад»','20 сен','214 300 ₽','221 000 ₽')}
+  ${arRow('Корпоратив · «Лофт 17»','12 сен · перерасход 3 600 ₽','201 600 ₽','198 000 ₽',1)}</div>
+  <div class="a-mon"><b>Август 2026</b><span>2 · факт 330 700 ₽</span></div>
+  <div class="a-evs">${arRow('Гала-ужин «Летний сезон»','29 авг','187 200 ₽','190 000 ₽')}
+  ${arRow('Выездной банкет · Истра','15 авг','143 500 ₽','150 000 ₽')}</div>
+  <div class="grow"></div></div>`]
+];
+
 /* ===== пачки ===== */
 const BATCH=[
  {t:'1 · Главная, селфи, карточка мероприятия',ok:1,note:'Согласовано 05.10. Главная сотрудника в двух состояниях, селфи после QR, карточка мероприятия администратора.',frames:()=>A.home().concat(A.selfie(),A.admin()),fix:i=>i<3},
  {t:'2 · Категория, время вызова, после селфи',ok:1,note:'Согласовано 05.10. Выбор категории и времени вызова показывается, только если их нельзя определить автоматически. Категория и время выбираются одним касанием. После селфи на входе человек сразу попадает на главную с открытой сменой; после селфи на выходе видит итог смены.',frames:()=>P2,fix:()=>true},
- {t:'3 · Согласие, номер, ФИО',ok:1,note:'Согласовано 05.10. Эти экраны человек видит один раз: согласие при первом открытии, номер и ФИО — перед первым селфи.',frames:()=>P3,fix:()=>true}
+ {t:'3 · Согласие, номер, ФИО',ok:1,note:'Согласовано 05.10. Эти экраны человек видит один раз: согласие при первом открытии, номер и ФИО — перед первым селфи.',frames:()=>P3,fix:()=>true},
+ {t:'4 · Консоль: мероприятия, флаги, архив',ok:1,note:'Согласовано 05.10. Три экрана консоли администратора: список мероприятий, вкладка «Флаги» и архив.',frames:()=>P4,fix:()=>true}
 ];
 const S={b:BATCH.length-1,t:'light'};
 (location.hash.slice(1).split('-')).forEach((x,i)=>{if(i===0&&BATCH[+x-1])S.b=+x-1;if(i===1&&(x==='light'||x==='dark'))S.t=x});
