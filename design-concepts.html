@@ -126,7 +126,7 @@ body[data-v=c] .st.ok{color:var(--ok)}body[data-v=c] .st.warn{color:var(--warn)}
 .a-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
 .a-row .mut{font-size:14px;margin-top:2px}
 .a-big{margin:30px 0 26px}
-.a-big .num{display:block;font-size:64px;line-height:1;letter-spacing:-.035em;font-weight:650}
+.a-big .num{display:block;font-size:52px;line-height:1;letter-spacing:-.035em;font-weight:650;white-space:nowrap}
 .a-big .mut{display:block;margin-top:8px;font-size:16px}
 .a h2.ev{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em}
 .kv{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--ln);font-size:15.5px}
@@ -140,6 +140,7 @@ body[data-v=c] .st.ok{color:var(--ok)}body[data-v=c] .st.warn{color:var(--warn)}
 .a-h2 span{color:var(--tx);letter-spacing:0;font-size:14px}
 .a-q{padding:16px 0 18px;border-bottom:1px solid var(--ln)}
 .a-q:last-of-type{border-bottom:0;padding-bottom:0}
+.a-box{background:var(--sf2);border-radius:20px;margin:22px -12px 0;padding:0 16px 16px}.a-box .a-h2{margin-top:0;padding-top:16px}.a-box .a-q{border-color:color-mix(in srgb,var(--tx) 9%,transparent)}.a-box .btn.sec{background:var(--bg)}
 .a-q .who{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:6px}
 .a-q .who b{font-size:17px;font-weight:600}
 .a-q p{font-size:14.5px;color:var(--mut);margin:4px 0 12px}
@@ -327,8 +328,8 @@ const Q=[
 ];
 const CATS=[
   {n:'Старшие официанты',w:'14:00–00:00',on:4,came:4,lim:4,av:['ОВ','ДП','КА','ШМ'],names:'Орлова, Демченко и ещё 2'},
-  {n:'Официанты DC',w:'15:00–01:00',on:12,came:12,lim:14,miss:2,pend:1,av:['ГА','БК','КМ','ТИ'],names:'Белова, Кузнецова и ещё 10'},
-  {n:'Официанты Хорека',w:'15:00–01:00',on:14,came:14,lim:16,miss:2,pend:1,av:['СА','НР','ИЛ','ПЕ'],names:'Назаров, Исаева и ещё 12'},
+  {n:'Официанты DC',w:'15:00–01:00',on:12,came:12,lim:14,miss:2,pend:1,ppl:[['warn','Григорьев Артём','16:47'],['ok','Белова Ксения','14:48'],['ok','Кузнецова Марина','14:52']],av:['ГА','БК','КМ','ТИ'],names:'Белова, Кузнецова и ещё 10'},
+  {n:'Официанты Хорека',w:'15:00–01:00',on:14,came:14,lim:16,miss:2,pend:1,ppl:[['warn','Садыкова Алина','13:20'],['ok','Назаров Руслан','14:50'],['ok','Исаева Лейла','14:51']],av:['СА','НР','ИЛ','ПЕ'],names:'Назаров, Исаева и ещё 12'},
   {n:'Менеджеры',w:'12:00–00:00',on:2,came:2,lim:2,av:['ЛИ','ФО'],names:'Лебедев, Фролова'},
   {n:'Грузчики',w:'09:00–17:00',on:0,came:6,lim:6,left:6,av:[],names:'все ушли, один флаг'}
 ];
@@ -342,11 +343,11 @@ home:()=>[['До отметки',`<div class="a">${brand()}
   <div class="a-last"><div class="lab">Последняя смена</div>
     <div class="a-row"><div><b>Фуршет · конгресс-холл «Заря»</b><div class="mut">27 сен · 10:00 → 20:10 · зачтено 10 ч</div></div><b>5 000 ₽</b></div></div>
   <div class="grow"></div>
-  <button class="btn">${I.qr}Сканировать QR</button>
-  <button class="btn txt">Ввести код с листа</button></div>`],
+  <button class="btn txt" style="margin-bottom:6px">Ввести код с листа</button>
+  <button class="btn">${I.qr}Сканировать QR</button></div>`],
  ['Смена открыта',`<div class="a">${brand()}
   <div style="margin-top:28px">${st('ok','Смена открыта')}</div>
-  <div class="a-big"><span class="num">14:52</span><span class="mut">приход · идёт 2 ч 48 мин</span></div>
+  <div class="a-big"><span class="num">2 ч 48 мин</span><span class="mut">Марина Кузнецова · приход в 14:52</span></div>
   <h2 class="ev">${EV.name}</h2><p class="mut">${EV.venue} · ${EV.date}</p>
   <div style="margin-top:16px">
     <div class="kv"><span>Категория</span><b>Официанты DC</b></div>
@@ -354,8 +355,8 @@ home:()=>[['До отметки',`<div class="a">${brand()}
     <div class="kv"><span>Часы считаются</span><b>с 15:00</b></div>
     <div class="kv"><span>Минимум за выход</span><b>10 ч</b></div></div>
   <div class="grow"></div>
-  <button class="btn">Закрыть смену</button>
-  <p class="hint">Понадобится селфи на выходе. Часы и сумма появятся после закрытия.</p></div>`]],
+  <p class="hint" style="margin:14px 0 12px">Понадобится селфи на выходе. Часы и сумма появятся после закрытия.</p>
+  <button class="btn">Закрыть смену</button></div>`]],
 selfie:()=>[['После сканирования QR',`<div class="a">${brand()}
   <h1 class="h1 sm" style="margin-top:22px">Селфи на входе</h1>
   <div class="a-ctx"><div><b>${EV.name}</b><span class="mut">Официанты DC · вызов к 15:00 · минимум 10 ч</span></div><button class="lnk">Изменить</button></div>
@@ -368,12 +369,12 @@ admin:()=>[['Карточка мероприятия · администрато
   <h1 class="h1 sm">${EV.name}</h1>
   <p class="mut" style="font-size:14.5px">${EV.date} · ${EV.venue} · ${EV.time} · ${EV.guests} гостей · код <b style="color:var(--tx)">${EV.code}</b></p>
   <div class="a-acts"><button class="btn sm sec">Дозаказ</button><button class="btn sm sec">QR-листы</button><button class="btn sm sec ico" aria-label="Ещё">•••</button></div>
-  <h2 class="a-h2">Требуют решения <span>4</span></h2>
+  <div class="a-box"><h2 class="a-h2">Требуют решения <span>4</span></h2>
   ${Q.map(q=>`<div class="a-q">${st('warn',q.tag)}<div class="who"><b>${q.who}</b><span class="mut">${q.role}</span></div><p>${q.why}</p>
-    <div class="two"><button class="btn duo sec"><span>${q.a[0]}</span><small>${q.a[1]}</small></button><button class="btn duo"><span>${q.b[0]}</span><small>${q.b[1]}</small></button></div></div>`).join('')}
+    <div class="two"><button class="btn duo sec"><span>${q.a[0]}</span><small>${q.a[1]}</small></button><button class="btn duo"><span>${q.b[0]}</span><small>${q.b[1]}</small></button></div></div>`).join('')}</div>
   <h2 class="a-h2">Сейчас на объекте</h2>
   <div class="a-nums"><div><b>32</b><small>на объекте</small></div><div><b>38<span class="mut" style="font-size:17px;font-weight:500"> / 42</span></b><small>вышло</small></div><div><b style="color:var(--bad)">4</b><small>не вышли</small></div></div>
-  ${CATS.map((c,i)=>`<div class="a-cat"><div>${c.n}<small>${c.w}${c.miss?' · <span style="color:var(--bad)">не вышли '+c.miss+'</span>':''}${c.pend?' · <span style="color:var(--warn)">ждёт '+c.pend+'</span>':''}</small></div><div class="r">${catRight(c)}</div></div>`+(i===1?`<div class="a-ppl"><div>${st('warn','Григорьев Артём')}<span class="mut">с 16:47</span></div><div>${st('ok','Белова Ксения')}<span class="mut">с 14:48</span></div><div>${st('ok','Кузнецова Марина')}<span class="mut">с 14:52</span></div><div><button class="lnk">Ещё 9 человек${I.next}</button></div></div>`:'')).join('')}
+  ${CATS.map((c,i)=>`<div class="a-cat"><div>${c.n}<small>${c.w}${c.miss?' · <span style="color:var(--bad)">не вышли '+c.miss+'</span>':''}${c.pend?' · <span style="color:var(--warn)">ждёт '+c.pend+'</span>':''}</small></div><div class="r">${catRight(c)}</div></div>`+(c.ppl?`<div class="a-ppl">${c.ppl.map(p=>`<div>${st(p[0],p[1])}<span class="mut">с ${p[2]}</span></div>`).join('')}<div><button class="lnk">Ещё ${c.on-c.ppl.length} человек${I.next}</button></div></div>`:'')).join('')}
   <h2 class="a-h2">Фонд оплаты</h2>
   <div class="a-row" style="margin-top:10px;align-items:baseline"><b style="font-size:24px;font-weight:650;letter-spacing:-.02em">222 200 ₽</b><span class="mut">из 246 800 ₽</span></div>
   <div class="meter"><i style="width:90%"></i></div>
@@ -479,9 +480,9 @@ admin:()=>[['Карточка мероприятия · администрато
 
 /* ===== пояснения к экрану ===== */
 const N={
-a:{home:['<b>Одно действие.</b> Кнопка закреплена внизу, под большим пальцем; ввод кода убран в текстовую ссылку (приём When I Work).','<b>Состояние смены — крупное время прихода</b> и одна строка статуса. Прогноза часов и суммы нет, как и сейчас.','<b>Без карточек:</b> строки разделены тонкой линией, рамок нет (Linear: меньше визуального шума).'],
+a:{home:['<b>Одно действие.</b> Главная кнопка прижата к низу экрана, второстепенное действие стоит над ней (приём When I Work).','<b>Состояние смены — крупно, сколько она идёт;</b> время прихода мелко под ним. Прогноза зачтённых часов и суммы нет, как и сейчас.','<b>Без карточек:</b> строки разделены тонкой линией, рамок нет (Linear: меньше визуального шума).'],
    selfie:['Мероприятие и группа уже подставлены одной строкой; «Изменить» — тихая ссылка, а не отдельный экран.','Камера занимает основную часть экрана, овал подсказывает положение лица.','Кнопка та же, на том же месте, что и на главной: человек не ищет её заново.'],
-   admin:['<b>Очередь решений идёт первой.</b> Опоздания, ранние приходы, дозаказ и флаги собраны в один список с одинаковой формой.','У каждой кнопки подписано последствие: что будет с часами или деньгами (Stripe: действие рядом с данными).','Показатели — три числа без плиток. Категории — строки; одна раскрыта до людей.','Действия мероприятия — тихий ряд под заголовком. «Закрыть мероприятие» остаётся в «•••».']},
+   admin:['<b>Очередь решений идёт первой.</b> Опоздания, ранние приходы, дозаказ и флаги собраны в один список с одинаковой формой.','У каждой кнопки подписано последствие: что будет с часами или деньгами (Stripe: действие рядом с данными).','«Требуют решения» лежит на лёгкой подложке, остальные разделы без рамок.','Показатели — три числа без плиток. Категории — строки; раскрыты только те, где кто-то ждёт решения.','Действия мероприятия — тихий ряд под заголовком. «Закрыть мероприятие» остаётся в «•••».']},
 b:{home:['<b>Золото только на главной кнопке</b> и в знаке. Заголовки тёмные, не золотые.','Карточки без рамок: отделяются тоном поверхности, в обеих темах одинаково.','В открытой смене крупно показано, сколько идёт смена; четыре факта собраны в спокойную сетку.'],
    selfie:['Контекст в карточке: мероприятие и группа плашками, «Не ваша группа?» — ссылка.','Золотые уголки на видоискателе — единственный декоративный акцент экрана.','Кнопка золотая, как на главной: один цвет главного действия для сотрудника.'],
    admin:['Каждое решение — отдельная мягкая карточка: легко попасть пальцем, но на экране помещается меньше.','Кнопки решений нейтральные и тёмные, без золота: в очереди золото только на счётчике.','Кто на объекте — кружки с инициалами по категориям; янтарный кружок — человек ждёт решения.','Действия мероприятия внизу карточки: «Дозаказ» главное, остальное рядом.']},
