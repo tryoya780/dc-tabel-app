@@ -226,8 +226,10 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
     <div class="st ok"><i></i>Смена открыта</div>
     <div class="bigv"><b id="o-dur"></b><span id="o-who"></span></div>
     <h2 class="evn" id="o-ev"></h2>
+    <p class="lead" style="font-size:16px" id="o-meta"></p>
     <div class="kvs">
       <div class="kv"><span class="k">Категория</span><b id="o-role"></b></div>
+      <div class="kv" id="o-call-row"><span class="k">Вызов</span><b id="o-call"></b></div>
       <div class="kv"><span class="k">Часы считаются</span><b id="o-since"></b></div>
       <div class="kv"><span class="k">Минимум за выход</span><b id="o-pay"></b></div>
     </div>
@@ -724,6 +726,10 @@ document.addEventListener('visibilitychange',async()=>{
 function renderOpen(o){
   document.getElementById('o-ev').textContent=o.evName;document.getElementById('o-role').textContent=o.role;
   document.getElementById('o-since').textContent='с '+(o.payFrom||o.since);document.getElementById('o-pay').textContent=o.min+' ч';
+  // площадка, день и вызов приходят с сервера не во всех версиях: без них строки не показываются
+  const dm=String(o.date||'').match(/^(\d{2})\.(\d{2})\.\d{4}$/),day=dm?+dm[1]+' '+['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][+dm[2]-1]:String(o.date||'');
+  document.getElementById('o-meta').textContent=[o.venue,day].filter(Boolean).join(' · ');
+  document.getElementById('o-call-row').style.display=o.call?'':'none';document.getElementById('o-call').textContent=o.call?'к '+o.call+(o.till?', смена до '+o.till:''):'';
   const who=nameFirst(me.fio);document.getElementById('o-who').textContent=(who?who+' · ':'')+'приход в '+o.since;
   durTick();
   const pe=document.getElementById('o-pend');pe.style.display=o.pending?'block':'none';
