@@ -371,7 +371,7 @@ function ordCard(r){
   if(!own.length)h+='<p class="muted" style="margin:0">Наряд пока пуст. Укажите, кто нужен, к какому времени и сколько человек.</p>';
   else{
     const multi=(r.days||[]).length>1,day=multi?r.day:'',mine=own.filter(x=>!day||x.day===day),by={},order=[];
-    mine.forEach(x=>{if(!by[x.role]){by[x.role]={n:0,sum:0,t:[]};order.push(x.role)}const c=by[x.role];c.n+=x.n;c.sum+=x.hours*x.n*x.rate;c.t.push('к '+x.start+' до '+x.end+' · '+x.n+' чел.')});
+    mine.forEach(x=>{if(!by[x.role]){by[x.role]={n:0,sum:0,t:[]};order.push(x.role)}const c=by[x.role];c.n+=x.n;c.sum+=x.hours*x.n*x.rate;c.t.push('к '+x.start+' до '+x.end+' · '+x.n+' чел.'+(o.state==='pending'&&!x.ok?' · <span class="warn">ждёт согласования</span>':''))});
     let sum=0,n=0;
     h+=order.map(k=>{const c=by[k];sum+=c.sum;n+=c.n;return '<div class="row"><span>'+k+' · '+c.n+' чел.<br><span class="muted" style="font-size:13px">'+c.t.join('<br>')+'</span></span><b>'+rub(c.sum)+'</b></div>'}).join('');
     if(!order.length)h+='<p class="muted" style="margin:0">На '+ruDay(day)+' в наряде никого нет.</p>';
@@ -506,6 +506,34 @@ async function evCreateGo(){
   if(!d.name||!d.date||!d.start||!d.end){mErr('Заполните название, первый день, начало и окончание');return}
   mErr('');
   if(await conAct('evCreate',0,'',d))modalClose();else mErr(conActErr);
+}
+/* новые мероприятия из книги бухгалтерии: вкладки проектов, для которых в Табеле ещё нет мероприятия с такой сделкой */
+let bnItems=[];
+async function bookNewAsk(){
+  modalOpen('<div class="mh">Новые из книги бухгалтерии</div><div id="bn-box"><p class="muted" style="margin:8px 0 0">Читаю книгу, это до полуминуты…</p></div><button class="btn sec wide" style="margin-top:16px" onclick="modalClose()">Закрыть</button>');
+  try{const r=await api('con.act',{act:'bookNew'},true,60000);bnItems=r.items||[];bookNewDraw(r.past||0)}
+  catch(e){const b=document.getElementById('bn-box');if(b)b.innerHTML='<p class="warn" style="margin:8px 0 0">'+escS(e.msg||'Не удалось прочитать книгу. Попробуйте ещё раз.')+'</p>'}
+}
+function bookNewDraw(past){
+  const b=document.getElementById('bn-box');if(!b)return;
+  const head=x=>'<b>'+escS(x.name||'Площадка не указана')+'</b><div class="muted" style="font-size:13px;margin-top:2px">'+dayLbl(x.date)+(x.days>1?' · '+x.days+' дн.':'')+(x.start?' · '+x.start+'–'+x.end:'')+(x.guests?' · гостей '+x.guests:'')+' · сделка '+escS(x.bx)+'</div>';
+  const ok=bnItems.filter(x=>x.ready),no=bnItems.filter(x=>!x.ready);
+  let h='';
+  if(!bnItems.length)h='<p class="muted" style="margin:8px 0 0">Новых вкладок нет: по всем предстоящим проектам книги мероприятия уже созданы.</p>';
+  if(ok.length)h+='<div class="fsec" style="margin-top:12px">Готовы · '+ok.length+'</div>'+ok.map(x=>'<div class="card" style="margin:10px 0 0">'+head(x)+
+    '<div style="font-size:14px;margin-top:8px">Менеджер: '+(x.mgrFio?escS(x.mgrFio):'<span class="warn">не назначен</span>')+'</div>'+
+    (x.note.length?'<div class="warn" style="font-size:13px;margin-top:4px">'+escS(x.note.join('; '))+'</div>':'')+
+    '<button class="btn wide" style="margin-top:12px" onclick="bookImportGo(\''+escS(x.bx)+'\')">Создать мероприятие</button></div>').join('');
+  if(no.length)h+='<div class="fsec" style="margin-top:16px">Не заполнены в книге · '+no.length+'</div>'+no.map(x=>'<div class="row" style="display:block;padding:10px 0">'+head(x)+
+    '<div class="warn" style="font-size:13px;margin-top:4px">Не хватает: '+escS(x.miss.join(', '))+'</div></div>').join('');
+  if(past)h+='<p class="muted" style="font-size:13px;margin:12px 0 0">Прошедшие проекты без мероприятия не показаны: '+past+'.</p>';
+  b.innerHTML=h;
+}
+async function bookImportGo(bx){
+  const x=bnItems.filter(i=>i.bx===bx)[0];if(!x)return;
+  if(!await ask('Создать мероприятие «'+x.name+'» · '+dayLbl(x.date)+' · '+x.start+'–'+x.end+'?'))return;
+  try{const r=await api('con.act',{act:'bookImport',bx:bx},false,60000);toast(r.msg||'Создано',true);bnItems=bnItems.filter(i=>i.bx!==bx);bookNewDraw(0);conList(true)}
+  catch(e){toast(e.msg||'Не получилось создать')}
 }
 /* защита от HTML в данных (причины, ФИО, названия): экранируем все строки ответа, кроме перечисленных полей */
 function escS(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
@@ -818,6 +846,7 @@ async function conEvents(quiet){
     r.events.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='list';conOpen(e.id)};box.appendChild(d)});
     if(r.archiveN){const a=document.createElement('button');a.className='btn sec';a.innerHTML='Архив · '+r.archiveN+' ›';a.onclick=()=>conArch();box.appendChild(a)} // пустой архив не показываем
     if(r.me.admin){const b=document.createElement('button');b.className='btn';b.textContent='Новое мероприятие';b.onclick=evCreateAsk;box.appendChild(b)}
+    if(r.me.admin){const b=document.createElement('button');b.className='btn sec';b.textContent='Новые из книги бухгалтерии';b.onclick=bookNewAsk;box.appendChild(b)}
     const u=document.createElement('p');u.className='muted';u.style.textAlign='center';u.textContent='обновлено '+stampNow()+'';box.appendChild(u);
     show('s-con');
   }catch(e){if(!quiet)toast(e.msg||'Нет доступа к консоли')}
