@@ -318,6 +318,39 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .stp2 b{font-size:18px;font-weight:650}.dzr.z .stp2 b{color:var(--mut);font-weight:500}
 .tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--mut)}
 .tot b{font-size:22px;font-weight:650;letter-spacing:-.02em;color:var(--txt)}
+/* ── наряд, новое мероприятие, выплаты, QR-лист, отчёт (редизайн, вариант A) ── */
+.ocat{padding:14px 16px 6px;margin-top:8px!important;margin-bottom:0}
+.ocn{font-size:17px;font-weight:600;color:var(--txt)}
+.oct>span:last-child{font-size:14px;white-space:nowrap;font-weight:550}
+.oln{border-bottom:0;border-top:1px solid rgba(128,128,128,.2);padding:13px 0}
+.ocat>.muted+.oln,.ocat>.muted+.oed{margin-top:10px}
+.oed{background:var(--bg);border:0;border-radius:14px;padding:4px 12px 6px;margin:0 -4px 8px}
+.oed .fld{border:2px solid var(--sf2);background:none;border-radius:10px;font-weight:550}
+.ocat>div:last-child{border-top:1px solid rgba(128,128,128,.2);margin-top:0}
+.fld{border:0;background:var(--sf2);border-radius:12px;min-height:52px;padding:12px 14px;font:inherit;font-size:17px;color:var(--txt)}
+select.fld{-webkit-appearance:none;appearance:none}
+#modal .fld,.drawer .fld{background:var(--sf2)}
+.flab{margin:14px 0 -2px;font-size:13px;color:var(--mut)}
+.fsec{margin:26px 0 0;padding-top:0;border-top:0;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.stp{border:0;background:var(--sf2);border-radius:12px;min-height:52px;padding:0 6px}
+.stp button{width:48px;height:44px;border-radius:10px;background:var(--bg)}
+.stp b{font-size:20px;font-weight:650}
+.mh{font-size:23px;font-weight:650;letter-spacing:-.02em;margin:0 0 3px}
+.obar{flex-direction:column;align-items:stretch;gap:12px;padding:14px 20px calc(22px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.obar .tot2{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;color:var(--mut)}
+.obar .tot2 b{font-size:20px;font-weight:650;letter-spacing:-.02em;color:var(--txt);white-space:nowrap}
+.obar .btn{width:100%;min-height:56px;padding:16px}
+#ord-body{padding-bottom:170px}
+.payr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.payr b{font-weight:600;font-size:16px;display:block}.payr small{font-size:13px;color:var(--mut)}
+.payr .r{display:flex;align-items:center;gap:10px;flex:none}.payr .r>b{font-size:15.5px}
+.payr .btn{width:92px;min-height:40px;margin:0;padding:8px 0;font-size:14px;border-radius:10px}
+.payr .btn.done{background:none;color:var(--ok);font-weight:550}
+.qrbox{width:230px;max-width:100%;margin:22px auto 0;padding:16px;border-radius:20px;background:#fff}
+.qrbox img{display:block;width:100%}
+.qrbox figcaption{text-align:center;color:#111;font-size:13px;font-weight:600;margin-top:8px}
+.qcode{text-align:center;font-size:36px;font-weight:650;letter-spacing:.06em;margin-top:18px;font-variant-numeric:tabular-nums}
+@media print{.qrbox{margin:20px auto;page-break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -440,9 +473,10 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
   <div id="ce-body"></div>
 </div>
 
-<div id="s-ord" class="scr wrap">
-  <div class="top"><button class="btn sec navback" onclick="ordBack()">‹ Назад</button><span class="muted" id="ord-ev"></span></div>
-  <h1 style="margin-top:4px">Наряд</h1>
+<div id="s-ord" class="scr wrap con">
+  <div class="ctop" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="ordBack();return false">‹ <span id="ord-ev"></span></a></div>
+  <h1 style="margin-top:8px">Наряд</h1>
+  <div class="muted">Кто нужен, к какому времени и сколько человек</div>
   <div id="ord-body"></div>
   <div class="obar" id="ord-bar"></div>
 </div>
@@ -568,7 +602,7 @@ function mgrBlock(o){
 function ordCard(r){
   const o=r.order;if(!o)return '';
   const ev=r.event,own=o.rows.filter(x=>!x.dz),stT={empty:'<span class="warn">не заполнен</span>',pending:'<span class="warn">ждёт согласования</span>',ok:'согласован'}[o.state]||'';
-  let h='<div class="sec-h"><h2>Наряд</h2><span class="muted">'+stT+'</span></div><div class="card">';
+  let h='<div class="sec2" style="justify-content:space-between">Наряд<span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--mut)">'+stT+'</span></div><div class="card" style="margin:8px -8px 0">';
   if(!own.length)h+='<p class="muted" style="margin:0">Наряд пока пуст. Укажите, кто нужен, к какому времени и сколько человек.</p>';
   else{
     const multi=(r.days||[]).length>1,day=multi?r.day:'',mine=own.filter(x=>!day||x.day===day),by={},order=[];
@@ -632,7 +666,7 @@ function ordSet(k,v){
 function ordSum(rows){let n=0,sum=0;rows.forEach(x=>{const R=ordRole(x.role),k=parseInt(x.n,10)||0;n+=k;sum+=ordNum(x.hours)*k*(R?R.rate:0)});return{n:n,sum:sum}}
 function ordBar(){
   const d=ordSum(ordEd.filter(x=>x.day===ordDay)),all=ordSum(ordEd),multi=ordDays.length>1;
-  document.getElementById('ord-bar').innerHTML='<div style="min-width:0"><b style="white-space:nowrap">'+d.n+' чел. · '+rub(d.sum)+'</b>'+(multi?'<div class="muted" style="font-size:13px">'+dayLbl(ordDay)+' · за все дни '+rub(all.sum)+'</div>':'')+'</div><button class="btn" onclick="ordGo()">Сохранить</button>';
+  document.getElementById('ord-bar').innerHTML='<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
   ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role)),m=ordMax(x.role);e.textContent=t.n+(m?' из '+m:'')+' чел. · '+rub(t.sum);e.className=m&&t.n>m?'warn':'muted'}});
 }
 const ordMax=role=>{const b=conData.order.book;return b&&b.found&&b.max&&b.max[role]>0?b.max[role]:0};
@@ -640,7 +674,7 @@ const ordCatId=role=>((conData.order.roles||[]).findIndex(q=>unesc(q.role)===rol
 function ordDraw(){
   const o=conData.order,multi=ordDays.length>1;
   let h='';
-  if(multi)h+='<div class="segs" style="margin-top:10px">'+ordDays.map((d,k)=>'<button class="'+(d===ordDay?'on':'')+'" onclick="ordPickDay('+k+')">'+dayLbl(d)+'</button>').join('')+'<button onclick="ordAddDay()" aria-label="Добавить день">+ день</button></div>';
+  if(multi)h+='<div class="chipsx" style="margin-bottom:6px">'+ordDays.map((d,k)=>'<button class="chip'+(d===ordDay?' on':'')+'" onclick="ordPickDay('+k+')">'+dayLbl(d)+'</button>').join('')+'<button class="chip" onclick="ordAddDay()" aria-label="Добавить день">+ день</button></div>';
   const rows=ordEd.map((x,i)=>({x:x,i:i})).filter(r=>r.x.day===ordDay);
   const cats=(o.roles||[]).map(q=>unesc(q.role)).filter(r=>rows.some(y=>y.x.role===r));
   if(!cats.length){
@@ -664,7 +698,7 @@ function ordDraw(){
     h+='<div style="padding-top:12px"><a class="lnk" href="#" data-r="'+escS(role)+'" onclick="ordAddRow(this.dataset.r);return false">+ время прихода</a></div></div>';
   });
   const have={};rows.forEach(r=>have[r.x.role]=1);
-  if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn sec" onclick="ordAddCat()">+ Категория</button>';
+  if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn txt" style="margin-top:8px" onclick="ordAddCat()">+ Категория</button>';
   h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
   h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'В пределах максимума из сметы бухгалтерии наряд согласуется сам; если максимум в смете не указан, наряд уйдёт администратору.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
@@ -699,7 +733,7 @@ function evCreateAsk(){
     '<div class="g2 eq">'+f('evc-start','Начало','time')+f('evc-end','Окончание','time')+'</div>'+
     '<div class="fsec">Где и сколько гостей</div><div class="g2">'+f('evc-venue','Площадка')+f('evc-guests','Гостей','number','inputmode="numeric"')+'</div>'+
     '<div class="fsec">Кто ведёт</div><label class="flab" for="evc-mgr">Менеджер</label><select id="evc-mgr" class="fld"><option value="">Не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
-    '<div class="ferr" id="m-err"></div><div class="acts" style="margin-top:16px"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
+    '<div class="ferr" id="m-err"></div><button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="evCreateGo()">Создать</button>');
 }
 async function evCreateGo(){
   const g=id=>document.getElementById(id).value.trim();
@@ -1410,11 +1444,15 @@ async function conAct(act,row,role,extra){
   try{
     const r=await api('con.act',Object.assign({id:ceId,act:act,row:row||0,role:role||''},extra||{}));
     if(act==='qr'){ // в панели: тихое обновление карточки её не стирает, печать печатает только её
-      openDrawer('<div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+escS(q.role)+'</figcaption></figure>').join('')+'</div><button class="btn wide noprint" style="margin-top:12px" onclick="conAct(\'qrSend\')">Отправить в чат бота</button><p class="muted noprint">QR-лист и код придут вам сообщением от бота: оттуда их можно переслать или сохранить. На компьютере лист можно распечатать: Ctrl+P.</p>','QR-листы','код '+escS(r.code));
+      const one=r.qr.length===1;
+      openDrawer(r.qr.map(q=>'<figure class="qrbox"><img src="'+q.img+'" alt="QR-код">'+(one?'':'<figcaption>'+escS(q.role)+'</figcaption>')+'</figure>').join('')+
+        '<div class="qcode">'+escS(String(r.code).replace(/^(\d{3})(\d{3})$/,'$1 $2'))+'</div><p class="hint" style="margin-top:4px">Код для тех, у кого не работает сканер</p>'+
+        '<p class="hint noprint" style="margin:22px 0 0">Лист и код придут сообщением от бота: оттуда их можно переслать. На компьютере лист можно распечатать: Ctrl+P.</p>'+
+        '<div class="foot noprint"><button class="btn" onclick="conAct(\'qrSend\')">Отправить в чат бота</button></div>','QR-лист',one?'Один на всё мероприятие и все категории':'');
       return true;
     }
     if(act==='qrSend'||act==='reportSend'){toast(r.msg||'Отправлено',true);return true} // панель с QR остаётся открытой
-    if(act==='report'){openDrawer('<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:0">'+r.text.replace(/</g,'&lt;')+'</pre><button class="btn wide noprint" style="margin-top:14px" onclick="conAct(\'reportSend\')">Отправить в чат бота</button><p class="muted noprint" style="font-size:13px">Отчёт придёт вам сообщением от бота: оттуда его можно переслать. Таблица с тем же отчётом — лист 08.</p>','Отчёт',escS(unesc(conData.event.name)));return true}
+    if(act==='report'){openDrawer(reportHtml(r),'Отчёт',escS(unesc(conData.event.name))+(r.data?' · '+escS(r.data.when):''));return true}
     toast(r.msg||'Готово',true);
     if(r.url)openL(r.url);
     if(act==='evCreate'){await conList();return true}
@@ -1425,6 +1463,22 @@ async function conAct(act,row,role,extra){
     conActErr=e.msg||'Ошибка';toast(conActErr);return false}
 }
 /* панель действий наверху карточки: только то, что нужно сейчас; остальное в «Ещё» */
+/* отчёт: если сервер отдал цифры (data) — структурой, иначе прежним текстом */
+function reportHtml(r){
+  const send='<div class="foot noprint"><button class="btn" onclick="conAct(\'reportSend\')">Отправить в чат бота</button></div><p class="hint noprint">Отчёт придёт сообщением от бота: оттуда его можно переслать. Таблица с тем же отчётом — лист 08.</p>';
+  const d=r.data;if(!d)return '<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:14px 0 0">'+String(r.text||'').replace(/</g,'&lt;')+'</pre>'+send;
+  const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><b>'+v+'</b></div>',diff=d.plan-d.fact;
+  const fw=n=>n+' '+(n%10===1&&n%100!==11?'флаг':(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'флага':'флагов'));
+  let h='<div class="bigv" style="margin-top:18px"><b>'+rub(d.fact)+'</b><span>факт из '+rub(d.plan)+' · '+(diff>=0?'экономия ':'перерасход ')+rub(Math.abs(diff))+'</span></div>'+
+    '<div class="meter'+(diff<0?' over':'')+'"><i style="width:'+Math.min(100,pct(d.fact,d.plan))+'%"></i></div>'+
+    '<div class="nums" style="margin-top:18px"><div><b>'+d.came+'<i> / '+d.lim+'</i></b><small>вышло</small></div><div><b>'+(Math.round(d.payH*10)/10).toLocaleString('ru-RU')+' ч</b><small>зачтено</small></div><div><b'+(d.flags?' class="warn"':'')+'>'+d.flags+'</b><small>'+fw(d.flags).replace(/^\d+ /,'')+'</small></div></div>';
+  h+='<div class="sec2" style="margin-top:26px">По категориям</div><div class="kvs t">'+d.cats.map(c=>kv(escS(c.name)+' · '+c.came+' из '+c.lim,rub(c.fact))).join('')+'</div>';
+  if(d.days&&d.days.length)h+='<div class="sec2" style="margin-top:26px">По дням</div><div class="kvs t">'+d.days.map(x=>kv(ruDay(x.day)+' · '+x.came+' из '+x.lim,rub(x.fact))).join('')+'</div>';
+  const dz=(conData.orders||[]);
+  h+='<div class="sec2" style="margin-top:26px">Что было</div><div class="kvs t">'+dz.map(o=>kv('Дозаказ',o.role+' +'+o.n+' · '+rub(o.sum))).join('')+
+    kv('Наличными своим',rub(d.cash))+kv('Безналом подрядчику',rub(d.cashless))+kv('Правок часов',d.edits)+kv('Автозакрытий',d.auto)+kv('Новых лиц',d.fresh)+(d.openN?kv('Ещё в смене',d.openN):'')+'</div>';
+  return h+send;
+}
 function actionBar(ev,m,st){
   const open=ev.status==='Открыто',closed=ev.status==='Закрыто';
   let b='';
@@ -1464,19 +1518,19 @@ async function bxGo(){
 }
 /* выплаты наличными: поимённый список по закрытым сменам своих, отметка «выдано» */
 function payOpen(){
-  const ev=conData.event,pay=conData.pay||[],multi=(conData.days||[]).length>1;
+  const pay=conData.pay||[],multi=(conData.days||[]).length>1;
   const sum=pay.reduce((n,x)=>n+x.sum,0),done=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0),openN=conData.shifts.filter(x=>x.open&&x.own).length;
-  let h='<div class="tiles" style="margin-top:0"><div class="tile"><b>'+rub(sum-done)+'</b><small>осталось выдать</small></div><div class="tile"><b>'+rub(done)+'</b><small>выдано из '+rub(sum)+'</small></div></div>';
-  if(openN)h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Ещё в смене: '+openN+' чел. Они появятся в списке после ухода.</p>';
-  if(!pay.length)h+='<p class="muted" style="margin:12px 0 0">Закрытых смен своего персонала пока нет.</p>';
+  let h='<div class="bigv" style="margin-top:18px"><b>'+rub(sum-done)+'</b><span>осталось выдать · выдано '+rub(done)+' из '+rub(sum)+'</span></div>';
+  if(openN)h+='<p class="cap" style="margin:10px 0 0;font-size:13.5px">Ещё в смене: '+openN+' чел. Они появятся в списке после ухода.</p>';
+  if(!pay.length)h+='<p class="muted" style="margin:16px 0 0">Закрытых смен своего персонала пока нет.</p>';
   let cat='';
   pay.forEach((x,i)=>{
-    if(x.role!==cat){cat=x.role;h+='<h2 style="margin-top:18px">'+x.role+'</h2>'}
-    h+='<div class="row" style="align-items:center"><span>'+x.fio+'<br><span class="muted" style="font-size:13px">'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</span></span>'+
-      '<span style="display:flex;align-items:center;gap:10px;flex:0 0 auto"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' sec':'')+'" style="width:auto;margin:0;padding:10px 14px;font-size:14px" onclick="payToggle('+i+')">'+(x.paid?'Выдано ✓':'Выдать')+'</button></span></div>';
+    if(x.role!==cat){cat=x.role;h+='<div class="sec2" style="margin-top:26px">'+x.role+'</div>'}
+    h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
+      '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
   });
-  h+='<p class="muted" style="font-size:13px;margin:14px 0 0">Список и отметки видны администратору и в таблице, лист 08. Подрядчику платят по безналу, его здесь нет.</p>';
-  openDrawer(h,'Выплаты наличными',ev.name);
+  h+='<p class="hint" style="margin-top:18px">Отметки видны администратору и в таблице, лист 08</p>';
+  openDrawer(h,'Выплаты наличными','Свой персонал · подрядчику платят по безналу');
 }
 async function payToggle(i){
   const x=(conData.pay||[])[i];if(!x)return;
