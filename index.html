@@ -212,6 +212,56 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ctx .notew{flex-basis:100%;margin-top:6px}
 .cam{border-radius:22px}
 #ev-name:not(:empty)::after{content:" · "}
+/* ── консоль (редизайн, вариант A): мероприятия карточками на подложке, очередь решений на подложке, фильтры одной строкой ── */
+.scr.con.on{display:flex;flex-direction:column}
+.ctop{display:flex;justify-content:flex-end;align-items:center;gap:14px;height:34px;margin-top:-34px}
+.ctop .lnk{padding:10px 0;margin:0;font-weight:500}
+.ib{width:44px;height:44px;margin-right:-10px;border:0;background:none;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt);position:relative}
+.ib svg{width:22px;height:22px}.ib:active{background:var(--sf2)}
+.con h1{margin-top:22px}
+#con-tabs{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;gap:24px;margin:16px 0 0}
+#con-tabs button{flex:none;padding:10px 0 11px;margin-bottom:-1px;border-radius:0;border-bottom:2px solid transparent;font-size:16px;font-weight:550}
+#con-tabs button.on{background:none;box-shadow:none;border-color:var(--txt)}
+#con-tabs .badge{background:none;color:var(--warn);padding:0;margin-left:5px;min-width:0;font-size:inherit;line-height:inherit;vertical-align:0}
+.evs{margin:14px -8px 0}
+.evr{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--sf2);border:0;border-radius:18px;padding:14px 16px 16px;margin-top:8px;cursor:pointer}
+.evr:active{filter:brightness(.96)}.evr:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.evr .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.evr .h b{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.evr .m{font-size:14px;color:var(--mut);margin-top:3px}
+.evr .sum{white-space:nowrap;font-weight:600;font-size:15.5px}
+.evr .st{white-space:nowrap}
+.meter{height:3px;border-radius:2px;background:rgba(128,128,128,.22);overflow:hidden;margin:12px 0 0}
+.meter i{display:block;height:100%;background:var(--txt);border-radius:2px}.meter.over i{background:var(--bad)}
+.st.off i{background:none;box-shadow:inset 0 0 0 1.5px var(--mut)}
+.st.fill i{background:none;box-shadow:inset 0 0 0 1.5px var(--txt);animation:fillp 1.6s ease-in-out infinite}
+@keyframes fillp{0%,100%{box-shadow:inset 0 0 0 1.5px var(--txt)}50%{box-shadow:inset 0 0 0 4px var(--txt)}}
+@media (prefers-reduced-motion:reduce){.st.fill i{animation:none}}
+.chipsx{display:flex;gap:6px;margin:16px -20px 0;padding:0 20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chipsx::-webkit-scrollbar{display:none}
+.chipsx .chip{flex:none;white-space:nowrap;border:0;background:var(--sf2);color:var(--mut);padding:8px 13px;font:inherit;font-size:14px;font-weight:550}
+.chipsx .chip.on{background:var(--txt);color:var(--bg)}
+.qbox{background:var(--sf2);border-radius:20px;margin:14px -8px 0;padding:0 16px 16px}
+.qbox .grp{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;background:none;border:0;padding:16px 0 0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.qbox .grp b{font-size:15.5px;font-weight:600}.qbox .grp span{font-size:13px;color:var(--mut);white-space:nowrap}
+.qbox .flrow{padding:14px 0 16px;border-bottom:1px solid rgba(128,128,128,.2)}
+.qbox .flrow:last-child{border-bottom:0;padding-bottom:0}
+.qbox .who{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:6px}
+.pname{background:none;border:0;padding:0;font:inherit;font-size:17px;font-weight:600;color:var(--txt);text-align:left;cursor:pointer}
+.qbox .pay{white-space:nowrap;font-size:14.5px;font-weight:600}
+.qd{font-size:14.5px;color:var(--mut);margin:4px 0 0}
+.qbox .acts{margin-top:12px}
+.qbox .btn.sec{background:var(--bg)}
+.acts.pb .btn{border-radius:12px;min-height:54px;padding:6px}
+.flrow.busy .who,.flrow.busy .qd{opacity:.55}
+.mon2{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 0;font-size:13px;color:var(--mut)}
+.mon2 b{font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.mon2+.evs{margin-top:4px}
+.srch{position:relative;margin-top:16px}
+.srch svg{position:absolute;left:14px;top:14px;width:20px;height:20px;color:var(--mut)}
+.srch input{height:48px;padding:0 14px 0 44px;font-size:16px;letter-spacing:0;text-align:left}
+.srch input::placeholder{color:var(--mut)}
+.upd{font-size:13px;color:var(--mut);text-align:center;margin:22px 0 0}
 </style>
 </head>
 <body>
@@ -309,17 +359,21 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
   <button class="btn" id="btn-send" style="display:none" onclick="sendShot()">Отправить</button>
 </div>
 
-<div id="s-con" class="scr wrap">
-  <div class="top"><div><h1 style="margin:0">Консоль</h1><div class="muted" id="con-me"></div></div><div style="display:flex;gap:8px;flex:none"><button class="btn sec ico" id="btn-ntf" onclick="ntfOpen()" aria-label="Уведомления" title="Уведомления"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button><button class="btn sec" onclick="show('s-home')">Отметиться</button></div></div>
+<div id="s-con" class="scr wrap con">
+  <div class="ctop"><a class="lnk" href="#" onclick="show('s-home');return false">Отметиться</a><button class="ib" id="btn-ntf" onclick="ntfOpen()" aria-label="Уведомления" title="Уведомления"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button></div>
+  <h1>Консоль</h1>
+  <div class="muted" id="con-me"></div>
   <div class="segs noprint" id="con-tabs"><button data-t="events" onclick="conTabGo('events')">Мероприятия</button><button data-t="flags" onclick="conTabGo('flags')">Флаги<span class="badge" id="fl-badge"></span></button></div>
   <div id="con-list"></div>
+  <div class="grow"></div>
+  <div id="con-foot"></div>
 </div>
 
-<div id="s-arch" class="scr wrap">
-  <div class="top"><button class="btn sec navback" onclick="conList()">‹ Консоль</button></div>
-  <h1>Архив</h1>
-  <div class="muted" style="margin-bottom:10px">Закрытые мероприятия за последние 3 месяца. Старше — в таблице.</div>
-  <input class="txt" id="arch-q" placeholder="Поиск: название или номер" oninput="archDraw()" style="margin-bottom:12px">
+<div id="s-arch" class="scr wrap con">
+  <div class="ctop" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conList();return false">‹ Консоль</a></div>
+  <h1 style="margin-top:8px">Архив</h1>
+  <div class="muted">Закрытые мероприятия за последние 3 месяца. Старше — в таблице.</div>
+  <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input class="txt" id="arch-q" placeholder="Название или номер" aria-label="Поиск по архиву" oninput="archDraw()"></div>
   <div id="arch-list"></div>
 </div>
 
@@ -936,13 +990,24 @@ function conTabsDraw(){document.querySelectorAll('#con-tabs button').forEach(b=>
 function flBadge(open,askN){const n=(open||0)+(conMe&&conMe.admin?(askN||0):0);document.getElementById('fl-badge').textContent=n?String(n):''}
 function conBack(){if(conFrom==='arch')return conArch();if(conFrom==='flags'){conTab='flags'}conList()}
 function conList(quiet){conTabsDraw();return conTab==='flags'?conFlags(quiet):conEvents(quiet)}
-function evCard(e){
-  const d=document.createElement('div');d.className='card evc';
-  d.innerHTML='<div class="top" style="margin:0 0 4px"><h3>'+e.name+'</h3><span class="pill '+pillCls(e.status)+'">'+e.status+'</span></div>'+
-    '<div class="muted">'+[ruDate(e.date),e.venue&&e.venue!==e.name?e.venue:'',e.start+'–'+e.end,e.bx?'сделка '+e.bx:'',e.mgr||''].filter(Boolean).join(' · ')+'</div>'+
-    (e.limit?'<div class="bar'+(e.fact>e.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(e.fact,e.plan))+'%"></i></div>'+
-    '<div class="muted">факт '+rub(e.fact)+' из '+rub(e.plan)+' · вышло '+e.came+' из '+e.limit+(e.status==='Закрыто'?'':' · на объекте '+e.on)+
-    (e.flagsOpen||e.flagsAsk?' · <span class="warn">флагов: '+(e.flagsOpen+e.flagsAsk)+'</span>':'')+'</div>':'<div class="muted">наряд не согласован</div>');
+/* строка мероприятия: в списке — статус, цифры и полоса фонда; в архиве (arch) — факт и план справа */
+const EV_ST={'Открыто':'ok','Закрыто':'','Заполняется':'fill'};
+function evCard(e,arch){
+  const d=document.createElement('button');d.className='evr';
+  const todo=e.todo!==undefined?e.todo:((e.flagsOpen||0)+(e.flagsAsk||0)),todoT=todo?'<span class="warn">'+(e.todo!==undefined?'требуют решения ':'флагов: ')+todo+'</span>':'';
+  const over=e.fact>e.plan;
+  if(arch){
+    d.innerHTML='<div class="h"><b>'+e.name+'</b><span class="sum'+(over?' bad':'')+'">'+rub(e.fact)+'</span></div>'+
+      '<div class="h"><span class="m">'+[ruDate(e.date),todoT,over?'перерасход '+rub(e.fact-e.plan):''].filter(Boolean).join(' · ')+'</span><span class="m">из '+rub(e.plan)+'</span></div>';
+    return d;
+  }
+  const open=e.status==='Открыто',closed=e.status==='Закрыто';
+  const line=!e.limit?'<span class="warn">Наряд не согласован</span>':
+    (open||closed?[closed?'':'На объекте '+e.on,(closed?'Вышло ':'вышло ')+e.came+' из '+e.limit,todoT].filter(Boolean).join(' · '):'Наряд: '+e.limit+' чел. · план '+rub(e.plan));
+  d.innerHTML='<div class="h"><b>'+e.name+'</b><span class="st '+(EV_ST[e.status]===undefined?'off':EV_ST[e.status])+'"><i></i>'+e.status+'</span></div>'+
+    '<div class="m">'+[ruDate(e.date),e.venue&&e.venue!==e.name?e.venue:'',e.start+'–'+e.end,e.bx?'сделка '+e.bx:'',e.mgr||''].filter(Boolean).join(' · ')+'</div>'+
+    '<div class="m">'+line+'</div>'+
+    (e.limit&&(open||closed)?'<div class="meter'+(over?' over':'')+'"><i style="width:'+Math.min(100,pct(e.fact,e.plan))+'%"></i></div>':'');
   return d;
 }
 async function conEvents(quiet){
@@ -952,13 +1017,16 @@ async function conEvents(quiet){
     flBadge(r.flagsOpen,r.flagsAsk);
     const key='L'+JSON.stringify([r.events,r.archiveN]);if(quiet&&key===lastJson)return;lastJson=key;
     document.getElementById('con-me').innerHTML=r.me.fio+' · '+r.me.role;
-    const box=document.getElementById('con-list');box.innerHTML='';
-    if(!r.events.length)box.innerHTML='<p class="muted">Текущих мероприятий нет.</p>';
-    r.events.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='list';conOpen(e.id)};box.appendChild(d)});
-    if(r.archiveN){const a=document.createElement('button');a.className='btn sec';a.innerHTML='Архив · '+r.archiveN+' ›';a.onclick=()=>conArch();box.appendChild(a)} // пустой архив не показываем
-    if(r.me.admin){const b=document.createElement('button');b.className='btn';b.textContent='Новое мероприятие';b.onclick=evCreateAsk;box.appendChild(b)}
-    if(r.me.admin){const b=document.createElement('button');b.className='btn sec';b.textContent='Новые из книги бухгалтерии';b.onclick=bookNewAsk;box.appendChild(b)}
-    const u=document.createElement('p');u.className='muted';u.style.textAlign='center';u.textContent='обновлено '+stampNow()+'';box.appendChild(u);
+    const box=document.getElementById('con-list'),ft=document.getElementById('con-foot');box.innerHTML='';ft.innerHTML='';
+    if(!r.events.length)box.innerHTML='<p class="muted" style="margin-top:16px">Текущих мероприятий нет.</p>';
+    const list=document.createElement('div');list.className='evs';box.appendChild(list);
+    r.events.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='list';conOpen(e.id)};list.appendChild(d)});
+    const u=document.createElement('p');u.className='upd';u.textContent='Обновлено в '+stampNow();box.appendChild(u);
+    // внизу: главное действие последним, второстепенные над ним; пустой архив не показываем
+    const fb=(cls,t,fn)=>{const b=document.createElement('button');b.className='btn'+cls;b.textContent=t;b.onclick=fn;ft.appendChild(b)};
+    if(r.archiveN)fb(' txt','Архив · '+r.archiveN,()=>conArch());
+    if(r.me.admin)fb(' txt','Новые из книги бухгалтерии',bookNewAsk);
+    if(r.me.admin)fb('','Новое мероприятие',evCreateAsk);
     show('s-con');
   }catch(e){if(!quiet)toast(e.msg||'Нет доступа к консоли')}
 }
@@ -972,23 +1040,30 @@ async function conFlags(quiet){
     flBadge(r.counts.open,r.counts.ask);
     const key='F'+JSON.stringify([r.counts,r.groups,r.state]);if(quiet&&key===lastJson)return;lastJson=key;
     document.getElementById('con-me').innerHTML=r.me.fio+' · '+r.me.role;
-    let h='<div class="chips">'+FL_ST.map(([k,t])=>'<button class="chip'+(k===r.state?' on':'')+'" onclick="flChip(\''+k+'\')">'+t+(r.counts[k]?' · '+r.counts[k]:'')+'</button>').join('')+'</div>';
-    if(!r.groups.length)h+='<p class="muted">'+(r.state==='open'?'Неразобранных флагов нет.':r.state==='ask'?'Запросов правки нет.':'За 3 месяца разобранных флагов нет.')+'</p>';
+    const plural=n=>n+' '+(n%10===1&&n%100!==11?'флаг':(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'флага':'флагов'));
+    let h='<div class="chipsx">'+FL_ST.map(([k,t])=>'<button class="chip'+(k===r.state?' on':'')+'" onclick="flChip(\''+k+'\')">'+t+(r.counts[k]?' · '+r.counts[k]:'')+'</button>').join('')+'</div>';
+    if(!r.groups.length)h+='<p class="muted" style="margin-top:16px">'+(r.state==='open'?'Неразобранных флагов нет.':r.state==='ask'?'Запросов правки нет.':'За 3 месяца разобранных флагов нет.')+'</p>';
     r.groups.forEach((g,gi)=>{
-      h+='<div class="mon"><h2>'+g.name+'</h2><span class="muted">'+ruDate(g.date)+' · '+g.items.length+'</span></div><div class="card">'+
+      h+='<div class="qbox"><button class="grp" onclick="flEv('+gi+')"><b>'+g.name+'</b><span>'+ruDate(g.date).split(',')[0]+' · '+plural(g.items.length)+'</span></button>'+
         g.items.map((x,ii)=>flRow('flData.groups['+gi+'].items['+ii+']',x,'flOpen('+gi+','+ii+')')).join('')+'</div>';
     });
-    if(r.state==='open'&&r.groups.length)h+='<p class="muted" style="font-size:13px">«Всё верно» закрывает флаг без изменения денег. Кнопки с часами отправляют запрос администратору: часы меняет только он.</p>';
-    h+='<p class="muted" style="text-align:center;margin-top:14px">обновлено '+stampNow()+'</p>';
-    document.getElementById('con-list').innerHTML=h;
+    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» закрывает флаг без изменения денег. Кнопки с часами отправляют запрос администратору: часы меняет только он.')+'</p>';
+    h+='<p class="upd">Обновлено в '+stampNow()+'</p>';
+    document.getElementById('con-list').innerHTML=h;document.getElementById('con-foot').innerHTML='';
+    {const on=document.querySelector('.chipsx .chip.on'),bx=on&&on.parentNode;if(on&&bx.scrollWidth>bx.clientWidth)bx.scrollLeft=Math.max(0,on.offsetLeft-bx.offsetLeft-20)} // выбранный фильтр не должен прятаться за краем
     show('s-con');
   }catch(e){if(!quiet)toast(e.msg||'Нет доступа к консоли')}
 }
+/* заголовок группы флагов ведёт в карточку мероприятия, ФИО — в карточку работника */
+function flEv(gi){const g=flData.groups[gi],x=g&&g.items[0];if(!x)return;conFrom='flags';conOpen(x.ev,x.day)}
 /* строка флага: кто, причина, зачтено; под ней кнопки по типу флага */
+const FL_TAG={auto:'Автозакрытие',early:'Ранний уход',late:'Поздний приход',long:'Долгая смена'};
 function flRow(ref,x,open){
-  const pend=flPend[x.key];
-  return '<div class="flrow'+(pend?' busy':'')+'" data-key="'+x.key+'"><div class="sh"'+(open?' onclick="'+open+'"':'')+'><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+(x.in||'')+(x.out?'–'+x.out:'')+'</div><div class="m">'+x.text+'</div></div>'+
-    '<div class="r"><b>'+h2(x.pay)+'</b><div class="m">'+(x.own?rub(x.sum):'подрядчик')+'</div>'+(open?'<div class="m">›</div>':'')+'</div></div>'+(pend?'<p class="flask warn">'+pend+'</p>':flState_(ref,x))+'</div>';
+  const pend=flPend[x.key],tag=x.state==='done'?'<div class="st"><i></i>Разобрано</div>':'<div class="st warn"><i></i>'+(x.state==='ask'?'Запрос правки':(FL_TAG[x.main]||'Флаг'))+'</div>';
+  return '<div class="flrow'+(pend?' busy':'')+'" data-key="'+x.key+'">'+tag+
+    '<div class="who"><button class="pname"'+(open?' onclick="'+open+'"':'')+'>'+x.fio+'</button><span class="pay">'+h2(x.pay)+(x.own?' · '+rub(x.sum):'')+'</span></div>'+
+    '<p class="qd">'+x.role+' · '+(x.in||'')+(x.out?'–'+x.out:'')+'. '+x.text+(x.own?'':' Сумму считает подрядчик.')+'</p>'+
+    (pend?'<p class="flask warn">'+pend+'</p>':flState_(ref,x))+'</div>';
 }
 function flState_(ref,x){
   if(x.state==='open')return flBtns(ref,x);
@@ -1001,38 +1076,41 @@ function flDone(r){
   return w?[w].concat(p.slice(1,3)).join(' · ')+(p[0]==='поправлено'&&p[3]?' · '+p[3]:''):'Поправлено администратором';
 }
 function flBtns(ref,x){
+  const adm=!!(conMe&&conMe.admin); // администратор правит часы сразу, менеджер отправляет запрос
   const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
+  const keep=h2(x.pay)+(x.own?' · '+rub(x.sum):''),minS=x.min+' ч'+(adm?(x.own&&x.rate?' · '+rub(x.min*x.rate):''):', запрос админу'),tillS=adm?'указать и пересчитать':'пересчёт, запрос админу';
   const ok=(t,sub)=>b('sec','ok',t||'Всё верно',sub||(h2(x.pay)+' остаётся'));
   let h='';
-  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Время ухода','пересчёт, запрос админу');
-  else if(x.main==='early')h=ok('Всё верно','по факту')+b('','min','Минимум',x.min+' ч, запрос админу');
-  else if(x.main==='late')h=ok('Опоздал','по факту, как сейчас')+b('','min','Вызывали','минимум '+x.min+' ч, запрос админу');
-  else if(x.main==='long')h=ok('Всё верно')+b('','until','Время ухода','пересчёт, запрос админу');
+  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Время ухода',tillS);
+  else if(x.main==='early')h=ok('Оставить факт',keep)+b('','min','Зачесть минимум',minS);
+  else if(x.main==='late')h=ok('Опоздал','по факту, как сейчас')+b('','min','Вызывали','минимум '+minS);
+  else if(x.main==='long')h=ok('Всё верно')+b('','until','Время ухода',tillS);
   else h=ok().replace('class="btn sec"','class="btn sec wide"');
   return '<div class="acts pb">'+h+'</div>';
 }
 function flOpen(gi,ii){const x=flData.groups[gi].items[ii];conFrom='flags';deepPhone=x.key.split('|')[1];conOpen(x.ev,x.day)}
 let flCur=null;
 async function flDo(x,act){
-  if(act==='until'){flCur=x;return modalOpen('<div class="mh">'+(x.main==='long'?'Когда ушёл':'До скольки работал')+'</div><p class="muted" style="margin:0 0 6px">'+x.fio+' · пришёл '+x.in+'. Бот посчитает часы по обычным правилам и отправит запрос администратору.</p>'+
+  if(act==='until'){flCur=x;return modalOpen('<div class="mh">'+(x.main==='long'?'Когда ушёл':'До скольки работал')+'</div><p class="muted" style="margin:0 0 6px">'+x.fio+' · пришёл '+x.in+'. '+(conMe&&conMe.admin?'Часы посчитаются по обычным правилам и применятся сразу.':'Бот посчитает часы по обычным правилам и отправит запрос администратору.')+'</p>'+
     '<label class="flab" for="fl-till">'+(x.main==='long'?'Время ухода':'Работал до')+'</label><input type="time" class="fld" id="fl-till" value=""><input class="fld" id="fl-why" placeholder="Комментарий (необязательно)"><div class="ferr" id="m-err"></div>'+
-    '<div class="acts"><button class="btn" onclick="flUntilGo()">Отправить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>')}
-  if(act==='min'&&!(await ask(x.fio+': попросить администратора зачесть минимум '+x.min+' ч?')))return;
+    '<div class="acts"><button class="btn" onclick="flUntilGo()">'+(conMe&&conMe.admin?'Пересчитать':'Отправить')+'</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>')}
+  const adm=!!(conMe&&conMe.admin);
+  if(act==='min'&&!(await ask(x.fio+(adm?': зачесть минимум '+x.min+' ч? Оплата пересчитается сразу.':': попросить администратора зачесть минимум '+x.min+' ч?'))))return;
   if(act==='apply'&&!(await ask('Применить: '+x.fio+' → '+h2(x.ask.h)+(x.own?', '+rub(Math.round(x.ask.h*x.rate)):'')+'?')))return;
   if(act==='reject'&&!(await ask('Отклонить запрос? Останется '+h2(x.pay)+'.')))return;
   const map={ok:'flagOk',min:'flagAsk',apply:'flagApply',reject:'flagReject'};
-  await flSend(x,map[act],act==='min'?{kind:'min'}:{});
+  await flSend(x,map[act],act==='min'?(adm?{kind:'min',now:1}:{kind:'min'}):{});
 }
 function flUntilGo(){
   const t=document.getElementById('fl-till').value,w=document.getElementById('fl-why').value.trim();
   if(!/^\d{1,2}:\d{2}$/.test(t))return mErr('Укажите время');
-  modalClose();flSend(flCur,'flagAsk',{kind:'until',till:t,why:w});
+  modalClose();flSend(flCur,'flagAsk',Object.assign({kind:'until',till:t,why:w},conMe&&conMe.admin?{now:1}:{}));
 }
 /* решение по флагу уходит в фоне: строка сразу показывает «сохраняю…», экран не блокируется; ответ сервера обновляет список тихо */
 const flPend={};
 function flMark(key,txt){document.querySelectorAll('.flrow[data-key="'+key+'"]').forEach(el=>{el.classList.add('busy');const a=el.querySelector('.acts,.flask');const p=document.createElement('p');p.className='flask warn';p.textContent=txt;if(a)a.replaceWith(p);else el.appendChild(p)})}
 async function flSend(x,act,extra){
-  const txt={flagOk:'Сохраняю…',flagAsk:'Отправляю запрос…',flagApply:'Применяю…',flagReject:'Отклоняю…'}[act]||'Сохраняю…';
+  const txt={flagOk:'Сохраняю…',flagAsk:extra&&extra.now?'Применяю…':'Отправляю запрос…',flagApply:'Применяю…',flagReject:'Отклоняю…'}[act]||'Сохраняю…';
   flPend[x.key]=txt;flMark(x.key,txt);
   try{
     const r=await api('con.act',Object.assign({id:unesc(x.ev),act:act,key:unesc(x.key)},extra||{}),true,60000);
@@ -1051,12 +1129,13 @@ function archDraw(){
   if(!archData)return;const q=(document.getElementById('arch-q').value||'').trim().toLowerCase();
   const L=archData.events.filter(e=>!q||unesc(e.name).toLowerCase().indexOf(q)>=0||String(e.id).toLowerCase().indexOf(q)>=0);
   const box=document.getElementById('arch-list');box.innerHTML='';
-  if(!L.length){box.innerHTML='<p class="muted">'+(q?'Ничего не найдено.':'За 3 месяца закрытых мероприятий нет.')+'</p>';return}
+  if(!L.length){box.innerHTML='<p class="muted" style="margin-top:16px">'+(q?'Ничего не найдено.':'За 3 месяца закрытых мероприятий нет.')+'</p>';return}
   const M=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],by={};
   L.forEach(e=>{const k=String(e.date).slice(0,7);(by[k]=by[k]||[]).push(e)});
   Object.keys(by).sort().reverse().forEach(k=>{const es=by[k],f=es.reduce((n,e)=>n+(e.fact||0),0);
-    const hd=document.createElement('div');hd.className='mon';hd.innerHTML='<h2>'+M[+k.slice(5,7)-1]+' '+k.slice(0,4)+'</h2><span class="muted">'+es.length+' · факт '+rub(f)+'</span>';box.appendChild(hd);
-    es.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='arch';conOpen(e.id)};box.appendChild(d)});
+    const hd=document.createElement('div');hd.className='mon2';hd.innerHTML='<b>'+M[+k.slice(5,7)-1]+' '+k.slice(0,4)+'</b><span>'+es.length+' · факт '+rub(f)+'</span>';box.appendChild(hd);
+    const list=document.createElement('div');list.className='evs';box.appendChild(list);
+    es.forEach(e=>{const d=evCard(e,true);d.onclick=()=>{conFrom='arch';conOpen(e.id)};list.appendChild(d)});
   });
 }
 let ceId='',ceDay='',deepRow=0,deepPhone='',deepDz=false,lastJson='',conMeta=null,pollBusy=false;
