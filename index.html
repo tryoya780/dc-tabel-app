@@ -43,7 +43,7 @@ input.txt{letter-spacing:0;font-size:18px;text-align:left}
 .cat.full{cursor:default}.cat.full b{color:var(--mut);font-weight:500}
 .scr{display:none}.scr.on{display:block;flex:1;min-width:0}
 .scr.emp.on{display:flex;flex-direction:column}
-body.tgback .navback{display:none}
+body.tgback .navback,body.tgback .navrow{display:none}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));background:var(--bad);color:var(--on-bad);padding:13px 16px;border-radius:14px;font-size:15px;font-weight:500;display:none;z-index:50}
 .toast.ok{background:var(--txt);color:var(--bg)}
 .toast.warn{background:var(--warn);color:var(--bg)}
@@ -218,6 +218,7 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ib{width:44px;height:44px;margin-right:-10px;border:0;background:none;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt);position:relative}
 .ib svg{width:22px;height:22px}.ib:active{background:var(--sf2)}
 .con h1{margin-top:10px}
+body.tgback #s-ord h1,body.tgback #s-arch h1{margin-top:4px!important}
 #con-tabs{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;gap:24px;margin:16px 0 0}
 #con-tabs button{flex:none;padding:10px 0 11px;margin-bottom:-1px;border-radius:0;border-bottom:2px solid transparent;font-size:16px;font-weight:550}
 #con-tabs button.on{background:none;box-shadow:none;border-color:var(--txt)}
@@ -460,7 +461,7 @@ select.fld{-webkit-appearance:none;appearance:none}
 </div>
 
 <div id="s-arch" class="scr wrap con">
-  <div class="ctop" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conList();return false">‹ Консоль</a></div>
+  <div class="ctop navrow" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conList();return false">‹ Консоль</a></div>
   <h1 style="margin-top:8px">Архив</h1>
   <div class="muted">Закрытые мероприятия за последние 3 месяца. Старше — в таблице.</div>
   <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input class="txt" id="arch-q" placeholder="Название или номер" aria-label="Поиск по архиву" oninput="archDraw()"></div>
@@ -475,7 +476,7 @@ select.fld{-webkit-appearance:none;appearance:none}
 </div>
 
 <div id="s-ord" class="scr wrap con">
-  <div class="ctop" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="ordBack();return false">‹ <span id="ord-ev"></span></a></div>
+  <div class="ctop navrow" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="ordBack();return false">‹ <span id="ord-ev"></span></a></div>
   <h1 style="margin-top:8px">Наряд</h1>
   <div class="muted">Кто нужен, к какому времени и сколько человек</div>
   <div id="ord-body"></div>
@@ -642,6 +643,14 @@ function ordEdit(){
 async function ordBack(){if(ordDirty&&!(await ask('Выйти без сохранения? Изменения наряда пропадут.')))return;ordDirty=false;conOpen(ceId,ceDay)}
 function ordPickDay(k){ordDay=ordDays[k];ordOpen=-1;ordEndEdit=false;ordDraw()}
 function ordAddDay(){const d=dayAdd(ordDays[ordDays.length-1],1);ordDays.push(d);ordDay=d;ordOpen=-1;ordDraw()}
+/* убрать день: только добавленный сверх дней мероприятия; группы с отметками не трогаем */
+function ordBaseDay(d){const ev=conData.event;for(let k=0;k<(+ev.days||1);k++)if(dayAdd(ev.date,k)===d)return true;return false}
+async function ordDelDay(){
+  const d=ordDay,mine=ordEd.filter(x=>x.day===d);
+  if(mine.some(x=>x.locked))return toast('В этом дне уже есть отметки: убрать его нельзя');
+  if(mine.length&&!(await ask('Убрать '+dayLbl(d)+' из наряда? Группы этого дня ('+mine.length+') удалятся.')))return;
+  ordEd=ordEd.filter(x=>x.day!==d);ordDays=ordDays.filter(x=>x!==d);ordDay=ordDays[Math.max(0,ordDays.length-1)];ordOpen=-1;ordEndEdit=false;if(mine.length)ordDirty=true;ordDraw();
+}
 function ordCopyDay(from){ordEd.filter(x=>x.day===from).forEach(x=>ordEd.push({role:x.role,day:ordDay,start:x.start,hours:x.hours,end:x.end,n:x.n,locked:false}));ordDirty=true;ordDraw()}
 function ordAddRow(role){
   const ev=conData.event,R=ordRole(role),same=ordEd.filter(x=>x.day===ordDay&&x.role===role).pop(),h=same&&ordNum(same.hours)>0?ordNum(same.hours):(R&&R.min?R.min:8),st=same?same.start:ev.start;
@@ -704,6 +713,7 @@ function ordDraw(){
   if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn txt" style="margin-top:8px" onclick="ordAddCat()">+ Категория</button>';
   h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
+  if(multi&&!ordBaseDay(ordDay))h+='<button class="btn txt red" style="margin-top:4px" onclick="ordDelDay()">Убрать день '+dayLbl(ordDay)+'</button>';
   h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'В пределах максимума из сметы бухгалтерии наряд согласуется сам; если максимум в смете не указан, наряд уйдёт администратору.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
     (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
   document.getElementById('ord-body').innerHTML=h;ordBar();
