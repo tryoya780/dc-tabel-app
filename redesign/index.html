@@ -172,7 +172,7 @@ body.busy .btn{pointer-events:none;opacity:.6}
 #modal .ph-wrap{margin:10px 0;min-height:80px;text-align:center}#modal .ph-img{width:100%;max-height:70vh;object-fit:contain;border-radius:10px;background:#000}
 #modal label.ck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}
 #modal label.ck input{width:20px;height:20px;margin-top:1px}
-.ntf{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.ntf:last-child{border-bottom:0}.ntf input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--brass)}.ntf .t{font-size:16px}.ntf .d{font-size:13px;color:var(--mut);margin-top:2px}
+.ntf{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.ntf:last-child{border-bottom:0}.ntf input{-webkit-appearance:none;appearance:none;flex:none;width:24px;height:24px;margin:0;padding:0;border-radius:7px;background:none!important;box-shadow:inset 0 0 0 1.5px var(--mut);display:grid;place-items:center}.ntf input:checked{background:var(--txt)!important;box-shadow:none}.ntf input:checked::after{content:"";width:11px;height:6px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}.ntf .t{font-size:16px}.ntf .d{font-size:13px;color:var(--mut);margin-top:2px}
 .acts.pb .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;line-height:1.15;min-height:64px;text-wrap:balance}.acts.pb .btn small,.btn small{font-size:12px;font-weight:400;opacity:.75}
 /* ── экраны сотрудника (редизайн, вариант A): главная кнопка прижата к низу, статус — точка и слово ── */
 .grow{flex:1;min-height:18px}
@@ -305,6 +305,9 @@ body.tgback #s-ord h1,body.tgback #s-arch h1{margin-top:4px!important}
 .btn.txt.red{color:var(--bad)}
 /* шторка прижата к низу автоотступом, а не выравниванием: длинное содержимое прокручивается с начала, верх не уезжает за экран */
 #modal{justify-content:flex-start;padding:max(16px,env(safe-area-inset-top)) 0 0}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--sf2);border-radius:14px;padding:4px;margin-top:10px}
+.seg3 button{border:0;background:none;border-radius:10px;height:44px;font:inherit;font-size:14.5px;font-weight:550;color:var(--mut);cursor:pointer}
+.seg3 button.on{background:var(--bg);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.14)}
 #modal .mgrip{height:26px;margin:-22px -24px 2px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
 #modal .mgrip i{width:40px;height:4px;border-radius:2px;background:var(--line)}
 html.dark #modal .mgrip i{background:#3a3a3a}
@@ -382,6 +385,7 @@ select.fld{-webkit-appearance:none;appearance:none}
     <div class="notew" id="o-pend" style="display:none"></div>
   </div>
   <div id="last-card" style="display:none"></div>
+  <p class="upd" id="home-set" style="display:none;text-align:left;margin-top:18px"><a class="lnk" href="#" style="padding:0;margin:0;font-size:14px" onclick="settingsOpen();return false">Настройки</a></p>
   <div class="grow"></div>
   <button class="btn txt" id="btn-con" style="display:none" onclick="conList()">Консоль</button>
   <div id="in-card">
@@ -456,7 +460,7 @@ select.fld{-webkit-appearance:none;appearance:none}
 </div>
 
 <div id="s-con" class="scr wrap con">
-  <div class="ctop"><a class="lnk" href="#" onclick="show('s-home');return false">Отметиться</a><button class="ib" id="btn-ntf" onclick="ntfOpen()" aria-label="Уведомления" title="Уведомления"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button></div>
+  <div class="ctop"><a class="lnk" href="#" onclick="show('s-home');return false">Отметиться</a></div>
   <h1>Консоль</h1>
   <div class="muted" id="con-me"></div>
   <div class="segs noprint" id="con-tabs"><button data-t="events" onclick="conTabGo('events')">Мероприятия</button><button data-t="flags" onclick="conTabGo('flags')">Флаги<span class="badge" id="fl-badge"></span></button></div>
@@ -506,7 +510,8 @@ const API='https://script.google.com/macros/s/AKfycbyPd_656FGUQs8kCA9silxZXttqHB
 const tg=window.Telegram&&window.Telegram.WebApp;
 /* тема: по настройке Telegram; вне Telegram — по системной; ?theme=dark|light — для проверки в браузере */
 function applyTheme(){
-  const q=new URLSearchParams(location.search).get('theme');
+  let q=new URLSearchParams(location.search).get('theme');
+  if(!q){try{const v=localStorage.getItem('theme');if(v==='dark'||v==='light')q=v}catch(e){}} // выбор в «Настройках»; пусто — «Авто», как в Telegram
   const dark=q?q==='dark':(tg&&tg.platform&&tg.platform!=='unknown'?tg.colorScheme==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches));
   document.documentElement.classList.toggle('dark',dark);
   if(tg){const c=dark?'#101010':'#ffffff';try{tg.setHeaderColor&&tg.setHeaderColor(c);tg.setBackgroundColor&&tg.setBackgroundColor(c)}catch(e){}}
@@ -870,7 +875,10 @@ function renderMe(){
 async function init(){
   if(tg){tg.ready();tg.expand();applyTheme();
     // системная «Назад» есть только внутри Telegram; в обычном браузере остаются кнопки на экранах
+    // «Настройки» в меню Telegram («•••»): есть с версии 7.0; где его нет — на главной остаётся текстовая ссылка
+    if(!window._setWired){window._setWired=1;try{if(tg.SettingsButton&&tg.isVersionAtLeast&&tg.isVersionAtLeast('7.0')&&tg.platform&&tg.platform!=='unknown'){tg.SettingsButton.onClick(settingsOpen);tg.SettingsButton.show();window._setMenu=1}}catch(e){}}
     if(tg.BackButton&&tg.platform&&tg.platform!=='unknown'&&!window._backWired){window._backWired=1;try{tg.BackButton.onClick(goBack);document.body.classList.add('tgback')}catch(e){}}}
+  document.getElementById('home-set').style.display=window._setMenu?'none':'block';
   scanOk=!!(tg&&tg.showScanQrPopup&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.4'));codeMode(!scanOk);freshIn=false;
   try{me=JSON.parse(localStorage.getItem('me')||'null')}catch(e){me=null}
   if(!me)me={phone:false,fio:'',open:null};
@@ -1155,7 +1163,7 @@ async function conEvents(quiet){
     if(!r.events.length)box.innerHTML='<p class="muted" style="margin-top:16px">Текущих мероприятий нет.</p>';
     const list=document.createElement('div');list.className='evs';box.appendChild(list);
     r.events.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='list';conOpen(e.id)};list.appendChild(d)});
-    const u=document.createElement('p');u.className='upd';u.textContent='Обновлено в '+stampNow();box.appendChild(u);
+    const u=document.createElement('p');u.className='upd';u.innerHTML='Обновлено в '+stampNow()+' · <a class="lnk" href="#" style="padding:0;margin:0;font-size:13px" onclick="settingsOpen();return false">Настройки</a>';box.appendChild(u);
     // внизу: главное действие последним, второстепенные над ним; пустой архив не показываем
     const fb=(cls,t,fn)=>{const b=document.createElement('button');b.className='btn'+cls;b.textContent=t;b.onclick=fn;ft.appendChild(b)};
     if(r.archiveN)fb(' txt','Архив · '+r.archiveN,()=>conArch());
@@ -1424,13 +1432,25 @@ function openCat(ci){ // индекс категории, а не имя: зна
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');updBack()}
 /* панель: липкая шапка с заголовком и крестиком, тело ниже */
 /* настройки уведомлений в чате бота: список типов с переключателями, сохранение сразу; обязательные показаны серым */
+/* настройки: оформление — всем; уведомления в чате бота — менеджерам и администраторам (список типов приходит с сервера, сохраняется сразу) */
 let ntfData=null;
-async function ntfOpen(){
-  try{ntfData=await api('con.prefs',{})}catch(e){return toast(e.msg||'Не удалось загрузить настройки')}
-  const rows=ntfData.types.map(x=>'<label class="ntf"><input type="checkbox" '+(x.on?'checked':'')+' onchange="ntfToggle(\''+x.key+'\',this)"><div><div class="t">'+escS(x.title)+'</div><div class="d">'+escS(x.desc)+'</div></div></label>').join('');
-  const locked='<h2 style="margin:18px 0 8px">Приходят всегда</h2><div class="card" style="padding:4px 14px">'+ntfData.locked.map(x=>'<div class="ntf"><div class="t" style="color:var(--mut)">'+escS(x)+'</div></div>').join('')+'</div><p class="muted" style="font-size:13px;margin-top:10px">События остаются в консоли и в таблице.</p>';
-  openDrawer('<div class="card" style="padding:4px 14px">'+rows+'</div>'+locked,'Уведомления','что присылать в чат бота');
+function themeNow(){try{const v=localStorage.getItem('theme');return v==='dark'||v==='light'?v:'auto'}catch(e){return 'auto'}}
+function themeSet(v){try{if(v==='auto')localStorage.removeItem('theme');else localStorage.setItem('theme',v)}catch(e){}applyTheme();document.querySelectorAll('.seg3 button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
+async function settingsOpen(){
+  if(document.getElementById('modal').classList.contains('on')&&document.getElementById('set-box'))return;
+  const cur=themeNow(),staff=!!(me&&me.staff);
+  modalOpen('<div class="mh">Настройки</div><div class="sec2" style="margin-top:18px">Оформление</div>'+
+    '<div class="seg3">'+[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(x=>'<button data-v="'+x[0]+'" class="'+(cur===x[0]?'on':'')+'" onclick="themeSet(\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>'+
+    '<p class="cap" style="margin:10px 0 0">«Авто» — как в Telegram.</p><div id="set-box">'+(staff?'<div class="sec2" style="margin-top:26px">Уведомления в чате бота</div><p class="muted" style="margin:8px 0 0">Загружаю…</p>':'')+'</div>'+
+    '<div class="mfoot"><button class="btn sec" onclick="modalClose()">Готово</button></div>');
+  if(!staff)return;
+  const box=()=>document.getElementById('set-box');
+  try{ntfData=await api('con.prefs',{},true)}catch(e){const b=box();if(b)b.innerHTML='<div class="sec2" style="margin-top:26px">Уведомления в чате бота</div><p class="warn" style="margin:8px 0 0">'+escS(e.msg||'Не удалось загрузить настройки уведомлений')+'</p>';return}
+  const b=box();if(!b)return;
+  b.innerHTML='<div class="sec2" style="margin-top:26px">Уведомления в чате бота</div>'+ntfData.types.map(x=>'<label class="ntf"><input type="checkbox" '+(x.on?'checked':'')+' onchange="ntfToggle(\''+x.key+'\',this)"><div><div class="t">'+escS(x.title)+'</div><div class="d">'+escS(x.desc)+'</div></div></label>').join('')+
+    ((ntfData.locked||[]).length?'<div class="sec2" style="margin-top:26px">Приходят всегда</div><p class="muted" style="margin:8px 0 0">'+ntfData.locked.map(escS).join(' · ')+'</p>':'')+'<p class="cap" style="margin:10px 0 0">События остаются в консоли и в таблице.</p>';
 }
+function ntfOpen(){return settingsOpen()}
 async function ntfToggle(key,el){
   const x=ntfData.types.filter(y=>y.key===key)[0];if(!x)return;
   const was=x.on;x.on=el.checked;
