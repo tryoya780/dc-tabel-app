@@ -196,6 +196,35 @@ body[data-v=a][data-t=dark]{--bg:#101010;--sf:#101010;--sf2:#1d1d1d;--tx:#ededed
 .a-search input::placeholder{color:var(--mut)}
 .a-mon{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 0;font-size:13px;color:var(--mut)}
 .a-mon b{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.a-sh{background:color-mix(in srgb,#000 46%,var(--bg))}
+body[data-t=dark] .a-sh{background:#000}
+.a-dim{flex:1 0 64px;padding:20px 24px 0;color:color-mix(in srgb,var(--bg) 55%,transparent);font-size:17px;font-weight:600}
+body[data-t=dark] .a-dim{color:#3a3a3a}
+.a-sheet{border-radius:26px 26px 0 0;padding-top:10px;background:var(--bg);display:flex;flex-direction:column}
+.a-sheet.full{flex:1 1 auto;min-height:636px}
+body[data-t=dark] .a-sheet{box-shadow:0 -1px 0 #2e2e2e;background:#161616}
+.a-grip{width:40px;height:4px;border-radius:2px;background:var(--ln);margin:0 auto 14px}
+.a-shh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.a-shh h1{font-size:23px;line-height:1.2;letter-spacing:-.02em;font-weight:650;margin:0 0 3px}
+.a-x{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:var(--sf2);color:var(--mut);font-size:20px;line-height:1;cursor:pointer}
+.a-pics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.a-pic{position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:linear-gradient(165deg,#44413d,#1b1a19 70%);border:0;padding:0;cursor:pointer}
+.a-pic svg{position:absolute;left:50%;bottom:0;width:62%;transform:translateX(-50%);fill:rgba(255,255,255,.14)}
+.a-pic span{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;padding:3px 8px;border-radius:7px}
+.a-pic.tap{aspect-ratio:auto;height:84px;background:var(--sf2);color:var(--tx);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;padding:0 14px 0 50px;text-align:left}.a-pic.tap svg{position:absolute;left:14px;top:50%;bottom:auto;width:24px;height:24px;transform:translateY(-50%);fill:none;color:var(--mut)}.a-pic.tap b{font-size:15px;font-weight:600}.a-pic.tap small{font-size:13px;color:var(--mut)}.a-pic.no{aspect-ratio:auto;height:84px;padding:0 12px;text-align:center;background:var(--sf2);cursor:default;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mut)}
+.a-sub{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:26px 0 2px}
+.btn.txt.red{color:var(--bad)}
+.a-field textarea{width:100%;min-height:104px;border:0;border-radius:var(--rs);background:var(--sf2);color:var(--tx);font:inherit;font-size:17px;padding:14px 16px;resize:none;display:block}
+.a-field textarea::placeholder{color:var(--mut)}
+.a-sel{display:flex;justify-content:space-between;align-items:center;width:100%;height:56px;border:0;border-radius:var(--rs);background:var(--sf2);color:var(--tx);font:inherit;font-size:18px;padding:0 14px 0 16px;cursor:pointer}
+.a-sel svg{width:20px;height:20px;color:var(--mut);transform:rotate(90deg)}
+.a-step{display:flex;align-items:center;justify-content:space-between;height:56px;border-radius:var(--rs);background:var(--sf2);padding:0 6px}
+.a-step button{width:48px;height:44px;border:0;border-radius:10px;background:var(--bg);font-size:22px;cursor:pointer;color:var(--tx)}
+.a-step b{font-size:20px;font-weight:650}
+.a-dz{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--ln)}.a-dz b{display:block;font-weight:600;font-size:16px}.a-dz small{font-size:13px;color:var(--mut)}.a-dz.z>div:first-child b{font-weight:500}
+.a-step.sm{height:48px;width:148px;flex:none;padding:0 4px}.a-step.sm button{width:42px;height:40px}.a-step.sm b{font-size:18px}.a-dz.z .a-step b{color:var(--mut);font-weight:500}
+.a-tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--ln)}
+.a-tot b{font-size:22px;font-weight:650;letter-spacing:-.02em}
 .a-note{font-size:14.5px;color:var(--mut);margin-top:16px}
 .a-warn{margin-top:18px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--warn) 11%,transparent);font-size:14.5px}
 .a-warn .st{margin-bottom:6px}
@@ -423,12 +452,77 @@ const P4=[
   <div class="grow"></div></div>`]
 ];
 
+/* ===== пачка 5: карточка человека, панель категории, подтверждения ===== */
+const SIL='<svg viewBox="0 0 200 190"><circle cx="100" cy="62" r="44"/><path d="M14 190c0-46 38-76 86-76s86 30 86 76z"/></svg>';
+const sheet=(full,html)=>`<div class="a-sh"><div class="a-dim">${EV.name}</div><div class="a a-sheet${full?' full':''}"><div class="a-grip"></div>${html}</div></div>`;
+const shHead=(t,sub)=>`<div class="a-shh"><div><h1>${t}</h1><p class="mut" style="font-size:14.5px">${sub}</p></div><button class="a-x" aria-label="Закрыть">×</button></div>`;
+const pRow=(k,n,r)=>`<div class="a-cat" style="padding:11px 0"><div>${st(k,n)}</div><div class="mut" style="font-size:14px;white-space:nowrap">${r}</div></div>`;
+const P5=[
+ ['Карточка человека · в смене, ждёт решения',sheet(1,`${shHead('Григорьев Артём','Официанты DC · к 15:00, до 01:00')}
+  <div style="margin-top:22px">${st('warn','Ждёт решения')}</div>
+  <div class="a-big" style="margin:14px 0 0"><span class="num">53 мин</span><span class="mut">в смене · приход в 16:47</span></div>
+  <div class="a-box" style="margin-top:20px"><div class="a-q" style="padding-top:16px"><p style="margin-top:0">Пришёл на 1 ч 47 мин позже вызова. Пока часы идут с прихода, без минимума.</p>
+    <div class="two"><button class="btn duo sec"><span>Опоздал</span><small>часы с прихода</small></button><button class="btn duo"><span>Вызывали</span><small>минимум за выход</small></button></div></div></div>
+  <div class="a-pics"><button class="a-pic tap">${I.cam}<b>Фото входа</b><small>16:47</small></button><div class="a-pic no">Фото выхода появится после закрытия</div></div>
+  <div style="margin-top:14px">
+    <div class="kv"><span>Минимум за выход</span><b>10 ч</b></div>
+    <div class="kv"><span>Ставка</span><b>500 ₽/ч</b></div>
+    <div class="kv"><span>Отметка через</span><b>приложение</b></div></div>
+  <p class="hint" style="margin:14px 0 12px">Часы и сумма появятся после закрытия смены</p>
+  <button class="btn txt red" style="margin-bottom:6px">Выгнать</button>
+  <button class="btn sec">Отпустить сейчас</button>`)],
+ ['Карточка человека · смена закрыта, флаг',sheet(1,`${shHead('Морозов Денис','Грузчики · 09:00–17:00')}
+  <div style="margin-top:22px">${st('','Смена закрыта')}</div>
+  <div class="a-big" style="margin:14px 0 0"><span class="num">2 500 ₽</span><span class="mut">зачтено 5 ч · 09:10 → 14:10</span></div>
+  <div class="a-box" style="margin-top:20px"><div class="a-q" style="padding-top:16px">${st('warn','Флаг · ранний уход')}<p style="margin-top:6px">Ушёл почти на 3 ч раньше конца окна. Факт 5 ч, минимум 8 ч.</p>
+    <div class="two"><button class="btn duo sec"><span>Оставить факт</span><small>5 ч · 2 500 ₽</small></button><button class="btn duo"><span>Зачесть минимум</span><small>8 ч · 4 000 ₽</small></button></div></div></div>
+  <div class="a-pics"><button class="a-pic tap">${I.cam}<b>Фото входа</b><small>09:10</small></button><button class="a-pic tap">${I.cam}<b>Фото выхода</b><small>14:10</small></button></div>
+  <div class="a-sub">Выходы за день</div>
+  <div class="kv"><span>09:10–14:10</span><b>5 ч</b></div>
+  <div class="a-sub">Расчёт</div>
+  <div class="kv"><span>Зачтено к оплате</span><b>5 ч</b></div>
+  <div class="kv"><span>Ставка</span><b>500 ₽/ч</b></div>
+  <div class="kv"><span>Минимум за выход</span><b>8 ч</b></div>
+  <div class="grow"></div>`)],
+ ['Панель категории',sheet(1,`${shHead('Официанты DC','15:00–01:00 · минимум 10 ч · 500 ₽/ч')}
+  <div class="a-nums" style="margin-top:22px"><div><b>12</b><small>на объекте</small></div><div><b>12<span class="mut" style="font-size:17px;font-weight:500"> / 14</span></b><small>вышло</small></div><div><b style="color:var(--bad)">2</b><small>не вышли</small></div></div>
+  <div class="a-row mut" style="font-size:14px;margin-top:4px"><span>Фонд: 60 000 ₽ из 70 000 ₽</span><span>86%</span></div>
+  <div class="a-sub">Группы</div>
+  <div class="kv"><span>К 15:00, до 01:00</span><b>9 из 10</b></div>
+  <div class="kv"><span>К 17:00, до 01:00</span><b>3 из 4</b></div>
+  <div class="a-sub">На объекте · 12</div>
+  ${pRow('warn','Григорьев Артём','с 16:47 · 53 мин')}${pRow('ok','Белова Ксения','с 14:48 · 2 ч 52 мин')}${pRow('ok','Кузнецова Марина','с 14:52 · 2 ч 48 мин')}${pRow('ok','Тарасов Илья','с 14:55 · 2 ч 45 мин')}${pRow('ok','Юсупов Тимур','с 15:02 · 2 ч 38 мин')}
+  <button class="lnk" style="margin-top:12px">Ещё 7 человек${I.next}</button>
+  <div class="a-sub">Ушли · 0</div>
+  <p class="mut" style="font-size:14.5px;margin-top:8px">Пока никто не ушёл</p>
+  <div class="grow" style="min-height:22px"></div>
+  <button class="btn sec">QR-листы</button>`)],
+ ['Подтверждение · выгнать',sheet(0,`${shHead('Выгнать с мероприятия','Григорьев Артём · Официанты DC')}
+  <p class="a-note">Смена закроется сейчас, оплата 0. Причину увидят сотрудник в боте и администратор в таблице.</p>
+  <div class="a-field"><label for="kw">Причина</label><textarea id="kw" placeholder="Нетрезв, грязная форма, конфликт…"></textarea></div>
+  <label class="a-check"><input type="checkbox"><span>Добавить в стоп-лист. По номеру и Telegram больше не сможет отметиться ни на одном мероприятии.</span></label>
+  <button class="btn txt" style="margin:22px 0 6px">Отмена</button>
+  <button class="btn stop">Выгнать</button>`)],
+ ['Подтверждение · отпустить',sheet(0,`${shHead('Отпустить сейчас?','Белова Ксения · Официанты DC')}
+  <p class="a-note">Смена закроется в 17:40 без селфи. До конца окна больше 2 часов, поэтому зачтётся факт: 2 ч 30 мин.</p>
+  <button class="btn txt" style="margin:22px 0 6px">Отмена</button>
+  <button class="btn">Отпустить</button>`)],
+ ['Дозаказ · несколько категорий',sheet(0,`${shHead('Дозаказ','Лимиты категорий вырастут, код у входа тот же')}
+  <div class="a-sub" style="margin-top:20px">Сколько человек добавить</div>
+  ${[['Старшие официанты','600 ₽/ч · 10 ч',0],['Официанты DC','500 ₽/ч · 10 ч',2],['Официанты Хорека','730 ₽/ч · 10 ч',4],['Грузчики','500 ₽/ч · 8 ч',0]].map(r=>`<div class="a-dz${r[2]?'':' z'}"><div><b>${r[0]}</b><small>${r[1]}</small></div><div class="a-step sm"><button aria-label="Меньше">−</button><b>${r[2]}</b><button aria-label="Больше">+</button></div></div>`).join('')}
+  <div class="a-field"><label for="dw">Причина</label><textarea id="dw" style="min-height:76px">Гостей больше на 30</textarea></div>
+  <div class="a-tot"><span class="mut" style="font-size:14px">6 человек в двух категориях</span><b>+39 200 ₽</b></div>
+  <button class="btn txt" style="margin:14px 0 6px">Отмена</button>
+  <button class="btn">Добавить в наряд</button>`)]
+];
+
 /* ===== пачки ===== */
 const BATCH=[
  {t:'1 · Главная, селфи, карточка мероприятия',ok:1,note:'Согласовано 05.10. Главная сотрудника в двух состояниях, селфи после QR, карточка мероприятия администратора.',frames:()=>A.home().concat(A.selfie(),A.admin()),fix:i=>i<3},
  {t:'2 · Категория, время вызова, после селфи',ok:1,note:'Согласовано 05.10. Выбор категории и времени вызова показывается, только если их нельзя определить автоматически. Категория и время выбираются одним касанием. После селфи на входе человек сразу попадает на главную с открытой сменой; после селфи на выходе видит итог смены.',frames:()=>P2,fix:()=>true},
  {t:'3 · Согласие, номер, ФИО',ok:1,note:'Согласовано 05.10. Эти экраны человек видит один раз: согласие при первом открытии, номер и ФИО — перед первым селфи.',frames:()=>P3,fix:()=>true},
- {t:'4 · Консоль: мероприятия, флаги, архив',ok:1,note:'Согласовано 05.10. Три экрана консоли администратора: список мероприятий, вкладка «Флаги» и архив.',frames:()=>P4,fix:()=>true}
+ {t:'4 · Консоль: мероприятия, флаги, архив',ok:1,note:'Согласовано 05.10. Три экрана консоли администратора: список мероприятий, вкладка «Флаги» и архив.',frames:()=>P4,fix:()=>true},
+ {t:'5 · Человек, категория, подтверждения',ok:1,note:'Согласовано 05.10. Всё это открывается шторкой снизу поверх карточки мероприятия: карточка человека в двух состояниях, панель категории и три окна действий.',frames:()=>P5,fix:()=>true}
 ];
 const S={b:BATCH.length-1,t:'light'};
 (location.hash.slice(1).split('-')).forEach((x,i)=>{if(i===0&&BATCH[+x-1])S.b=+x-1;if(i===1&&(x==='light'||x==='dark'))S.t=x});
