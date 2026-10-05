@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diamond Табель — редизайн, вариант A</title>
+<!-- Рабочий файл редизайна: макеты экранов варианта A по пачкам на согласование. Данные демонстрационные.
+     Приложение (index.html) этим файлом не затрагивается. -->
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--pg);color:var(--pg-tx);line-height:1.4;font-size:15px}
+button{font:inherit;color:inherit}
+p{margin:0}
+
+/* ===== страница: тема ===== */
+body[data-t=light]{--pg:#ECEBE8;--pg-sf:#fff;--pg-tx:#1a1a1a;--pg-mut:#625e59;--pg-ln:#d9d6d1;--frame:#1c1c1c;--tgb:#f4f4f4;--tgt:#111;--tgm:#7a7a7a;
+  --ok:#1E7F4A;--warn:#A8590B;--bad:#C0362C;--gold:#B8864F}
+body[data-t=dark]{--pg:#090909;--pg-sf:#151515;--pg-tx:#ededed;--pg-mut:#a39f9a;--pg-ln:#292929;--frame:#303030;--tgb:#1c1c1e;--tgt:#f2f2f2;--tgm:#8e8e93;
+  --ok:#56C28A;--warn:#E2A545;--bad:#EF6E63;--gold:#C99A67}
+
+/* ===== токены вариантов ===== */
+body[data-v=a]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;--disp:var(--font);--rb:16px;--rs:12px}
+body[data-v=a][data-t=light]{--bg:#fff;--sf:#fff;--sf2:#f3f3f2;--tx:#161616;--mut:#686868;--ln:#ebebea;--pri:#161616;--pri-tx:#fff;--acc:#8F5A12}
+body[data-v=a][data-t=dark]{--bg:#101010;--sf:#101010;--sf2:#1d1d1d;--tx:#ededed;--mut:#9c9c9c;--ln:#262626;--pri:#ededed;--pri-tx:#101010;--acc:#C99A67}
+
+
+
+/* ===== шапка страницы ===== */
+.wrap{max-width:1240px;margin:0 auto;padding:28px 20px 60px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--pg-mut)}
+.title{font-size:28px;line-height:1.15;letter-spacing:-.02em;margin:6px 0 8px;font-weight:650}
+.intro{color:var(--pg-mut);max-width:780px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 8px}
+.vcard{text-align:left;background:var(--pg-sf);border:1px solid var(--pg-ln);border-radius:14px;padding:16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.vcard:hover{border-color:var(--pg-mut)}
+.vcard[aria-pressed=true]{border-color:var(--pg-tx);box-shadow:0 0 0 1px var(--pg-tx)}
+.vcard h3{margin:0 0 8px;font-size:16px}
+.vcard h3 span{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:7px;background:var(--pg-tx);color:var(--pg);font-size:13px;margin-right:8px}
+.vcard dl{margin:0;display:grid;gap:8px;font-size:13.5px}
+.vcard dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--pg-mut);margin-bottom:1px}
+.vcard dd{margin:0}
+.common{font-size:13.5px;color:var(--pg-mut);margin:10px 0 0}
+.bar{position:sticky;top:0;z-index:5;margin:18px -20px 26px;padding:10px 20px;background:color-mix(in srgb,var(--pg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--pg-ln);display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;background:var(--pg-sf);border:1px solid var(--pg-ln);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:7px 12px;border-radius:7px;font-size:14px;font-weight:550;color:var(--pg-mut);cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--pg-tx)}
+.seg button[aria-pressed=true]{background:var(--pg-tx);color:var(--pg)}
+.seg button:focus-visible,.vcard:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bar .grp{display:flex;align-items:center;gap:8px}.bar .lbl{font-size:12px;color:var(--pg-mut)}
+.stage{display:flex;gap:28px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.cap{font-size:13px;color:var(--pg-mut);margin:0 0 10px 14px}
+.notes{width:300px;flex:1 1 300px;max-width:420px;background:var(--pg-sf);border:1px solid var(--pg-ln);border-radius:14px;padding:16px 18px;font-size:13.5px;position:sticky;top:120px;margin-top:29px}
+.notes h4{margin:0 0 10px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--pg-mut);font-weight:600}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:8px}
+.notes b{font-weight:600}
+@media (max-width:900px){.cards{grid-template-columns:1fr}}
+
+/* ===== телефон ===== */
+.ph{width:410px;max-width:100%;border:10px solid var(--frame);border-radius:46px;overflow:hidden;background:var(--bg);box-shadow:0 20px 50px -24px rgba(0,0,0,.45)}
+.tg{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;background:var(--tgb);color:var(--tgt);font-size:15px}
+.tg b{font-weight:600;text-align:center;line-height:1.15}.tg b small{display:block;font-weight:400;font-size:11px;color:var(--tgm)}
+.tg span{color:var(--tgm);width:64px}.tg span:last-child{text-align:right;letter-spacing:2px}
+.scr{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:16px;line-height:1.38;font-variant-numeric:tabular-nums}
+.scr.fix>div{min-height:700px;display:flex;flex-direction:column}
+.grow{flex:1}
+.mut{color:var(--mut)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ===== общие элементы ===== */
+.btn{appearance:none;border:0;font-weight:600;font-size:17px;height:56px;padding:0 16px;border-radius:var(--rb);background:var(--pri);color:var(--pri-tx);width:100%;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:transform .08s,filter .15s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:scale(.985);filter:brightness(.9)}
+.btn:focus-visible,.cb:focus-visible,.lnk:focus-visible,.chip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn svg{width:22px;height:22px;flex:none}
+.btn.sec{background:var(--sf2);color:var(--tx)}
+.btn.ink{background:var(--ink,var(--pri));color:var(--ink-tx,var(--pri-tx))}
+.btn.txt{background:none;color:var(--tx);height:44px;font-size:15px;font-weight:500}
+.btn.sm{height:44px;font-size:15px;border-radius:var(--rs);padding:0 14px}
+.btn.duo{flex-direction:column;gap:1px;height:54px;padding:0 6px;line-height:1.15;font-size:15px;border-radius:var(--rs)}
+.btn.duo small{font-size:12px;font-weight:400;opacity:.72}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lnk{background:none;border:0;padding:0;color:var(--acc);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:2px}
+.lnk svg{width:16px;height:16px}
+.brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--mut)}
+.brand svg{width:11px;height:11px;color:var(--gold)}
+.hint{font-size:13px;color:var(--mut);text-align:center;margin-top:10px}
+
+/* статус: один способ на вариант. A — точка и слово, B — мягкая плашка, C — квадрат и короткая подпись */
+.st{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:550;white-space:nowrap}
+.st i{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.st.ok i{background:var(--ok)}.st.warn i{background:var(--warn)}.st.bad i{background:var(--bad)}
+.st.off i{background:none;box-shadow:inset 0 0 0 1.5px var(--mut)}
+
+/* камера */
+.cam{position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(165deg,#44413d,#1b1a19 70%);aspect-ratio:3/4;width:100%}
+.cam .sil{position:absolute;left:50%;bottom:0;width:74%;transform:translateX(-50%);fill:rgba(255,255,255,.13)}
+.cam .oval{position:absolute;left:50%;top:14%;width:52%;aspect-ratio:3/4;transform:translateX(-50%);border:1.5px dashed rgba(255,255,255,.5);border-radius:50%}
+.cam .stamp{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.5);color:#fff;font-size:12.5px;padding:5px 9px;border-radius:8px;font-variant-numeric:tabular-nums}
+.cam .live{position:absolute;right:12px;top:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;padding:4px 9px;border-radius:999px}
+.cam .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#ff5b4f}
+
+/* ===== A: спокойный ===== */
+.a{padding:22px 24px 22px}
+.a .h1{font-size:30px;line-height:1.14;letter-spacing:-.022em;font-weight:650;margin:28px 0 10px}
+.a .h1.sm{font-size:25px;margin:16px 0 6px}
+.a .lead{font-size:17px}
+.a .lab{font-size:13px;color:var(--mut);margin-bottom:8px}
+.a-last{margin-top:44px;padding-top:18px;border-top:1px solid var(--ln)}
+.a-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.a-row .mut{font-size:14px;margin-top:2px}
+.a-big{margin:30px 0 26px}
+.a-big .num{display:block;font-size:52px;line-height:1;letter-spacing:-.035em;font-weight:650;white-space:nowrap}
+.a-big .mut{display:block;margin-top:8px;font-size:16px}
+.a h2.ev{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--ln);font-size:15.5px}
+.kv span{color:var(--mut)}.kv b{font-weight:550;text-align:right}
+.kv:last-child{border-bottom:0}
+.a-ctx{margin:14px 0 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.a-ctx b{display:block;font-weight:600}
+.a-top{display:flex;justify-content:space-between;align-items:center}
+.a-acts{display:flex;gap:8px;margin:16px 0 4px}.a-acts .btn{width:auto;flex:1}.a-acts .btn.ico{flex:0 0 48px;padding:0;letter-spacing:1px}
+.a-h2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:34px 0 4px;display:flex;gap:8px;align-items:baseline}
+.a-h2 span{color:var(--tx);letter-spacing:0;font-size:14px}
+.a-q{padding:16px 0 18px;border-bottom:1px solid var(--ln)}
+.a-q:last-of-type{border-bottom:0;padding-bottom:0}
+.a-box{background:var(--sf2);border-radius:20px;margin:22px -12px 0;padding:0 16px 16px}.a-box .a-h2{margin-top:0;padding-top:16px}.a-box .a-q{border-color:color-mix(in srgb,var(--tx) 9%,transparent)}.a-box .btn.sec{background:var(--bg)}
+.a-q .who{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:6px}
+.a-q .who b{font-size:17px;font-weight:600}
+.a-q p{font-size:14.5px;color:var(--mut);margin:4px 0 12px}
+.a-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 10px}
+.a-nums b{display:block;font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.a-nums small{font-size:13px;color:var(--mut)}
+.a-cat{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--ln);font-size:15.5px}
+.a-cat small{display:block;color:var(--mut);font-size:13px}
+.a-cat .r{text-align:right;white-space:nowrap;font-weight:550}
+.a-ppl{padding:2px 0 8px 0;border-bottom:1px solid var(--ln)}
+.a-ppl div{display:flex;justify-content:space-between;gap:10px;padding:8px 0 8px 14px;font-size:14.5px}
+.meter{height:4px;border-radius:2px;background:var(--sf2);overflow:hidden;margin:12px 0 8px}
+.meter i{display:block;height:100%;background:var(--tx);border-radius:2px}
+.foot{font-size:13px;color:var(--mut);text-align:center;margin-top:30px}
+
+
+/* ===== пачка 2: выбор и итоговые экраны ===== */
+.a-opt{display:flex;align-items:center;gap:14px;width:100%;padding:16px 0;background:none;border:0;border-bottom:1px solid var(--ln);text-align:left;cursor:pointer;font-size:17px}
+.a-opt:last-of-type{border-bottom:0}
+.a-opt b{display:block;font-weight:600}
+.a-opt small{display:block;font-size:14px;color:var(--mut);margin-top:1px}
+.a-opt .rd{flex:none;width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--mut);transition:box-shadow .12s}
+.a-opt.on .rd{box-shadow:inset 0 0 0 7px var(--tx)}
+.a-opt.full{cursor:default}.a-opt.full b,.a-opt.full small{color:var(--mut);font-weight:500}.a-opt.full .rd{opacity:.35}
+.a-opt:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn.stop{background:var(--bad);color:#fff}body[data-t=dark] .btn.stop{color:#1a0b09}
+.a-opt .ch{margin-left:auto;color:var(--mut);display:flex}.a-opt .ch svg{width:20px;height:20px}
+.a-doc{margin-top:16px;padding:16px;border-radius:16px;background:var(--sf2);font-size:15px;line-height:1.45}
+.a-doc p+p{margin-top:10px}
+.a-check{display:flex;gap:12px;align-items:flex-start;margin-top:18px;font-size:15px;cursor:pointer}
+.a-check input{appearance:none;-webkit-appearance:none;flex:none;width:24px;height:24px;margin:0;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--mut);cursor:pointer;display:grid;place-items:center}
+.a-check input:checked{background:var(--tx);box-shadow:none}
+.a-check input:checked::after{content:"";width:11px;height:6px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}
+.a-check input:focus-visible,.a-field input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.a-field{margin-top:22px}
+.a-field label{display:block;font-size:13px;color:var(--mut);margin-bottom:8px}
+.a-field input{width:100%;height:56px;border:0;border-radius:var(--rs);background:var(--sf2);color:var(--tx);font:inherit;font-size:18px;padding:0 16px}
+.a-field small{display:block;font-size:13px;color:var(--mut);margin-top:8px}
+.a-note{font-size:14.5px;color:var(--mut);margin-top:16px}
+.a-warn{margin-top:18px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--warn) 11%,transparent);font-size:14.5px}
+.a-warn .st{margin-bottom:6px}
+.bnote{font-size:13.5px;color:var(--pg-mut);max-width:780px;margin:0 0 22px}
+</style>
+</head>
+<body data-v="a" data-t="light">
+<div class="wrap">
+  <div class="eyebrow">Diamond Табель · редизайн · вариант A</div>
+  <h1 class="title">Экраны на согласование</h1>
+  <p class="intro">Макеты с демонстрационными данными, по три экрана в пачке. Общие правила: главная кнопка прижата к низу экрана, второстепенное действие над ней; статус — точка и слово; золото только в знаке.</p>
+  <div class="bar">
+    <div class="grp"><span class="lbl">Пачка</span><div class="seg" id="seg-b"></div></div>
+    <div class="grp"><span class="lbl">Тема</span><div class="seg" id="seg-t"><button data-t="light">Светлая</button><button data-t="dark">Тёмная</button></div></div>
+  </div>
+  <p class="bnote" id="bnote"></p>
+  <div class="stage" id="stage"></div>
+</div>
+<script>
+/* ===== значки ===== */
+const sv=(d,x)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
+const I={
+  qr:sv('<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM18 14h2M14 18v2"/>'),
+  cam:sv('<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+  back:sv('<path d="m15 6-6 6 6 6"/>'),
+  next:sv('<path d="m9 6 6 6-6 6"/>'),
+  dia:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 0l6 6-6 6-6-6z" fill="currentColor"/></svg>'
+};
+const st=(k,t)=>'<span class="st '+k+'"><i></i>'+t+'</span>';
+const brand=()=>'<div class="brand">'+I.dia+'Diamond Табель</div>';
+const cam=(stamp)=>'<div class="cam"><svg class="sil" viewBox="0 0 200 190"><circle cx="100" cy="62" r="44"/><path d="M14 190c0-46 38-76 86-76s86 30 86 76z"/></svg><div class="oval"></div><div class="live">камера включена</div><div class="stamp">'+stamp+'</div></div>';
+
+/* ===== демонстрационные данные ===== */
+const EV={name:'Гала-ужин «Осенний сезон»',venue:'Особняк на Волхонке',date:'2 окт, пт',time:'17:00–23:30',guests:240,code:'482 913'};
+const Q=[
+  {tag:'Поздний приход',who:'Григорьев Артём',role:'Официанты DC',why:'Пришёл в 16:47 — на 1 ч 47 мин позже вызова. Пока часы идут с прихода, без минимума.',short:'Официанты DC · 16:47, вызов к 15:00',a:['Опоздал','часы с прихода','с 16:47'],b:['Вызывали','минимум за выход','минимум']},
+  {tag:'Ранний приход',who:'Садыкова Алина',role:'Официанты Хорека',fresh:1,why:'Пришла в 13:20, вызов к 15:00. Пока часы идут с 15:00. Новое лицо: посмотрите фото.',short:'Хорека · 13:20, вызов к 15:00 · новое лицо',a:['Пришла рано','с начала окна','с 15:00'],b:['Работала','с прихода','с 13:20']},
+  {tag:'Дозаказ',who:'Официанты Хорека +4',role:'29 200 ₽',why:'«Гостей больше на 30». Запросил Лебедев И. в 17:22.',short:'29 200 ₽ · «гостей больше на 30» · Лебедев И.',a:['Отклонить','план не меняется',''],b:['Подтвердить','+29 200 ₽ к плану','+4 чел.']},
+  {tag:'Флаг',who:'Морозов Денис',role:'Грузчики',why:'Ушёл в 14:10 — почти на 3 ч раньше конца окна. Факт 5 ч, минимум 8 ч.',short:'Грузчики · ушёл 14:10, окно до 17:00',a:['Оставить факт','5 ч · 2 500 ₽','5 ч'],b:['Зачесть минимум','8 ч · 4 000 ₽','8 ч'],cs:['Факт','Минимум']}
+];
+const CATS=[
+  {n:'Старшие официанты',w:'14:00–00:00',on:4,came:4,lim:4,av:['ОВ','ДП','КА','ШМ'],names:'Орлова, Демченко и ещё 2'},
+  {n:'Официанты DC',w:'15:00–01:00',on:12,came:12,lim:14,miss:2,pend:1,ppl:[['warn','Григорьев Артём','16:47'],['ok','Белова Ксения','14:48'],['ok','Кузнецова Марина','14:52']],av:['ГА','БК','КМ','ТИ'],names:'Белова, Кузнецова и ещё 10'},
+  {n:'Официанты Хорека',w:'15:00–01:00',on:14,came:14,lim:16,miss:2,pend:1,ppl:[['warn','Садыкова Алина','13:20'],['ok','Назаров Руслан','14:50'],['ok','Исаева Лейла','14:51']],av:['СА','НР','ИЛ','ПЕ'],names:'Назаров, Исаева и ещё 12'},
+  {n:'Менеджеры',w:'12:00–00:00',on:2,came:2,lim:2,av:['ЛИ','ФО'],names:'Лебедев, Фролова'},
+  {n:'Грузчики',w:'09:00–17:00',on:0,came:6,lim:6,left:6,av:[],names:'все ушли, один флаг'}
+];
+const catRight=c=>c.left?'ушли '+c.left:c.on+' из '+c.lim;
+
+/* ===== A ===== */
+const A={
+home:()=>[['До отметки',`<div class="a">${brand()}
+  <h1 class="h1">Здравствуйте, Марина</h1>
+  <p class="lead mut">Смена не открыта. Отсканируйте QR-код у входа на площадку.</p>
+  <div class="a-last"><div class="lab">Последняя смена</div>
+    <div class="a-row"><div><b>Фуршет · конгресс-холл «Заря»</b><div class="mut">27 сен · 10:00 → 20:10 · зачтено 10 ч</div></div><b>5 000 ₽</b></div></div>
+  <div class="grow"></div>
+  <button class="btn txt" style="margin-bottom:6px">Ввести код с листа</button>
+  <button class="btn">${I.qr}Сканировать QR</button></div>`],
+ ['Смена открыта',`<div class="a">${brand()}
+  <div style="margin-top:28px">${st('ok','Смена открыта')}</div>
+  <div class="a-big"><span class="num">2 ч 48 мин</span><span class="mut">Марина Кузнецова · приход в 14:52</span></div>
+  <h2 class="ev">${EV.name}</h2><p class="mut">${EV.venue} · ${EV.date}</p>
+  <div style="margin-top:16px">
+    <div class="kv"><span>Категория</span><b>Официанты DC</b></div>
+    <div class="kv"><span>Вызов</span><b>к 15:00, смена до 01:00</b></div>
+    <div class="kv"><span>Часы считаются</span><b>с 15:00</b></div>
+    <div class="kv"><span>Минимум за выход</span><b>10 ч</b></div></div>
+  <div class="grow"></div>
+  <p class="hint" style="margin:14px 0 12px">Понадобится селфи на выходе. Часы и сумма появятся после закрытия.</p>
+  <button class="btn stop">Закрыть смену</button></div>`]],
+selfie:()=>[['После сканирования QR',`<div class="a">${brand()}
+  <h1 class="h1 sm" style="margin-top:22px">Селфи на входе</h1>
+  <div class="a-ctx"><div><b>${EV.name}</b><span class="mut">Официанты DC · вызов к 15:00 · минимум 10 ч</span></div><button class="lnk">Изменить</button></div>
+  ${cam('2 окт · 14:52')}
+  <div class="grow"></div>
+  <p class="hint" style="margin:14px 0 12px">Снимок делается камерой прямо сейчас</p>
+  <button class="btn">${I.cam}Сделать фото</button></div>`]],
+admin:()=>[['Карточка мероприятия · администратор',`<div class="a">
+  <div class="a-top"><button class="lnk" style="color:var(--mut)">${I.back}Мероприятия</button>${st('ok','Открыто')}</div>
+  <h1 class="h1 sm">${EV.name}</h1>
+  <p class="mut" style="font-size:14.5px">${EV.date} · ${EV.venue} · ${EV.time} · ${EV.guests} гостей · код <b style="color:var(--tx)">${EV.code}</b></p>
+  <div class="a-acts"><button class="btn sm sec">Дозаказ</button><button class="btn sm sec">QR-листы</button><button class="btn sm sec ico" aria-label="Ещё">•••</button></div>
+  <div class="a-box"><h2 class="a-h2">Требуют решения <span>4</span></h2>
+  ${Q.map(q=>`<div class="a-q">${st('warn',q.tag)}<div class="who"><b>${q.who}</b><span class="mut">${q.role}</span></div><p>${q.why}</p>
+    <div class="two"><button class="btn duo sec"><span>${q.a[0]}</span><small>${q.a[1]}</small></button><button class="btn duo"><span>${q.b[0]}</span><small>${q.b[1]}</small></button></div></div>`).join('')}</div>
+  <h2 class="a-h2">Сейчас на объекте</h2>
+  <div class="a-nums"><div><b>32</b><small>на объекте</small></div><div><b>38<span class="mut" style="font-size:17px;font-weight:500"> / 42</span></b><small>вышло</small></div><div><b style="color:var(--bad)">4</b><small>не вышли</small></div></div>
+  ${CATS.map((c,i)=>`<div class="a-cat"><div>${c.n}<small>${c.w}${c.miss?' · <span style="color:var(--bad)">не вышли '+c.miss+'</span>':''}${c.pend?' · <span style="color:var(--warn)">ждёт '+c.pend+'</span>':''}</small></div><div class="r">${catRight(c)}</div></div>`+(c.ppl?`<div class="a-ppl">${c.ppl.map(p=>`<div>${st(p[0],p[1])}<span class="mut">с ${p[2]}</span></div>`).join('')}<div><button class="lnk">Ещё ${c.on-c.ppl.length} человек${I.next}</button></div></div>`:'')).join('')}
+  <h2 class="a-h2">Фонд оплаты</h2>
+  <div class="a-row" style="margin-top:10px;align-items:baseline"><b style="font-size:24px;font-weight:650;letter-spacing:-.02em">222 200 ₽</b><span class="mut">из 246 800 ₽</span></div>
+  <div class="meter"><i style="width:90%"></i></div>
+  <div class="a-row mut" style="font-size:14px"><span>90% плана</span><span>остаток 24 600 ₽</span></div>
+  <p class="foot">Обновлено в 17:40</p></div>`]]
+};
+
+
+/* ===== пачка 2 ===== */
+const opt=(t,sub,cls)=>'<button class="a-opt '+(cls||'')+'"'+(cls==='full'?' disabled':'')+'><span><b>'+t+'</b><small>'+sub+'</small></span>'+(cls==='full'?'':'<span class="ch">'+I.next+'</span>')+'</button>';
+const P2=[
+ ['Выбор категории',`<div class="a">${brand()}
+  <h1 class="h1 sm" style="margin-top:22px">Ваша категория</h1>
+  <p class="mut">${EV.name} · ${EV.venue}</p>
+  <div style="margin-top:14px">
+    ${opt('Старшие официанты','мест нет · обратитесь к координатору','full')}
+    ${opt('Официанты DC','свободно 2 из 14 · минимум 10 ч')}
+    ${opt('Официанты Хорека','свободно 2 из 16 · минимум 10 ч')}
+    ${opt('Грузчики','мест нет · обратитесь к координатору','full')}
+  </div>
+  <p class="a-note">Нажмите на свою категорию. Если ошиблись, на экране селфи есть «Изменить».</p>
+  <div class="grow"></div></div>`],
+ ['Выбор времени вызова',`<div class="a">${brand()}
+  <h1 class="h1 sm" style="margin-top:22px">К какому времени вас вызвали?</h1>
+  <p class="mut">${EV.name} · Официанты DC</p>
+  <div style="margin-top:14px">
+    ${opt('К 15:00','смена 15:00–01:00 · 10 человек')}
+    ${opt('К 17:00','смена 17:00–01:00 · 4 человека')}
+  </div>
+  <p class="a-note">В категории две группы с разным временем. По вашей группе считаются окно прихода и минимум за выход. Если ошиблись, на экране селфи есть «Изменить».</p>
+  <div class="grow"></div></div>`],
+ ['После селфи на входе — сразу главная',`<div class="a">${brand()}
+  <div style="margin-top:28px">${st('ok','Смена открыта')}</div>
+  <div class="a-big"><span class="num">1 мин</span><span class="mut">Марина Кузнецова · приход в 14:52</span></div>
+  <h2 class="ev">${EV.name}</h2><p class="mut">${EV.venue} · ${EV.date}</p>
+  <div style="margin-top:16px">
+    <div class="kv"><span>Категория</span><b>Официанты DC</b></div>
+    <div class="kv"><span>Вызов</span><b>к 15:00, смена до 01:00</b></div>
+    <div class="kv"><span>Часы считаются</span><b>с 15:00</b></div>
+    <div class="kv"><span>Минимум за выход</span><b>10 ч</b></div></div>
+  <div class="grow"></div>
+  <p class="hint" style="margin:14px 0 12px">Перед уходом нажмите «Закрыть смену». Иначе утром смена закроется на половину минимума.</p>
+  <button class="btn stop">Закрыть смену</button></div>`],
+ ['Главная · поздний приход',`<div class="a">${brand()}
+  <div style="margin-top:28px">${st('ok','Смена открыта')}</div>
+  <div class="a-big" style="margin-bottom:0"><span class="num">53 мин</span><span class="mut">Артём Григорьев · приход в 16:47</span></div>
+  <div class="a-warn">${st('warn','Ждёт решения менеджера')}<div>Вы пришли позже вызова (15:00). Пока часы считаются с прихода, минимум не применяется. Если менеджер подтвердит, что вас вызвали позже, зачтут минимум.</div></div>
+  <div style="margin-top:14px">
+    <div class="kv"><span>Мероприятие</span><b>${EV.name}</b></div>
+    <div class="kv"><span>Категория</span><b>Официанты DC</b></div>
+    <div class="kv"><span>Часы считаются</span><b>с 16:47</b></div></div>
+  <div class="grow"></div>
+  <p class="hint" style="margin:14px 0 12px">Понадобится селфи на выходе. Часы и сумма появятся после закрытия.</p>
+  <button class="btn stop">Закрыть смену</button></div>`],
+ ['После селфи на выходе',`<div class="a">${brand()}
+  <div style="margin-top:28px">${st('','Смена закрыта')}</div>
+  <div class="a-big"><span class="num">5 000 ₽</span><span class="mut">Марина Кузнецова · к выдаче</span></div>
+  <h2 class="ev">${EV.name}</h2><p class="mut">${EV.venue} · ${EV.date}</p>
+  <div style="margin-top:16px">
+    <div class="kv"><span>Категория</span><b>Официанты DC</b></div>
+    <div class="kv"><span>Время</span><b>14:52 → 01:04</b></div>
+    <div class="kv"><span>Факт</span><b>10 ч</b></div>
+    <div class="kv"><span>Зачтено к оплате</span><b>10 ч</b></div></div>
+  <div class="grow"></div>
+  <p class="hint" style="margin:14px 0 12px">Если цифра не сходится, скажите сегодня, а не в конце месяца.</p>
+  <button class="btn">Готово</button></div>`]
+];
+
+/* ===== пачки ===== */
+const BATCH=[
+ {t:'1 · Главная, селфи, карточка мероприятия',ok:1,note:'Согласовано 05.10. Главная сотрудника в двух состояниях, селфи после QR, карточка мероприятия администратора.',frames:()=>A.home().concat(A.selfie(),A.admin()),fix:i=>i<3},
+ {t:'2 · Категория, время вызова, после селфи',ok:1,note:'Согласовано 05.10. Выбор категории и времени вызова показывается, только если их нельзя определить автоматически. Категория и время выбираются одним касанием. После селфи на входе человек сразу попадает на главную с открытой сменой; после селфи на выходе видит итог смены.',frames:()=>P2,fix:()=>true}
+];
+const S={b:BATCH.length-1,t:'light'};
+(location.hash.slice(1).split('-')).forEach((x,i)=>{if(i===0&&BATCH[+x-1])S.b=+x-1;if(i===1&&(x==='light'||x==='dark'))S.t=x});
+document.getElementById('seg-b').innerHTML=BATCH.map((b,i)=>'<button data-b="'+i+'">'+b.t+(b.ok?' ✓':'')+'</button>').join('');
+function phone(cap,html,fix){return '<div><p class="cap">'+cap+'</p><div class="ph"><div class="tg"><span>Закрыть</span><b>Diamond Табель<small>мини-приложение</small></b><span>•••</span></div><div class="scr'+(fix?' fix':'')+'">'+html+'</div></div></div>'}
+function draw(){
+  document.body.dataset.t=S.t;
+  document.querySelectorAll('#seg-b button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.b===S.b)));
+  document.querySelectorAll('#seg-t button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===S.t)));
+  const B=BATCH[S.b];
+  document.getElementById('bnote').textContent=B.note;
+  document.getElementById('stage').innerHTML=B.frames().map((f,i)=>phone(f[0],f[1],B.fix(i))).join('');
+  try{history.replaceState(null,'','#'+(S.b+1)+'-'+S.t)}catch(e){}
+}
+document.addEventListener('click',e=>{
+  const o=e.target.closest('.a-opt');
+  if(o)return;
+  if(e.target.matches('.a-check input')){const b=e.target.closest('.a').querySelector('[data-need]');if(b)b.disabled=!e.target.checked;return}
+  const b=e.target.closest('.seg button');if(!b)return;
+  if(b.dataset.b)S.b=+b.dataset.b;if(b.dataset.t)S.t=b.dataset.t;draw();
+});
+draw();
+</script>
+</body>
+</html>
