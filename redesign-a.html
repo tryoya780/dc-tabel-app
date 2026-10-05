@@ -225,6 +225,33 @@ body[data-t=dark] .a-sheet{box-shadow:0 -1px 0 #2e2e2e;background:#161616}
 .a-step.sm{height:48px;width:148px;flex:none;padding:0 4px}.a-step.sm button{width:42px;height:40px}.a-step.sm b{font-size:18px}.a-dz.z .a-step b{color:var(--mut);font-weight:500}
 .a-tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--ln)}
 .a-tot b{font-size:22px;font-weight:650;letter-spacing:-.02em}
+.a-oc{background:var(--sf2);border-radius:18px;padding:14px 16px 6px;margin-top:8px}
+.a-oc .t{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.a-oc .t b{font-size:17px;font-weight:600}.a-oc .t span{font-size:14px;white-space:nowrap;font-weight:550}
+.a-oc .m{font-size:13px;color:var(--mut);margin-top:2px}
+.a-ol{display:flex;justify-content:space-between;gap:10px;width:100%;background:none;border:0;border-top:1px solid color-mix(in srgb,var(--tx) 9%,transparent);padding:13px 0;font-size:16px;cursor:pointer;text-align:left;margin-top:0}
+.a-oc .m+.a-ol,.a-oc .m+.a-oe{margin-top:10px}
+.a-oe{background:var(--bg);border-radius:14px;padding:12px 12px 4px;margin:0 -4px 8px}
+.a-oe .g3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px}
+.a-oe label,.a-f2 label{display:block;font-size:13px;color:var(--mut);margin-bottom:6px}
+.a-oe input{width:100%;height:48px;border:2px solid var(--sf2);border-radius:10px;background:none;color:var(--tx);font:inherit;font-size:17px;font-weight:550;padding:0 12px}
+.a-oe .f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 2px;font-size:14px}
+.a-oc .add{padding:12px 0 10px;border-top:1px solid color-mix(in srgb,var(--tx) 9%,transparent)}
+.a-dock{position:sticky;bottom:0;background:var(--bg);margin:18px -24px -22px;padding:14px 24px 22px;border-top:1px solid var(--ln)}
+.a-dock .tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.a-dock .tot b{font-size:20px;font-weight:650;letter-spacing:-.02em}
+.a-f2{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}.a-f2.eq{grid-template-columns:1fr 1fr}
+.a-f2 input,.a-f2 .a-step{height:52px}
+.a-f2 input{width:100%;border:0;border-radius:var(--rs);background:var(--sf2);color:var(--tx);font:inherit;font-size:17px;padding:0 14px}
+.a-field.t{margin-top:14px}.a-field.t input{height:52px;font-size:17px}
+.a-pay{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--ln)}
+.a-pay b{font-weight:600;font-size:16px;display:block}.a-pay small{font-size:13px;color:var(--mut)}
+.a-pay .r{display:flex;align-items:center;gap:10px;flex:none}.a-pay .r>b{font-size:15.5px}
+.a-pay .btn{width:92px;height:40px;font-size:14px;border-radius:10px;padding:0}
+.a-pay .done{width:92px;text-align:center;font-size:14px;font-weight:550;color:var(--ok)}
+.a-qr{width:230px;margin:22px auto 0;padding:16px;border-radius:20px;background:#fff}
+.a-qr svg{display:block;width:100%}
+.a-code{text-align:center;font-size:36px;font-weight:650;letter-spacing:.06em;margin-top:18px}
 .a-note{font-size:14.5px;color:var(--mut);margin-top:16px}
 .a-warn{margin-top:18px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--warn) 11%,transparent);font-size:14.5px}
 .a-warn .st{margin-bottom:6px}
@@ -516,13 +543,86 @@ const P5=[
   <button class="btn">Добавить в наряд</button>`)]
 ];
 
+/* ===== пачка 6: наряд, новое мероприятие, выплаты, QR, отчёт ===== */
+const QR=(()=>{const n=25,c=[];let v=7;const fin=(x,y)=>[[0,0],[n-7,0],[0,n-7]].some(([a,b])=>x>=a&&x<a+7&&y>=b&&y<b+7&&(x===a||x===a+6||y===b||y===b+6||(x>=a+2&&x<=a+4&&y>=b+2&&y<=b+4)));
+  const inF=(x,y)=>[[0,0],[n-8,0],[0,n-8]].some(([a,b])=>x>=a&&x<a+8&&y>=b&&y<b+8);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){v=(v*1103515245+12345)%2147483648;if(inF(x,y)?fin(x,y):v%100<46)c.push('<rect x="'+x+'" y="'+y+'" width="1" height="1"/>')}
+  return '<svg viewBox="0 0 '+n+' '+n+'" fill="#111" shape-rendering="crispEdges">'+c.join('')+'</svg>'})();
+const oLine=(t,n)=>`<button class="a-ol"><span>${t}</span><b style="font-weight:600">${n}</b></button>`;
+const payRow=(n,m,sum,paid,flag)=>`<div class="a-pay"><div><b>${n}</b><small>${m}${flag?' · <span style="color:var(--warn)">флаг не разобран</span>':''}</small></div><div class="r"><b>${sum}</b>${paid?'<span class="done">Выдано</span>':'<button class="btn">Выдать</button>'}</div></div>`;
+const P6=[
+ ['Наряд',`<div class="a">
+  <button class="lnk" style="color:var(--mut)">${I.back}${EV.name}</button>
+  <h1 class="h1 sm">Наряд</h1><p class="mut" style="font-size:14.5px">Кто нужен, к какому времени и сколько человек</p>
+  <div class="a-chips" style="margin-bottom:14px"><button class="on">2 окт</button><button>3 окт</button><button>+ день</button></div>
+  <div class="a-oc"><div class="t"><b>Старшие официанты</b><span>4 чел. · 24 000 ₽</span></div><div class="m">600 ₽ в час · по смете не больше 4</div>
+    ${oLine('к 14:00 до 00:00','4 чел.')}<div class="add"><button class="lnk">+ время прихода</button></div></div>
+  <div class="a-oc"><div class="t"><b>Официанты DC</b><span>14 чел. · 70 000 ₽</span></div><div class="m">500 ₽ в час · по смете не больше 14</div>
+    ${oLine('к 15:00 до 01:00','10 чел.')}
+    <div class="a-oe"><div class="g3"><div><label for="o1">Приходят к</label><input id="o1" value="17:00"></div><div><label for="o2">Часов</label><input id="o2" value="8" inputmode="decimal"></div><div><label for="o3">Человек</label><input id="o3" value="4" inputmode="numeric"></div></div>
+      <div class="f"><span class="mut">работают до 01:00</span><span style="display:flex;gap:18px"><button class="lnk" style="color:var(--bad)">Удалить</button><button class="lnk" style="color:var(--tx);font-weight:600">Готово</button></span></div></div>
+    <div class="add"><button class="lnk">+ время прихода</button></div></div>
+  <div class="a-oc"><div class="t"><b>Официанты Хорека</b><span>16 чел. · 116 800 ₽</span></div><div class="m">730 ₽ в час · по смете не больше 16</div>
+    ${oLine('к 15:00 до 01:00','16 чел.')}<div class="add"><button class="lnk">+ время прихода</button></div></div>
+  <button class="btn txt" style="margin-top:8px">+ Категория</button>
+  <div class="kv" style="border-top:1px solid var(--ln);margin-top:6px"><span>Менеджеры · фикс из сметы · 2</span><b>12 000 ₽</b></div>
+  <div class="grow"></div>
+  <div class="a-dock"><div class="tot"><span class="mut" style="font-size:14px">2 окт · 34 человека<br>за все дни 398 400 ₽</span><b>210 800 ₽</b></div><button class="btn">Сохранить</button></div></div>`],
+ ['Новое мероприятие',sheet(1,`${shHead('Новое мероприятие','Номер вида DC-ГГММДД-NN присвоится сам')}
+  <div class="a-field t" style="margin-top:20px"><label for="e1">Название — его видят сотрудники</label><input id="e1" value="Конференция «Финтех-день»"></div>
+  <div class="a-field t"><label for="e2">Номер сделки в Битрикс</label><input id="e2" value="48 217" inputmode="numeric"></div>
+  <div class="a-sub">Когда</div>
+  <div class="a-f2" style="margin-top:10px"><div><label for="e3">Первый день</label><input id="e3" value="6 окт 2026"></div><div><label>Сколько дней</label><div class="a-step"><button aria-label="Меньше дней">−</button><b>2</b><button aria-label="Больше дней">+</button></div></div></div>
+  <p class="mut" style="font-size:13px;margin-top:6px">по 7 окт включительно</p>
+  <div class="a-f2 eq" style="margin-top:12px"><div><label for="e4">Начало</label><input id="e4" value="09:00"></div><div><label for="e5">Окончание</label><input id="e5" value="19:00"></div></div>
+  <div class="a-sub">Где и сколько гостей</div>
+  <div class="a-f2" style="margin-top:10px"><div><label for="e6">Площадка</label><input id="e6" value="Конгресс-холл «Заря»"></div><div><label for="e7">Гостей</label><input id="e7" value="320" inputmode="numeric"></div></div>
+  <div class="a-sub">Кто ведёт</div>
+  <div class="a-field" style="margin-top:10px"><label>Менеджер</label><button class="a-sel" style="height:52px;font-size:17px">Лебедев Игорь${I.next}</button></div>
+  <button class="btn txt" style="margin:18px 0 6px">Отмена</button>
+  <button class="btn">Создать</button>`)],
+ ['Выплаты наличными',sheet(1,`${shHead('Выплаты наличными','Свой персонал · подрядчику платят по безналу')}
+  <div class="a-big" style="margin:22px 0 0"><span class="num">16 000 ₽</span><span class="mut">осталось выдать · выдано 16 000 ₽ из 32 000 ₽</span></div>
+  <p class="mut" style="font-size:13.5px;margin-top:10px">Ещё в смене 9 человек. Они появятся в списке после ухода.</p>
+  <div class="a-sub">Старшие официанты</div>
+  ${payRow('Орлова Вера','10 ч × 600 ₽','6 000 ₽',1)}${payRow('Демченко Павел','10 ч × 600 ₽','6 000 ₽',1)}
+  <div class="a-sub">Официанты DC</div>
+  ${payRow('Белова Ксения','10 ч × 500 ₽','5 000 ₽')}${payRow('Кузнецова Марина','10 ч × 500 ₽','5 000 ₽')}${payRow('Григорьев Артём','7 ч × 500 ₽','3 500 ₽')}
+  <div class="a-sub">Грузчики</div>
+  ${payRow('Морозов Денис','5 ч × 500 ₽','2 500 ₽',0,1)}${payRow('Соколов Пётр','8 ч × 500 ₽','4 000 ₽',1)}
+  <p class="hint" style="margin-top:18px">Отметки видны администратору и в таблице, лист 08</p>`)],
+ ['QR-лист',sheet(0,`${shHead('QR-лист','Один на всё мероприятие и все категории')}
+  <div class="a-qr">${QR}</div>
+  <div class="a-code num">${EV.code}</div>
+  <p class="hint" style="margin-top:4px">Код для тех, у кого не работает сканер</p>
+  <p class="hint" style="margin:22px 0 12px">Лист и код придут сообщением от бота: оттуда их можно переслать или распечатать</p>
+  <button class="btn">Отправить в чат бота</button>`)],
+ ['Отчёт',sheet(1,`${shHead('Отчёт','Гала-ужин «Осенний сезон» · 2 окт')}
+  <div class="a-big" style="margin:22px 0 0"><span class="num">236 400 ₽</span><span class="mut">факт из 246 800 ₽ · экономия 10 400 ₽</span></div>
+  <div class="meter"><i style="width:96%"></i></div>
+  <div class="a-nums" style="margin-top:18px"><div><b>38<span class="mut" style="font-size:17px;font-weight:500"> / 42</span></b><small>вышло</small></div><div><b>381 ч</b><small>зачтено</small></div><div><b style="color:var(--warn)">1</b><small>флаг</small></div></div>
+  <div class="a-sub">По категориям</div>
+  <div class="kv"><span>Старшие официанты · 4 из 4</span><b>24 000 ₽</b></div>
+  <div class="kv"><span>Официанты DC · 12 из 14</span><b>58 500 ₽</b></div>
+  <div class="kv"><span>Официанты Хорека · 18 из 20</span><b>119 400 ₽</b></div>
+  <div class="kv"><span>Грузчики · 6 из 6</span><b>22 500 ₽</b></div>
+  <div class="kv"><span>Менеджеры · 2 из 2</span><b>12 000 ₽</b></div>
+  <div class="a-sub">Что было</div>
+  <div class="kv"><span>Дозаказ</span><b>Хорека +4 · 29 200 ₽</b></div>
+  <div class="kv"><span>Правок часов</span><b>2</b></div>
+  <div class="kv"><span>Автозакрытий</span><b>0</b></div>
+  <div class="grow" style="min-height:20px"></div>
+  <button class="btn">Отправить в чат бота</button>`)]
+];
+
 /* ===== пачки ===== */
 const BATCH=[
  {t:'1 · Главная, селфи, карточка мероприятия',ok:1,note:'Согласовано 05.10. Главная сотрудника в двух состояниях, селфи после QR, карточка мероприятия администратора.',frames:()=>A.home().concat(A.selfie(),A.admin()),fix:i=>i<3},
  {t:'2 · Категория, время вызова, после селфи',ok:1,note:'Согласовано 05.10. Выбор категории и времени вызова показывается, только если их нельзя определить автоматически. Категория и время выбираются одним касанием. После селфи на входе человек сразу попадает на главную с открытой сменой; после селфи на выходе видит итог смены.',frames:()=>P2,fix:()=>true},
  {t:'3 · Согласие, номер, ФИО',ok:1,note:'Согласовано 05.10. Эти экраны человек видит один раз: согласие при первом открытии, номер и ФИО — перед первым селфи.',frames:()=>P3,fix:()=>true},
  {t:'4 · Консоль: мероприятия, флаги, архив',ok:1,note:'Согласовано 05.10. Три экрана консоли администратора: список мероприятий, вкладка «Флаги» и архив.',frames:()=>P4,fix:()=>true},
- {t:'5 · Человек, категория, подтверждения',ok:1,note:'Согласовано 05.10. Всё это открывается шторкой снизу поверх карточки мероприятия: карточка человека в двух состояниях, панель категории и три окна действий.',frames:()=>P5,fix:()=>true}
+ {t:'5 · Человек, категория, подтверждения',ok:1,note:'Согласовано 05.10. Всё это открывается шторкой снизу поверх карточки мероприятия: карточка человека в двух состояниях, панель категории и три окна действий.',frames:()=>P5,fix:()=>true},
+ {t:'6 · Наряд, мероприятие, выплаты, QR, отчёт',ok:1,note:'Согласовано 05.10. Последняя пачка: экран наряда, форма нового мероприятия, выплаты наличными, QR-лист и отчёт.',frames:()=>P6,fix:()=>true}
 ];
 const S={b:BATCH.length-1,t:'light'};
 (location.hash.slice(1).split('-')).forEach((x,i)=>{if(i===0&&BATCH[+x-1])S.b=+x-1;if(i===1&&(x==='light'||x==='dark'))S.t=x});
