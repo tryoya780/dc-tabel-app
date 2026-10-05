@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diamond Табель — направления дизайна</title>
+<!-- Этап выбора направления. Самостоятельный файл: рабочее приложение (dc-tabel-app/index.html), сервер и опубликованная версия не затронуты.
+     Шрифт Unbounded нужен только варианту B; без сети заголовки B покажутся системным шрифтом. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--pg);color:var(--pg-tx);line-height:1.4;font-size:15px}
+button{font:inherit;color:inherit}
+p{margin:0}
+
+/* ===== страница: тема ===== */
+body[data-t=light]{--pg:#ECEBE8;--pg-sf:#fff;--pg-tx:#1a1a1a;--pg-mut:#625e59;--pg-ln:#d9d6d1;--frame:#1c1c1c;--tgb:#f4f4f4;--tgt:#111;--tgm:#7a7a7a;
+  --ok:#1E7F4A;--warn:#A8590B;--bad:#C0362C;--gold:#B8864F}
+body[data-t=dark]{--pg:#090909;--pg-sf:#151515;--pg-tx:#ededed;--pg-mut:#a39f9a;--pg-ln:#292929;--frame:#303030;--tgb:#1c1c1e;--tgt:#f2f2f2;--tgm:#8e8e93;
+  --ok:#56C28A;--warn:#E2A545;--bad:#EF6E63;--gold:#C99A67}
+
+/* ===== токены вариантов ===== */
+body[data-v=a]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;--disp:var(--font);--rb:16px;--rs:12px}
+body[data-v=a][data-t=light]{--bg:#fff;--sf:#fff;--sf2:#f3f3f2;--tx:#161616;--mut:#686868;--ln:#ebebea;--pri:#161616;--pri-tx:#fff;--acc:#8F5A12}
+body[data-v=a][data-t=dark]{--bg:#101010;--sf:#101010;--sf2:#1d1d1d;--tx:#ededed;--mut:#9c9c9c;--ln:#262626;--pri:#ededed;--pri-tx:#101010;--acc:#C99A67}
+
+body[data-v=b]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;--disp:"Unbounded",var(--font);--rb:18px;--rs:14px}
+body[data-v=b][data-t=light]{--bg:#F6EFE7;--sf:#FFFDFA;--sf2:#F5EEE6;--tx:#1A1A1A;--mut:#6B625C;--ln:#E8DED2;--pri:#C99A67;--pri-tx:#1A1A1A;--ink:#1A1A1A;--ink-tx:#FFF9F3;--acc:#8F5A12}
+body[data-v=b][data-t=dark]{--bg:#161413;--sf:#221F1C;--sf2:#2C2824;--tx:#F3ECE4;--mut:#A79C93;--ln:#342F2A;--pri:#C99A67;--pri-tx:#1A1A1A;--ink:#F3ECE4;--ink-tx:#1A1A1A;--acc:#C99A67}
+
+body[data-v=c]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;--disp:var(--font);--rb:12px;--rs:8px}
+body[data-v=c][data-t=light]{--bg:#F2F3F5;--sf:#fff;--sf2:#ECEEF1;--tx:#14171A;--mut:#5A636E;--ln:#DDE0E5;--pri:#14171A;--pri-tx:#fff;--acc:#8F5A12}
+body[data-v=c][data-t=dark]{--bg:#0D0F11;--sf:#16191C;--sf2:#1F2327;--tx:#E6E8EA;--mut:#929BA5;--ln:#282C31;--pri:#E6E8EA;--pri-tx:#0D0F11;--acc:#C99A67}
+
+/* ===== шапка страницы ===== */
+.wrap{max-width:1240px;margin:0 auto;padding:28px 20px 60px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--pg-mut)}
+.title{font-size:28px;line-height:1.15;letter-spacing:-.02em;margin:6px 0 8px;font-weight:650}
+.intro{color:var(--pg-mut);max-width:780px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 8px}
+.vcard{text-align:left;background:var(--pg-sf);border:1px solid var(--pg-ln);border-radius:14px;padding:16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.vcard:hover{border-color:var(--pg-mut)}
+.vcard[aria-pressed=true]{border-color:var(--pg-tx);box-shadow:0 0 0 1px var(--pg-tx)}
+.vcard h3{margin:0 0 8px;font-size:16px}
+.vcard h3 span{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:7px;background:var(--pg-tx);color:var(--pg);font-size:13px;margin-right:8px}
+.vcard dl{margin:0;display:grid;gap:8px;font-size:13.5px}
+.vcard dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--pg-mut);margin-bottom:1px}
+.vcard dd{margin:0}
+.common{font-size:13.5px;color:var(--pg-mut);margin:10px 0 0}
+.bar{position:sticky;top:0;z-index:5;margin:18px -20px 26px;padding:10px 20px;background:color-mix(in srgb,var(--pg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--pg-ln);display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;background:var(--pg-sf);border:1px solid var(--pg-ln);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:7px 12px;border-radius:7px;font-size:14px;font-weight:550;color:var(--pg-mut);cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--pg-tx)}
+.seg button[aria-pressed=true]{background:var(--pg-tx);color:var(--pg)}
+.seg button:focus-visible,.vcard:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bar .grp{display:flex;align-items:center;gap:8px}.bar .lbl{font-size:12px;color:var(--pg-mut)}
+.stage{display:flex;gap:28px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.cap{font-size:13px;color:var(--pg-mut);margin:0 0 10px 14px}
+.notes{width:300px;flex:1 1 300px;max-width:420px;background:var(--pg-sf);border:1px solid var(--pg-ln);border-radius:14px;padding:16px 18px;font-size:13.5px;position:sticky;top:120px;margin-top:29px}
+.notes h4{margin:0 0 10px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--pg-mut);font-weight:600}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:8px}
+.notes b{font-weight:600}
+@media (max-width:900px){.cards{grid-template-columns:1fr}}
+
+/* ===== телефон ===== */
+.ph{width:410px;max-width:100%;border:10px solid var(--frame);border-radius:46px;overflow:hidden;background:var(--bg);box-shadow:0 20px 50px -24px rgba(0,0,0,.45)}
+.tg{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;background:var(--tgb);color:var(--tgt);font-size:15px}
+.tg b{font-weight:600;text-align:center;line-height:1.15}.tg b small{display:block;font-weight:400;font-size:11px;color:var(--tgm)}
+.tg span{color:var(--tgm);width:64px}.tg span:last-child{text-align:right;letter-spacing:2px}
+.scr{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:16px;line-height:1.38;font-variant-numeric:tabular-nums}
+.scr.fix>div{min-height:700px;display:flex;flex-direction:column}
+.grow{flex:1}
+.mut{color:var(--mut)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ===== общие элементы ===== */
+.btn{appearance:none;border:0;font-weight:600;font-size:17px;height:56px;padding:0 16px;border-radius:var(--rb);background:var(--pri);color:var(--pri-tx);width:100%;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:transform .08s,filter .15s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:scale(.985);filter:brightness(.9)}
+.btn:focus-visible,.cb:focus-visible,.lnk:focus-visible,.chip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn svg{width:22px;height:22px;flex:none}
+.btn.sec{background:var(--sf2);color:var(--tx)}
+.btn.ink{background:var(--ink,var(--pri));color:var(--ink-tx,var(--pri-tx))}
+.btn.txt{background:none;color:var(--tx);height:44px;font-size:15px;font-weight:500}
+.btn.sm{height:44px;font-size:15px;border-radius:var(--rs);padding:0 14px}
+.btn.duo{flex-direction:column;gap:1px;height:54px;padding:0 6px;line-height:1.15;font-size:15px;border-radius:var(--rs)}
+.btn.duo small{font-size:12px;font-weight:400;opacity:.72}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lnk{background:none;border:0;padding:0;color:var(--acc);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:2px}
+.lnk svg{width:16px;height:16px}
+.brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--mut)}
+.brand svg{width:11px;height:11px;color:var(--gold)}
+.hint{font-size:13px;color:var(--mut);text-align:center;margin-top:10px}
+
+/* статус: один способ на вариант. A — точка и слово, B — мягкая плашка, C — квадрат и короткая подпись */
+.st{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:550;white-space:nowrap}
+.st i{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.st.ok i{background:var(--ok)}.st.warn i{background:var(--warn)}.st.bad i{background:var(--bad)}
+.st.off i{background:none;box-shadow:inset 0 0 0 1.5px var(--mut)}
+body[data-v=b] .st{padding:5px 11px 5px 9px;border-radius:999px;background:var(--sf2);font-size:13px}
+body[data-v=b] .st.ok{background:color-mix(in srgb,var(--ok) 13%,transparent);color:var(--ok)}
+body[data-v=b] .st.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+body[data-v=b] .st.bad{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}
+body[data-v=c] .st{font-size:12px;font-weight:600;gap:6px}
+body[data-v=c] .st i{width:7px;height:7px;border-radius:2px}
+body[data-v=c] .st.ok{color:var(--ok)}body[data-v=c] .st.warn{color:var(--warn)}body[data-v=c] .st.bad{color:var(--bad)}
+
+/* камера */
+.cam{position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(165deg,#44413d,#1b1a19 70%);aspect-ratio:3/4;width:100%}
+.cam .sil{position:absolute;left:50%;bottom:0;width:74%;transform:translateX(-50%);fill:rgba(255,255,255,.13)}
+.cam .oval{position:absolute;left:50%;top:14%;width:52%;aspect-ratio:3/4;transform:translateX(-50%);border:1.5px dashed rgba(255,255,255,.5);border-radius:50%}
+.cam .stamp{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.5);color:#fff;font-size:12.5px;padding:5px 9px;border-radius:8px;font-variant-numeric:tabular-nums}
+.cam .live{position:absolute;right:12px;top:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;padding:4px 9px;border-radius:999px}
+.cam .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#ff5b4f}
+
+/* ===== A: спокойный ===== */
+.a{padding:22px 24px 22px}
+.a .h1{font-size:30px;line-height:1.14;letter-spacing:-.022em;font-weight:650;margin:28px 0 10px}
+.a .h1.sm{font-size:25px;margin:16px 0 6px}
+.a .lead{font-size:17px}
+.a .lab{font-size:13px;color:var(--mut);margin-bottom:8px}
+.a-last{margin-top:44px;padding-top:18px;border-top:1px solid var(--ln)}
+.a-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.a-row .mut{font-size:14px;margin-top:2px}
+.a-big{margin:30px 0 26px}
+.a-big .num{display:block;font-size:64px;line-height:1;letter-spacing:-.035em;font-weight:650}
+.a-big .mut{display:block;margin-top:8px;font-size:16px}
+.a h2.ev{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--ln);font-size:15.5px}
+.kv span{color:var(--mut)}.kv b{font-weight:550;text-align:right}
+.kv:last-child{border-bottom:0}
+.a-ctx{margin:14px 0 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.a-ctx b{display:block;font-weight:600}
+.a-top{display:flex;justify-content:space-between;align-items:center}
+.a-acts{display:flex;gap:8px;margin:16px 0 4px}.a-acts .btn{width:auto;flex:1}.a-acts .btn.ico{flex:0 0 48px;padding:0;letter-spacing:1px}
+.a-h2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:34px 0 4px;display:flex;gap:8px;align-items:baseline}
+.a-h2 span{color:var(--tx);letter-spacing:0;font-size:14px}
+.a-q{padding:16px 0 18px;border-bottom:1px solid var(--ln)}
+.a-q:last-of-type{border-bottom:0;padding-bottom:0}
+.a-q .who{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:6px}
+.a-q .who b{font-size:17px;font-weight:600}
+.a-q p{font-size:14.5px;color:var(--mut);margin:4px 0 12px}
+.a-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 10px}
+.a-nums b{display:block;font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.a-nums small{font-size:13px;color:var(--mut)}
+.a-cat{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--ln);font-size:15.5px}
+.a-cat small{display:block;color:var(--mut);font-size:13px}
+.a-cat .r{text-align:right;white-space:nowrap;font-weight:550}
+.a-ppl{padding:2px 0 8px 0;border-bottom:1px solid var(--ln)}
+.a-ppl div{display:flex;justify-content:space-between;gap:10px;padding:8px 0 8px 14px;font-size:14.5px}
+.meter{height:4px;border-radius:2px;background:var(--sf2);overflow:hidden;margin:12px 0 8px}
+.meter i{display:block;height:100%;background:var(--tx);border-radius:2px}
+.foot{font-size:13px;color:var(--mut);text-align:center;margin-top:30px}
+
+/* ===== B: тёплый фирменный ===== */
+.b{padding:18px 16px 20px}
+.b .brand{color:var(--tx);padding:0 6px}
+.b .h1{font-family:var(--disp);font-size:23px;line-height:1.2;letter-spacing:-.02em;font-weight:600;margin:22px 6px 16px}
+.b-card{background:var(--sf);border-radius:24px;padding:20px;margin-bottom:12px}
+.b-card .lab{font-size:13px;color:var(--mut);margin-bottom:6px}
+.b-card h3{margin:0 0 4px;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.b-card .btn{margin-top:18px}
+.b-or{display:block;margin:14px auto 0;font-size:14.5px}
+.b-sum{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--ln)}
+.b-sum b{font-family:var(--disp);font-size:20px;font-weight:600}
+.b-time{font-family:var(--disp);font-size:36px;line-height:1.1;letter-spacing:-.03em;font-weight:600;margin:16px 0 4px}
+.b-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.b-facts div{background:var(--sf2);border-radius:14px;padding:10px 12px}
+.b-facts small{display:block;font-size:12px;color:var(--mut)}
+.b-facts b{font-weight:600;font-size:15px}
+.b-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.b-chips span{background:var(--sf2);border-radius:999px;padding:5px 11px;font-size:13.5px;font-weight:550}
+.b .cam{border-radius:28px;margin-bottom:14px}
+.b .cam::before,.b .cam::after{content:"";position:absolute;width:34px;height:34px;border:2.5px solid var(--gold);z-index:1}
+.b .cam::before{left:18px;top:18px;border-right:0;border-bottom:0;border-radius:12px 0 0 0}
+.b .cam::after{right:18px;bottom:18px;border-left:0;border-top:0;border-radius:0 0 12px 0}
+.b .cam .live{right:auto;left:50%;transform:translateX(-50%)}
+.b-h2{font-family:var(--disp);font-size:14px;font-weight:600;margin:22px 6px 10px;display:flex;align-items:center;gap:8px}
+.b-h2 span{min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--gold);color:#1a1a1a;font-family:var(--font);font-size:12.5px;display:inline-flex;align-items:center;justify-content:center}
+.b-h2 span.n{background:var(--sf2);color:var(--tx)}
+.b-q{background:var(--sf);border-radius:20px;padding:16px;margin-bottom:8px}
+.b-q .who{font-size:17px;font-weight:600;margin:10px 0 2px}
+.b-q p{font-size:14.5px;color:var(--mut);margin:0 0 12px}
+.b-head{background:var(--sf);border-radius:24px;padding:18px 20px;margin-top:14px}
+.b-head h1{font-family:var(--disp);font-size:19px;line-height:1.25;letter-spacing:-.015em;font-weight:600;margin:10px 0 6px}
+.b-head p{font-size:14px;color:var(--mut)}
+.b-cat{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 0;border-bottom:1px solid var(--ln)}
+.b-cat:last-child{border-bottom:0;padding-bottom:0}.b-cat:first-child{padding-top:0}
+.b-cat b{font-weight:600;font-size:15.5px}
+.b-cat .r{font-weight:600;white-space:nowrap}
+.b-cat small{grid-column:1/-1;color:var(--mut);font-size:13px}
+.av{display:flex;margin-top:6px;grid-column:1/-1;align-items:center}
+.av i{width:26px;height:26px;border-radius:50%;background:var(--sf2);box-shadow:0 0 0 2px var(--sf);font-style:normal;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-right:4px}
+.av i.w{background:color-mix(in srgb,var(--warn) 22%,var(--sf));color:var(--warn)}
+.av em{font-style:normal;font-size:13px;color:var(--mut);margin-left:6px}
+.b-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.b-tiles div{background:var(--sf);border-radius:18px;padding:14px 16px}
+.b-tiles b{display:block;font-family:var(--disp);font-size:21px;font-weight:600;letter-spacing:-.02em}
+.b-tiles small{font-size:13px;color:var(--mut)}
+.b-tiles .wide{grid-column:1/-1}
+.b .meter i{background:var(--gold)}
+.b-dock{display:grid;grid-template-columns:1.4fr 1fr 52px;gap:8px;margin-top:16px}
+.b-dock .btn{padding:0 8px}
+
+/* ===== C: компактный операционный ===== */
+.c{padding:14px 14px 18px;font-size:15px}
+.c-bar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut)}
+.c-pan{background:var(--sf);border:1px solid var(--ln);border-radius:10px;overflow:hidden}
+.c-state{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;margin:14px 0 10px;background:var(--sf);border:1px solid var(--ln);border-radius:10px;border-left:3px solid var(--mut)}
+.c-state.ok{border-left-color:var(--ok)}
+.c-state b{font-size:17px;font-weight:650;display:block;letter-spacing:-.01em}
+.c-state small{font-size:13px;color:var(--mut)}
+.c-state .t{font-size:26px;font-weight:650;letter-spacing:-.02em;white-space:nowrap}
+.c-kv{display:grid;grid-template-columns:132px 1fr;gap:8px;padding:9px 12px;border-bottom:1px solid var(--ln);font-size:14.5px}
+.c-kv:last-child{border-bottom:0}.c-kv span{color:var(--mut)}.c-kv b{font-weight:550}
+.c-lab{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);margin:16px 2px 6px;display:flex;justify-content:space-between;align-items:baseline}
+.c-lab em{font-style:normal;letter-spacing:0;text-transform:none;font-weight:500}
+.c-code{display:flex;gap:8px;align-items:center;margin-top:10px}
+.c-code .boxes{flex:1;display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.c-code .boxes i{height:48px;border-radius:8px;background:var(--sf);border:1px solid var(--ln)}
+.c-code .btn{width:64px;flex:none}
+.c-win{padding:12px}
+.c-win .tr{position:relative;height:8px;border-radius:4px;background:var(--sf2);margin:8px 0 6px}
+.c-win .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--ok);width:27%}
+.c-win .tr u{position:absolute;left:27%;top:-4px;bottom:-4px;width:2px;background:var(--tx)}
+.c-win .ax{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut)}
+.c-steps{display:flex;gap:6px;margin:12px 0 10px;font-size:12.5px;font-weight:600;color:var(--mut)}
+.c-steps span{flex:1;padding-top:7px;border-top:3px solid var(--ln)}
+.c-steps .d{border-color:var(--ok);color:var(--tx)}.c-steps .n{border-color:var(--tx);color:var(--tx)}
+.c .cam{border-radius:12px;aspect-ratio:1/1;margin:10px 0 12px}
+.c .cam .oval{top:9%;width:44%}
+.c .cam .stamp{left:0;right:0;bottom:0;border-radius:0;padding:7px 12px;background:rgba(0,0,0,.58)}
+.c-hd{display:flex;align-items:center;gap:8px}
+.c-hd h1{flex:1;min-width:0;font-size:17px;font-weight:650;margin:0;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-hd .bk{width:32px;height:32px;margin-left:-8px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer}
+.c-hd .bk svg{width:20px;height:20px}
+.c-meta{font-size:12.5px;color:var(--mut);margin:4px 0 10px}
+.c-strip{display:grid;grid-template-columns:repeat(4,1fr)}
+.c-strip div{padding:9px 10px;border-right:1px solid var(--ln)}
+.c-strip div:last-child{border-right:0}
+.c-strip b{display:block;font-size:19px;font-weight:650;letter-spacing:-.02em}
+.c-strip small{font-size:11.5px;color:var(--mut);white-space:nowrap}
+.c-tools{display:grid;grid-template-columns:1.2fr 1fr 1fr 44px;gap:6px;margin-top:8px}
+.cb{height:40px;border-radius:8px;border:1px solid var(--ln);background:var(--sf);font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;padding:0 6px;transition:filter .15s,transform .08s}
+.cb:hover{filter:brightness(.97)}.cb:active{transform:scale(.98)}
+.cb.p{background:var(--pri);color:var(--pri-tx);border-color:transparent}
+.cb small{font-weight:400;font-size:12px;opacity:.7}
+.c-q{padding:10px 12px 12px;border-bottom:1px solid var(--ln);border-left:3px solid var(--warn)}
+.c-q:last-child{border-bottom:0}
+.c-q .t{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.c-q .t b{font-weight:600;font-size:15px}
+.c-q .d{font-size:13px;color:var(--mut);margin:1px 0 8px}
+.c-q .two{gap:6px}
+.chips{display:flex;gap:6px;overflow:hidden;margin-bottom:8px}
+.chip{border:1px solid var(--ln);background:var(--sf);border-radius:999px;padding:6px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;color:var(--mut)}
+.chip.on{background:var(--pri);color:var(--pri-tx);border-color:transparent}
+.c-g{display:flex;justify-content:space-between;gap:8px;padding:7px 12px;background:var(--sf2);font-size:12.5px;font-weight:600;border-bottom:1px solid var(--ln)}
+.c-g span{font-weight:500;color:var(--mut)}
+.c-p{display:grid;grid-template-columns:10px 1fr 46px 42px;gap:8px;align-items:center;padding:0 12px;height:40px;border-bottom:1px solid var(--ln);font-size:14px}
+.c-p:last-child{border-bottom:0}
+.c-p i{width:7px;height:7px;border-radius:2px;background:var(--ok)}
+.c-p i.w{background:var(--warn)}.c-p i.g{background:var(--mut)}.c-p i.n{background:none;box-shadow:inset 0 0 0 1.5px var(--bad)}
+.c-p span{color:var(--mut);font-size:13px;text-align:right}
+.c-p b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-p b small{color:var(--warn);font-weight:600;font-size:12px;margin-left:6px}
+.c-p.more{display:block;line-height:36px;height:36px;color:var(--mut);font-size:13px}
+.c-f{display:grid;grid-template-columns:1fr 54px 132px;gap:8px;padding:8px 12px;border-bottom:1px solid var(--ln);font-size:13.5px}
+.c-f:last-child{border-bottom:0;font-weight:650}
+.c-f span{text-align:right;color:var(--mut)}.c-f:last-child span{color:var(--tx)}
+</style>
+</head>
+<body data-v="a" data-t="light">
+<div class="wrap">
+  <div class="eyebrow">Diamond Табель · этап выбора направления</div>
+  <h1 class="title">Три направления дизайна основных экранов</h1>
+  <p class="intro">Макеты с демонстрационными данными. Рабочее приложение, сервер и опубликованная версия не менялись. Переключайте вариант, экран и тему; выбор сохраняется в адресе страницы.</p>
+
+  <div class="cards" id="cards">
+    <button class="vcard" data-v="a"><h3><span>A</span>Спокойный и минималистичный</h3><dl>
+      <div><dt>Характер</dt><dd>Почти без карточек и рамок. Иерархию держат размер текста и свободное место. Главная кнопка нейтральная, золото только в знаке.</dd></div>
+      <div><dt>Сильные стороны</dt><dd>Лучше всего читается на улице и в тёмном зале. У сотрудника на экране одно действие и одна крупная цифра.</dd></div>
+      <div><dt>Компромисс</dt><dd>Меньше фирменного характера. Карточка мероприятия длиннее: администратору больше прокрутки.</dd></div></dl></button>
+    <button class="vcard" data-v="b"><h3><span>B</span>Тёплый фирменный</h3><dl>
+      <div><dt>Характер</dt><dd>Кремовые и тёплые тёмные поверхности, мягкие карточки без рамок, заголовки шрифтом Unbounded. Золото — на главной кнопке сотрудника и в мелких метках.</dd></div>
+      <div><dt>Сильные стороны</dt><dd>Узнаваемо Diamond, дружелюбно для линейного персонала, крупные цифры в плитках.</dd></div>
+      <div><dt>Компромисс</dt><dd>Карточки занимают место: администратору помещается меньше строк. Фирменный шрифт подгружается из сети, на слабой связи заголовки сначала системные.</dd></div></dl></button>
+    <button class="vcard" data-v="c"><h3><span>C</span>Компактный операционный</h3><dl>
+      <div><dt>Характер</dt><dd>Плотные строки, табличные цифры, полоса показателей, решения принимаются кнопками прямо в строке очереди.</dd></div>
+      <div><dt>Сильные стороны</dt><dd>Администратор видит очередь, показатели и людей за один-два экрана. Меньше переходов в карточки.</dd></div>
+      <div><dt>Компромисс</dt><dd>Выглядит как рабочий инструмент, меньше эмоций. Кнопки решений 40 px вместо 54: в спешке нужна точность пальца.</dd></div></dl></button>
+  </div>
+  <p class="common">Общее для всех вариантов: статус показывается одним способом внутри варианта; зелёный — на объекте, янтарный — ждёт решения, красный — проблема или опасное действие, серый — завершено. Золото остаётся акцентом, а не цветом заголовков.</p>
+
+  <div class="bar">
+    <div class="grp"><span class="lbl">Вариант</span><div class="seg" id="seg-v"><button data-v="a">A · Спокойный</button><button data-v="b">B · Фирменный</button><button data-v="c">C · Компактный</button></div></div>
+    <div class="grp"><span class="lbl">Экран</span><div class="seg" id="seg-s"><button data-s="home">Главная сотрудника</button><button data-s="selfie">Селфи после QR</button><button data-s="admin">Карточка мероприятия</button></div></div>
+    <div class="grp"><span class="lbl">Тема</span><div class="seg" id="seg-t"><button data-t="light">Светлая</button><button data-t="dark">Тёмная</button></div></div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+/* ===== значки ===== */
+const sv=(d,x)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
+const I={
+  qr:sv('<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM18 14h2M14 18v2"/>'),
+  cam:sv('<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+  back:sv('<path d="m15 6-6 6 6 6"/>'),
+  next:sv('<path d="m9 6 6 6-6 6"/>'),
+  dia:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 0l6 6-6 6-6-6z" fill="currentColor"/></svg>'
+};
+const st=(k,t)=>'<span class="st '+k+'"><i></i>'+t+'</span>';
+const brand=()=>'<div class="brand">'+I.dia+'Diamond Табель</div>';
+const cam=(stamp)=>'<div class="cam"><svg class="sil" viewBox="0 0 200 190"><circle cx="100" cy="62" r="44"/><path d="M14 190c0-46 38-76 86-76s86 30 86 76z"/></svg><div class="oval"></div><div class="live">камера включена</div><div class="stamp">'+stamp+'</div></div>';
+
+/* ===== демонстрационные данные ===== */
+const EV={name:'Гала-ужин «Осенний сезон»',venue:'Особняк на Волхонке',date:'2 окт, пт',time:'17:00–23:30',guests:240,code:'482 913'};
+const Q=[
+  {tag:'Поздний приход',who:'Григорьев Артём',role:'Официанты DC',why:'Пришёл в 16:47 — на 1 ч 47 мин позже вызова. Пока часы идут с прихода, без минимума.',short:'Официанты DC · 16:47, вызов к 15:00',a:['Опоздал','часы с прихода','с 16:47'],b:['Вызывали','минимум за выход','минимум']},
+  {tag:'Ранний приход',who:'Садыкова Алина',role:'Официанты Хорека',fresh:1,why:'Пришла в 13:20, вызов к 15:00. Пока часы идут с 15:00. Новое лицо: посмотрите фото.',short:'Хорека · 13:20, вызов к 15:00 · новое лицо',a:['Пришла рано','с начала окна','с 15:00'],b:['Работала','с прихода','с 13:20']},
+  {tag:'Дозаказ',who:'Официанты Хорека +4',role:'29 200 ₽',why:'«Гостей больше на 30». Запросил Лебедев И. в 17:22.',short:'29 200 ₽ · «гостей больше на 30» · Лебедев И.',a:['Отклонить','план не меняется',''],b:['Подтвердить','+29 200 ₽ к плану','+4 чел.']},
+  {tag:'Флаг',who:'Морозов Денис',role:'Грузчики',why:'Ушёл в 14:10 — почти на 3 ч раньше конца окна. Факт 5 ч, минимум 8 ч.',short:'Грузчики · ушёл 14:10, окно до 17:00',a:['Оставить факт','5 ч · 2 500 ₽','5 ч'],b:['Зачесть минимум','8 ч · 4 000 ₽','8 ч'],cs:['Факт','Минимум']}
+];
+const CATS=[
+  {n:'Старшие официанты',w:'14:00–00:00',on:4,came:4,lim:4,av:['ОВ','ДП','КА','ШМ'],names:'Орлова, Демченко и ещё 2'},
+  {n:'Официанты DC',w:'15:00–01:00',on:12,came:12,lim:14,miss:2,pend:1,av:['ГА','БК','КМ','ТИ'],names:'Белова, Кузнецова и ещё 10'},
+  {n:'Официанты Хорека',w:'15:00–01:00',on:14,came:14,lim:16,miss:2,pend:1,av:['СА','НР','ИЛ','ПЕ'],names:'Назаров, Исаева и ещё 12'},
+  {n:'Менеджеры',w:'12:00–00:00',on:2,came:2,lim:2,av:['ЛИ','ФО'],names:'Лебедев, Фролова'},
+  {n:'Грузчики',w:'09:00–17:00',on:0,came:6,lim:6,left:6,av:[],names:'все ушли, один флаг'}
+];
+const catRight=c=>c.left?'ушли '+c.left:c.on+' из '+c.lim;
+
+/* ===== A ===== */
+const A={
+home:()=>[['До отметки',`<div class="a">${brand()}
+  <h1 class="h1">Здравствуйте, Марина</h1>
+  <p class="lead mut">Смена не открыта. Отсканируйте QR-код у входа на площадку.</p>
+  <div class="a-last"><div class="lab">Последняя смена</div>
+    <div class="a-row"><div><b>Фуршет · конгресс-холл «Заря»</b><div class="mut">27 сен · 10:00 → 20:10 · зачтено 10 ч</div></div><b>5 000 ₽</b></div></div>
+  <div class="grow"></div>
+  <button class="btn">${I.qr}Сканировать QR</button>
+  <button class="btn txt">Ввести код с листа</button></div>`],
+ ['Смена открыта',`<div class="a">${brand()}
+  <div style="margin-top:28px">${st('ok','Смена открыта')}</div>
+  <div class="a-big"><span class="num">14:52</span><span class="mut">приход · идёт 2 ч 48 мин</span></div>
+  <h2 class="ev">${EV.name}</h2><p class="mut">${EV.venue} · ${EV.date}</p>
+  <div style="margin-top:16px">
+    <div class="kv"><span>Категория</span><b>Официанты DC</b></div>
+    <div class="kv"><span>Вызов</span><b>к 15:00, смена до 01:00</b></div>
+    <div class="kv"><span>Часы считаются</span><b>с 15:00</b></div>
+    <div class="kv"><span>Минимум за выход</span><b>10 ч</b></div></div>
+  <div class="grow"></div>
+  <button class="btn">Закрыть смену</button>
+  <p class="hint">Понадобится селфи на выходе. Часы и сумма появятся после закрытия.</p></div>`]],
+selfie:()=>[['После сканирования QR',`<div class="a">${brand()}
+  <h1 class="h1 sm" style="margin-top:22px">Селфи на входе</h1>
+  <div class="a-ctx"><div><b>${EV.name}</b><span class="mut">Официанты DC · вызов к 15:00 · минимум 10 ч</span></div><button class="lnk">Изменить</button></div>
+  ${cam('2 окт · 14:52')}
+  <div class="grow"></div>
+  <p class="hint" style="margin:14px 0 12px">Снимок делается камерой прямо сейчас</p>
+  <button class="btn">${I.cam}Сделать фото</button></div>`]],
+admin:()=>[['Карточка мероприятия · администратор',`<div class="a">
+  <div class="a-top"><button class="lnk" style="color:var(--mut)">${I.back}Мероприятия</button>${st('ok','Открыто')}</div>
+  <h1 class="h1 sm">${EV.name}</h1>
+  <p class="mut" style="font-size:14.5px">${EV.date} · ${EV.venue} · ${EV.time} · ${EV.guests} гостей · код <b style="color:var(--tx)">${EV.code}</b></p>
+  <div class="a-acts"><button class="btn sm sec">Дозаказ</button><button class="btn sm sec">QR-листы</button><button class="btn sm sec ico" aria-label="Ещё">•••</button></div>
+  <h2 class="a-h2">Требуют решения <span>4</span></h2>
+  ${Q.map(q=>`<div class="a-q">${st('warn',q.tag)}<div class="who"><b>${q.who}</b><span class="mut">${q.role}</span></div><p>${q.why}</p>
+    <div class="two"><button class="btn duo sec"><span>${q.a[0]}</span><small>${q.a[1]}</small></button><button class="btn duo"><span>${q.b[0]}</span><small>${q.b[1]}</small></button></div></div>`).join('')}
+  <h2 class="a-h2">Сейчас на объекте</h2>
+  <div class="a-nums"><div><b>32</b><small>на объекте</small></div><div><b>38<span class="mut" style="font-size:17px;font-weight:500"> / 42</span></b><small>вышло</small></div><div><b style="color:var(--bad)">4</b><small>не вышли</small></div></div>
+  ${CATS.map((c,i)=>`<div class="a-cat"><div>${c.n}<small>${c.w}${c.miss?' · <span style="color:var(--bad)">не вышли '+c.miss+'</span>':''}${c.pend?' · <span style="color:var(--warn)">ждёт '+c.pend+'</span>':''}</small></div><div class="r">${catRight(c)}</div></div>`+(i===1?`<div class="a-ppl"><div>${st('warn','Григорьев Артём')}<span class="mut">с 16:47</span></div><div>${st('ok','Белова Ксения')}<span class="mut">с 14:48</span></div><div>${st('ok','Кузнецова Марина')}<span class="mut">с 14:52</span></div><div><button class="lnk">Ещё 9 человек${I.next}</button></div></div>`:'')).join('')}
+  <h2 class="a-h2">Фонд оплаты</h2>
+  <div class="a-row" style="margin-top:10px;align-items:baseline"><b style="font-size:24px;font-weight:650;letter-spacing:-.02em">222 200 ₽</b><span class="mut">из 246 800 ₽</span></div>
+  <div class="meter"><i style="width:90%"></i></div>
+  <div class="a-row mut" style="font-size:14px"><span>90% плана</span><span>остаток 24 600 ₽</span></div>
+  <p class="foot">Обновлено в 17:40</p></div>`]]
+};
+
+/* ===== B ===== */
+const B={
+home:()=>[['До отметки',`<div class="b">${brand()}
+  <h1 class="h1">Здравствуйте, Марина</h1>
+  <div class="b-card"><div class="lab">Отметка прихода</div><h3>Наведите камеру на QR-код у входа</h3><p class="mut" style="font-size:15px">Мероприятие и ваша группа определятся сами.</p>
+    <button class="btn">${I.qr}Сканировать QR</button><button class="lnk b-or">Ввести код с листа</button></div>
+  <div class="b-card"><div class="lab">Последняя смена · 27 сен</div><h3 style="font-size:16.5px">Фуршет · конгресс-холл «Заря»</h3><p class="mut" style="font-size:14.5px">10:00 → 20:10 · зачтено 10 ч</p>
+    <div class="b-sum"><span class="mut" style="font-size:14px">К выдаче</span><b>5 000 ₽</b></div></div>
+  <div class="grow"></div></div>`],
+ ['Смена открыта',`<div class="b">${brand()}
+  <h1 class="h1">Хорошей смены, Марина</h1>
+  <div class="b-card">${st('ok','Смена открыта')}
+    <div class="b-time">2 ч 48 мин</div><p class="mut" style="font-size:15px">идёт с 14:52</p>
+    <h3 style="margin-top:18px;font-size:17px">${EV.name}</h3><p class="mut" style="font-size:14.5px">${EV.venue} · ${EV.date}</p>
+    <div class="b-facts"><div><small>Категория</small><b>Официанты DC</b></div><div><small>Вызов</small><b>к 15:00, до 01:00</b></div><div><small>Часы считаются</small><b>с 15:00</b></div><div><small>Минимум за выход</small><b>10 ч</b></div></div></div>
+  <div class="grow"></div>
+  <button class="btn">Закрыть смену</button>
+  <p class="hint">Понадобится селфи на выходе. Часы и сумма появятся после закрытия.</p></div>`]],
+selfie:()=>[['После сканирования QR',`<div class="b">${brand()}
+  <h1 class="h1" style="margin-bottom:12px">Селфи на входе</h1>
+  <div class="b-card" style="padding:16px 18px"><h3 style="font-size:16.5px">${EV.name}</h3><p class="mut" style="font-size:14px">${EV.venue}</p>
+    <div class="b-chips"><span>Официанты DC</span><span>к 15:00</span><span>минимум 10 ч</span></div><button class="lnk" style="margin-top:8px">Не ваша группа?</button></div>
+  ${cam('2 окт · 14:52')}
+  <div class="grow"></div>
+  <button class="btn">${I.cam}Сделать фото</button>
+  <p class="hint">Снимок делается камерой прямо сейчас</p></div>`]],
+admin:()=>[['Карточка мероприятия · администратор',`<div class="b">
+  <button class="lnk" style="color:var(--mut);margin-left:4px">${I.back}Мероприятия</button>
+  <div class="b-head">${st('ok','Открыто')}<h1>${EV.name}</h1><p>${EV.date} · ${EV.venue} · ${EV.time} · ${EV.guests} гостей</p><div class="b-chips" style="margin-top:12px"><span>код ${EV.code}</span><span>менеджер Лебедев И.</span></div></div>
+  <h2 class="b-h2">Требуют решения <span>4</span></h2>
+  ${Q.map(q=>`<div class="b-q">${st('warn',q.tag)}<div class="who">${q.who}</div><p>${q.role.includes('₽')?'':q.role+'. '}${q.why}</p>
+    <div class="two"><button class="btn duo sec"><span>${q.a[0]}</span><small>${q.a[1]}</small></button><button class="btn duo ink"><span>${q.b[0]}</span><small>${q.b[1]}</small></button></div></div>`).join('')}
+  <h2 class="b-h2">Сейчас на объекте <span class="n">32</span></h2>
+  <div class="b-card" style="border-radius:20px;padding:16px">${CATS.map(c=>`<div class="b-cat"><b>${c.n}</b><span class="r">${catRight(c)}</span><small>${c.w}${c.miss?' · не вышли '+c.miss:''}</small>${c.av.length?'<div class="av">'+c.av.map((a,i)=>'<i'+(c.pend&&i===0?' class="w"':'')+'>'+a+'</i>').join('')+'<em>'+c.names+'</em></div>':''}</div>`).join('')}</div>
+  <h2 class="b-h2">Показатели</h2>
+  <div class="b-tiles"><div><b>38 из 42</b><small>вышло</small></div><div><b>4</b><small>не вышли, окно началось</small></div>
+    <div class="wide"><b>222 200 ₽</b><small>факт фонда оплаты из 246 800 ₽</small><div class="meter"><i style="width:90%"></i></div><small>90% плана · остаток 24 600 ₽</small></div></div>
+  <div class="b-dock"><button class="btn sm">Дозаказ</button><button class="btn sm sec">QR-листы</button><button class="btn sm sec" aria-label="Ещё" style="letter-spacing:1px">•••</button></div>
+  <p class="foot" style="margin-top:16px">Обновлено в 17:40</p></div>`]]
+};
+
+/* ===== C ===== */
+const cTop=()=>'<div class="c-bar">'+brand()+'<span>Кузнецова М. А.</span></div>';
+const P=(k,n,a,b,x)=>'<div class="c-p"><i class="'+k+'"></i><b>'+n+(x?'<small>'+x+'</small>':'')+'</b><span>'+a+'</span><span>'+b+'</span></div>';
+const C={
+home:()=>[['До отметки',`<div class="c">${cTop()}
+  <div class="c-state"><div><b>Смена не открыта</b><small>Отсканируйте QR у входа на площадку</small></div></div>
+  <button class="btn">${I.qr}Сканировать QR</button>
+  <div class="c-lab">Или код с листа</div>
+  <div class="c-code" style="margin-top:0"><div class="boxes"><i></i><i></i><i></i><i></i><i></i><i></i></div><button class="btn sec" style="height:48px" aria-label="Найти">${I.next}</button></div>
+  <div class="c-lab">Последняя смена</div>
+  <div class="c-pan"><div class="c-kv"><span>Мероприятие</span><b>Фуршет · «Заря»</b></div><div class="c-kv"><span>Дата и время</span><b>27 сен · 10:00 → 20:10</b></div><div class="c-kv"><span>Зачтено</span><b>10 ч</b></div><div class="c-kv"><span>К выдаче</span><b>5 000 ₽</b></div></div>
+  <div class="grow"></div></div>`],
+ ['Смена открыта',`<div class="c">${cTop()}
+  <div class="c-state ok"><div><b>Смена открыта</b><small>приход в 14:52</small></div><div class="t">2 ч 48 мин</div></div>
+  <div class="c-pan"><div class="c-kv"><span>Мероприятие</span><b>${EV.name}</b></div><div class="c-kv"><span>Площадка</span><b>${EV.venue}</b></div><div class="c-kv"><span>Категория</span><b>Официанты DC</b></div><div class="c-kv"><span>Часы считаются</span><b>с 15:00</b></div><div class="c-kv"><span>Минимум</span><b>10 ч за выход</b></div></div>
+  <div class="c-lab">Окно смены <em>сейчас 17:40</em></div>
+  <div class="c-pan c-win"><div class="tr"><i></i><u></u></div><div class="ax"><span>15:00</span><span>01:00</span></div></div>
+  <div class="grow"></div>
+  <button class="btn">Закрыть смену</button>
+  <p class="hint">Понадобится селфи на выходе. Часы и сумма появятся после закрытия.</p></div>`]],
+selfie:()=>[['После сканирования QR',`<div class="c">${cTop()}
+  <div class="c-steps"><span class="d">QR считан</span><span class="n">Селфи</span><span>Смена открыта</span></div>
+  <div class="c-pan"><div class="c-kv"><span>Мероприятие</span><b>${EV.name}</b></div><div class="c-kv"><span>Группа</span><b>Официанты DC · к 15:00 <button class="lnk" style="margin-left:6px;font-size:13.5px">изменить</button></b></div></div>
+  ${cam('02.10 · 14:52 · '+EV.venue)}
+  <div class="grow"></div>
+  <button class="btn">${I.cam}Сделать фото</button>
+  <p class="hint">Снимок делается камерой прямо сейчас</p></div>`]],
+admin:()=>[['Карточка мероприятия · администратор',`<div class="c" style="font-size:14px">
+  <div class="c-hd"><button class="bk" aria-label="Назад">${I.back}</button><h1>${EV.name}</h1>${st('ok','Открыто')}</div>
+  <div class="c-meta">${EV.date} · ${EV.venue} · ${EV.time} · ${EV.guests} гостей · код ${EV.code}</div>
+  <div class="c-pan c-strip"><div><b>32</b><small>на объекте</small></div><div><b>38/42</b><small>вышло</small></div><div><b style="color:var(--bad)">4</b><small>не вышли</small></div><div><b>90%</b><small>фонда</small></div></div>
+  <div class="c-tools"><button class="cb p">Дозаказ</button><button class="cb">QR-листы</button><button class="cb">Отчёт</button><button class="cb" aria-label="Ещё">•••</button></div>
+  <div class="c-lab">Очередь решений · 4 <em>сначала старые</em></div>
+  <div class="c-pan">${Q.map(q=>`<div class="c-q"><div class="t"><b>${q.who}</b>${st('warn',q.tag)}</div><div class="d">${q.short}</div>
+    <div class="two"><button class="cb">${q.cs?q.cs[0]:q.a[0]}${q.a[2]?' <small>'+q.a[2]+'</small>':''}</button><button class="cb p">${q.cs?q.cs[1]:q.b[0]} <small>${q.b[2]}</small></button></div></div>`).join('')}</div>
+  <div class="c-lab">Люди <em>приход · в смене</em></div>
+  <div class="chips"><button class="chip on">На объекте 32</button><button class="chip">Ждут 2</button><button class="chip">Ушли 6</button><button class="chip">Не вышли 4</button></div>
+  <div class="c-pan">
+    <div class="c-g">Официанты DC<span>12 из 14 · 15:00–01:00</span></div>
+    ${P('w','Григорьев Артём','16:47','0:53','ждёт')}${P('','Белова Ксения','14:48','2:52')}${P('','Кузнецова Марина','14:52','2:48')}${P('','Тарасов Илья','14:55','2:45')}
+    <div class="c-p more">ещё 8 на объекте · 2 не вышли</div>
+    <div class="c-g">Официанты Хорека<span>14 из 16 · 15:00–01:00</span></div>
+    ${P('w','Садыкова Алина','13:20','4:20','ждёт')}${P('','Назаров Руслан','14:50','2:50')}${P('','Исаева Лейла','14:51','2:49')}
+    <div class="c-p more">ещё 11 на объекте · 2 не вышли</div>
+    <div class="c-g">Старшие официанты<span>4 из 4 · 14:00–00:00</span></div>
+    ${P('','Орлова Вера','13:52','3:48')}${P('','Демченко Павел','13:55','3:45')}
+    <div class="c-p more">ещё 2 на объекте</div>
+    <div class="c-g">Менеджеры<span>2 из 2 · 12:00–00:00</span></div>
+    ${P('','Лебедев Игорь','11:58','5:42')}${P('','Фролова Ольга','12:03','5:37')}
+  </div>
+  <div class="c-lab">Фонд оплаты <em>факт из плана, ₽</em></div>
+  <div class="c-pan"><div class="c-f"><b style="font-weight:500">Старшие официанты</b><span>4/4</span><span>24 000 / 24 000</span></div><div class="c-f"><b style="font-weight:500">Официанты DC</b><span>12/14</span><span>60 000 / 70 000</span></div><div class="c-f"><b style="font-weight:500">Официанты Хорека</b><span>14/16</span><span>102 200 / 116 800</span></div><div class="c-f"><b style="font-weight:500">Грузчики</b><span>6/6</span><span>24 000 / 24 000</span></div><div class="c-f"><b style="font-weight:500">Менеджеры</b><span>2/2</span><span>12 000 / 12 000</span></div><div class="c-f"><b>Итого</b><span>38/42</span><span>222 200 / 246 800</span></div></div>
+  <p class="foot" style="margin-top:14px">Обновлено в 17:40</p></div>`]]
+};
+
+/* ===== пояснения к экрану ===== */
+const N={
+a:{home:['<b>Одно действие.</b> Кнопка закреплена внизу, под большим пальцем; ввод кода убран в текстовую ссылку (приём When I Work).','<b>Состояние смены — крупное время прихода</b> и одна строка статуса. Прогноза часов и суммы нет, как и сейчас.','<b>Без карточек:</b> строки разделены тонкой линией, рамок нет (Linear: меньше визуального шума).'],
+   selfie:['Мероприятие и группа уже подставлены одной строкой; «Изменить» — тихая ссылка, а не отдельный экран.','Камера занимает основную часть экрана, овал подсказывает положение лица.','Кнопка та же, на том же месте, что и на главной: человек не ищет её заново.'],
+   admin:['<b>Очередь решений идёт первой.</b> Опоздания, ранние приходы, дозаказ и флаги собраны в один список с одинаковой формой.','У каждой кнопки подписано последствие: что будет с часами или деньгами (Stripe: действие рядом с данными).','Показатели — три числа без плиток. Категории — строки; одна раскрыта до людей.','Действия мероприятия — тихий ряд под заголовком. «Закрыть мероприятие» остаётся в «•••».']},
+b:{home:['<b>Золото только на главной кнопке</b> и в знаке. Заголовки тёмные, не золотые.','Карточки без рамок: отделяются тоном поверхности, в обеих темах одинаково.','В открытой смене крупно показано, сколько идёт смена; четыре факта собраны в спокойную сетку.'],
+   selfie:['Контекст в карточке: мероприятие и группа плашками, «Не ваша группа?» — ссылка.','Золотые уголки на видоискателе — единственный декоративный акцент экрана.','Кнопка золотая, как на главной: один цвет главного действия для сотрудника.'],
+   admin:['Каждое решение — отдельная мягкая карточка: легко попасть пальцем, но на экране помещается меньше.','Кнопки решений нейтральные и тёмные, без золота: в очереди золото только на счётчике.','Кто на объекте — кружки с инициалами по категориям; янтарный кружок — человек ждёт решения.','Действия мероприятия внизу карточки: «Дозаказ» главное, остальное рядом.']},
+c:{home:['Оба пути отметки видны сразу: кнопка QR и шесть ячеек кода, без раскрытия.','Состояние смены — полоса с цветной меткой слева; тот же приём в очереди администратора.','Полоска окна смены показывает, где «сейчас» относительно вызова. Суммы и прогноза нет.'],
+   selfie:['Три шага сверху показывают, где человек находится: QR считан → селфи → смена открыта.','Камера квадратная, чтобы контекст и кнопка помещались без прокрутки на небольших телефонах.','На снимке — полоса с датой, временем и площадкой, как в штампе текущего приложения.'],
+   admin:['<b>Полоса показателей</b> вместо плиток: четыре числа в одной строке (Linear: согласованная плотность).','<b>Решение в строке очереди:</b> две кнопки с конкретным исходом — «с 16:47» или «минимум». Карточку человека открывать не нужно.','Люди — плотная таблица по категориям: приход и время в смене выровнены по правому краю, фильтры сверху.','Фонд оплаты по категориям — таблица «факт из плана» вместо плиток и полос.']}
+};
+
+/* ===== состояние и отрисовка ===== */
+const V={a:A,b:B,c:C},S={v:'a',s:'home',t:'light'};
+(location.hash.slice(1).split('-')).forEach((x,i)=>{const k=['v','s','t'][i];if(k==='v'&&V[x])S.v=x;if(k==='s'&&A[x])S.s=x;if(k==='t'&&(x==='light'||x==='dark'))S.t=x});
+function phone(cap,html,fix){return '<div><p class="cap">'+cap+'</p><div class="ph"><div class="tg"><span>Закрыть</span><b>Diamond Табель<small>мини-приложение</small></b><span>•••</span></div><div class="scr'+(fix?' fix':'')+'">'+html+'</div></div></div>'}
+function draw(){
+  document.body.dataset.v=S.v;document.body.dataset.t=S.t;
+  document.querySelectorAll('[data-v],[data-s],[data-t]').forEach(b=>{if(b===document.body)return;const k=b.dataset.v?'v':b.dataset.s?'s':'t';b.setAttribute('aria-pressed',String(b.dataset[k]===S[k]))});
+  const frames=V[S.v][S.s]();
+  document.getElementById('stage').innerHTML=frames.map(f=>phone(f[0],f[1],S.s!=='admin')).join('')+
+    '<aside class="notes"><h4>Что здесь сделано</h4><ul>'+N[S.v][S.s].map(x=>'<li>'+x+'</li>').join('')+'</ul></aside>';
+  history.replaceState(null,'','#'+S.v+'-'+S.s+'-'+S.t);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.seg button,.vcard');if(!b)return;
+  if(b.dataset.v)S.v=b.dataset.v;if(b.dataset.s)S.s=b.dataset.s;if(b.dataset.t)S.t=b.dataset.t;draw();
+});
+draw();
+</script>
+</body>
+</html>
