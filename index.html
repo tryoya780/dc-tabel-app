@@ -304,8 +304,9 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .btn.txt.red{color:var(--bad)}
 /* шторка прижата к низу автоотступом, а не выравниванием: длинное содержимое прокручивается с начала, верх не уезжает за экран */
 #modal{justify-content:flex-start;padding:max(16px,env(safe-area-inset-top)) 0 0}
+#modal .mfoot{position:sticky;bottom:0;z-index:2;background:var(--bg);margin:16px -24px calc(-22px - env(safe-area-inset-bottom));padding:12px 24px calc(22px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+#modal .mfoot .btn:first-child{margin-top:0}
 #modal .box{position:relative;background:var(--bg);border:0;border-radius:26px 26px 0 0;max-width:none;margin:auto 0 0;padding:22px 24px calc(22px + env(safe-area-inset-bottom))}
-#modal .mx{position:sticky;top:12px;float:right;margin:-6px -6px 0 10px;width:36px;height:36px;border-radius:50%;border:0;background:var(--bg);box-shadow:0 0 0 1px var(--line),0 2px 8px rgba(0,0,0,.18);color:var(--txt);font:inherit;font-size:20px;line-height:1;cursor:pointer;z-index:2}
 @media (min-width:700px){#modal{justify-content:flex-start;padding:16px}#modal .box{max-width:440px;border-radius:26px;margin:auto}}
 .shh h1{font-size:23px;margin:0 0 3px}
 .shh p{margin:0;font-size:14.5px;color:var(--mut)}
@@ -530,8 +531,8 @@ document.getElementById('toast').onclick=function(){this.style.display='none'};
 let asking=false; // пока открыто системное окно, тихое обновление не перерисовывает карточку
 function ask(msg){return new Promise(res=>{asking=true;const done=ok=>{asking=false;res(!!ok)};if(tg&&tg.showConfirm&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.2')){try{tg.showConfirm(msg,done);return}catch(e){}}done(window.confirm(msg))})}
 function modalClose(){document.getElementById('modal').classList.remove('on');updBack()}
-/* у каждого окна крестик сверху; окно открывается с начала; нажатие на затемнение закрывает */
-function modalOpen(html){const m=document.getElementById('modal');document.getElementById('modal-box').innerHTML='<button class="mx" onclick="modalClose()" aria-label="Закрыть">×</button>'+html;m.classList.add('on');m.scrollTop=0;updBack()}
+/* окно открывается с начала; нажатие на затемнение закрывает; кнопки длинных окон закреплены у нижнего края (.mfoot) */
+function modalOpen(html){const m=document.getElementById('modal');document.getElementById('modal-box').innerHTML=html;m.classList.add('on');m.scrollTop=0;updBack()}
 document.addEventListener('click',e=>{if(e.target&&e.target.id==='modal')modalClose()});
 /* «Выгнать»: причина обязательна, стоп-лист по галочке */
 const shHead=(t,sub)=>'<div class="shh"><h1>'+t+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>';
@@ -560,7 +561,7 @@ function dzAsk(){
     roles.map((n,k)=>{const q=info(n);return '<div class="dzr z" data-k="'+k+'"><div><b>'+escS(n)+'</b><small>'+(q.rate?rub(q.rate)+'/ч':'')+(q.rate&&q.h?' · ':'')+(q.h?q.h+' ч':'')+'</small></div><div class="stp2"><button type="button" aria-label="Меньше" onclick="dzStep('+k+',-1)">−</button><b>0</b><button type="button" aria-label="Больше" onclick="dzStep('+k+',1)">+</button></div></div>'}).join('')+
     '<div class="field"><label for="dz-why">Причина</label><textarea id="dz-why" style="min-height:76px" placeholder="Заказчик добавил 30 гостей…"></textarea></div>'+
     '<div class="tot"><span id="dz-tot">Никого не добавлено</span><b id="dz-sum"></b></div>'+
-    '<div class="ferr" id="m-err"></div><button class="btn txt" style="margin-top:14px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="dzGo()">'+(conMe&&conMe.admin?'Добавить в наряд':'Отправить на подтверждение')+'</button>');
+    '<div class="ferr" id="m-err"></div><div class="mfoot"><button class="btn txt" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="dzGo()">'+(conMe&&conMe.admin?'Добавить в наряд':'Отправить на подтверждение')+'</button></div>');
   dzAsk.roles=roles;dzAsk.info=info;
 }
 function dzStep(k,d){
@@ -735,7 +736,7 @@ function evCreateAsk(){
     '<div class="g2 eq">'+f('evc-start','Начало','time')+f('evc-end','Окончание','time')+'</div>'+
     '<div class="fsec">Где и сколько гостей</div><div class="g2">'+f('evc-venue','Площадка')+f('evc-guests','Гостей','number','inputmode="numeric"')+'</div>'+
     '<div class="fsec">Кто ведёт</div><label class="flab" for="evc-mgr">Менеджер</label><select id="evc-mgr" class="fld"><option value="">Не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
-    '<div class="ferr" id="m-err"></div><button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="evCreateGo()">Создать</button>');
+    '<div class="ferr" id="m-err"></div><div class="mfoot"><button class="btn txt" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="evCreateGo()">Создать</button></div>');
 }
 async function evCreateGo(){
   const g=id=>document.getElementById(id).value.trim();
@@ -747,7 +748,7 @@ async function evCreateGo(){
 /* новые мероприятия из книги бухгалтерии: вкладки проектов, для которых в Табеле ещё нет мероприятия с такой сделкой */
 let bnItems=[];
 async function bookNewAsk(){
-  modalOpen('<div class="mh">Новые из книги бухгалтерии</div><div id="bn-box"><p class="muted" style="margin:8px 0 0">Читаю книгу, это до полуминуты…</p></div><button class="btn sec wide" style="margin-top:16px" onclick="modalClose()">Закрыть</button>');
+  modalOpen('<div class="mh">Новые из книги бухгалтерии</div><div id="bn-box"><p class="muted" style="margin:8px 0 0">Читаю книгу, это до полуминуты…</p></div><div class="mfoot"><button class="btn sec" style="background:var(--sf2)" onclick="modalClose()">Закрыть</button></div>');
   try{const r=await api('con.act',{act:'bookNew'},true,60000);bnItems=r.items||[];bookNewDraw(r.past||0)}
   catch(e){const b=document.getElementById('bn-box');if(b)b.innerHTML='<p class="warn" style="margin:8px 0 0">'+escS(e.msg||'Не удалось прочитать книгу. Попробуйте ещё раз.')+'</p>'}
 }
