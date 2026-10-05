@@ -252,6 +252,16 @@ body[data-t=dark] .a-sheet{box-shadow:0 -1px 0 #2e2e2e;background:#161616}
 .a-qr{width:230px;margin:22px auto 0;padding:16px;border-radius:20px;background:#fff}
 .a-qr svg{display:block;width:100%}
 .a-code{text-align:center;font-size:36px;font-weight:650;letter-spacing:.06em;margin-top:18px}
+.a-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--sf2);border-radius:14px;padding:4px;margin-top:10px}
+.a-seg button{border:0;background:none;border-radius:10px;height:44px;font:inherit;font-size:14.5px;font-weight:550;color:var(--mut);cursor:pointer}
+.a-seg button.on{background:var(--bg);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.a-gear{display:flex;justify-content:flex-end;align-items:center;gap:14px;height:34px}
+.a-tg{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--ln);font-size:15.5px;cursor:pointer}
+.a-tg:last-of-type{border-bottom:0}
+.a-tg small{display:block;font-size:13px;color:var(--mut);margin-top:2px}
+.a-tg input{appearance:none;-webkit-appearance:none;flex:none;width:24px;height:24px;margin:0;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--mut);cursor:pointer;display:grid;place-items:center}
+.a-tg input:checked{background:var(--tx);box-shadow:none}
+.a-tg input:checked::after{content:"";width:11px;height:6px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}
 .a-note{font-size:14.5px;color:var(--mut);margin-top:16px}
 .a-warn{margin-top:18px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--warn) 11%,transparent);font-size:14.5px}
 .a-warn .st{margin-bottom:6px}
@@ -280,6 +290,7 @@ const I={
   next:sv('<path d="m9 6 6 6-6 6"/>'),
   bell:sv('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'),
   find:sv('<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>'),
+  gear:sv('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
   dia:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 0l6 6-6 6-6-6z" fill="currentColor"/></svg>'
 };
 const st=(k,t)=>'<span class="st '+k+'"><i></i>'+t+'</span>';
@@ -615,6 +626,41 @@ const P6=[
   <button class="btn">Отправить в чат бота</button>`)]
 ];
 
+/* ===== настройки: шестерёнка вместо колокольчика, тема оформления для всех ===== */
+let mockTheme='tg';
+const seg=()=>`<div class="a-seg">${[['tg','Авто'],['light','Светлая'],['dark','Тёмная']].map(x=>`<button data-th="${x[0]}" class="${mockTheme===x[0]?'on':''}">${x[1]}</button>`).join('')}</div>`;
+const sheetOn=(dim,html)=>`<div class="a-sh"><div class="a-dim">${dim}</div><div class="a a-sheet"><div class="a-grip"></div>${html}</div></div>`;
+const tgl=(t,d,on)=>`<label class="a-tg"><input type="checkbox"${on?' checked':''}><span>${t}<small>${d}</small></span></label>`;
+const P7=[
+ ['Главная сотрудника · шестерёнка в углу',`<div class="a"><div class="a-gear"><button class="a-ib" aria-label="Настройки">${I.gear}</button></div>
+  <h1 class="h1" style="margin-top:6px">Здравствуйте, Марина</h1>
+  <p class="lead mut">Смена не открыта. Отсканируйте QR-код у входа на площадку.</p>
+  <div class="a-last"><div class="lab">Последняя смена</div>
+    <div class="a-row"><div><b>Фуршет · конгресс-холл «Заря»</b><div class="mut">27 сен · 10:00 → 20:10 · зачтено 10 ч</div></div><b>5 000 ₽</b></div></div>
+  <div class="grow"></div>
+  <button class="btn txt" style="margin-bottom:6px">Ввести код с листа</button>
+  <button class="btn">${I.qr}Сканировать QR</button></div>`],
+ ['Настройки · сотрудник',sheetOn('Здравствуйте, Марина',`<div class="a-shh"><div><h1>Настройки</h1></div></div>
+  <div class="a-sub" style="margin-top:18px">Оформление</div>${seg()}
+  <p class="mut" style="font-size:13px;margin-top:10px">«Авто» — как в Telegram: тема меняется вместе с темой самого Telegram.</p>
+  <button class="btn sec" style="margin-top:22px">Готово</button>`)],
+ ['Консоль · шестерёнка вместо колокольчика',`<div class="a"><div class="a-gear"><button class="lnk">Отметиться</button><button class="a-ib" aria-label="Настройки">${I.gear}</button></div>
+  <h1 class="h1 sm" style="margin-top:6px">Консоль</h1><p class="mut" style="font-size:14.5px">Смирнова Анна · администратор</p>
+  <div class="a-tabs"><button class="on">Мероприятия</button><button>Флаги<em>3</em></button></div>
+  <div class="a-evs">${evRow(EV.name,st('ok','Открыто'),'Сегодня · '+EV.venue+' · '+EV.time,'На объекте 32 · вышло 38 из 42 · <span style="color:var(--warn)">требуют решения 4</span>',90)}</div>
+  <div class="grow"></div>
+  <button class="btn txt" style="margin-bottom:6px">Архив · 14</button>
+  <button class="btn">Новое мероприятие</button></div>`],
+ ['Настройки · менеджер и администратор',sheetOn('Консоль',`<div class="a-shh"><div><h1>Настройки</h1></div></div>
+  <div class="a-sub" style="margin-top:18px">Оформление</div>${seg()}
+  <p class="mut" style="font-size:13px;margin-top:10px">«Авто» — как в Telegram.</p>
+  <div class="a-sub">Уведомления в чате бота</div>
+  ${tgl('Ждут подтверждения','Ранний или поздний приход, нужна ваша кнопка',1)}${tgl('Запросы дозаказа','Менеджер просит добавить людей',1)}${tgl('Запросы правки часов','Менеджер просит поправить часы по флагу',1)}${tgl('Решения коллег','Кто-то другой подтвердил, отпустил или выгнал',0)}
+  <div class="a-sub">Приходят всегда</div>
+  <p class="mut" style="font-size:14.5px;margin-top:8px">Утренний итог автозакрытия · открытие и закрытие мероприятия</p>
+  <button class="btn sec" style="margin-top:22px">Готово</button>`)]
+];
+
 /* ===== пачки ===== */
 const BATCH=[
  {t:'1 · Главная, селфи, карточка мероприятия',ok:1,note:'Согласовано 05.10. Главная сотрудника в двух состояниях, селфи после QR, карточка мероприятия администратора.',frames:()=>A.home().concat(A.selfie(),A.admin()),fix:i=>i<3},
@@ -622,7 +668,8 @@ const BATCH=[
  {t:'3 · Согласие, номер, ФИО',ok:1,note:'Согласовано 05.10. Эти экраны человек видит один раз: согласие при первом открытии, номер и ФИО — перед первым селфи.',frames:()=>P3,fix:()=>true},
  {t:'4 · Консоль: мероприятия, флаги, архив',ok:1,note:'Согласовано 05.10. Три экрана консоли администратора: список мероприятий, вкладка «Флаги» и архив.',frames:()=>P4,fix:()=>true},
  {t:'5 · Человек, категория, подтверждения',ok:1,note:'Согласовано 05.10. Всё это открывается шторкой снизу поверх карточки мероприятия: карточка человека в двух состояниях, панель категории и три окна действий.',frames:()=>P5,fix:()=>true},
- {t:'6 · Наряд, мероприятие, выплаты, QR, отчёт',ok:1,note:'Согласовано 05.10. Последняя пачка: экран наряда, форма нового мероприятия, выплаты наличными, QR-лист и отчёт.',frames:()=>P6,fix:()=>true}
+ {t:'6 · Наряд, мероприятие, выплаты, QR, отчёт',ok:1,note:'Согласовано 05.10. Последняя пачка: экран наряда, форма нового мероприятия, выплаты наличными, QR-лист и отчёт.',frames:()=>P6,fix:()=>true},
+ {t:'7 · Настройки и тема',note:'На согласовании. Шестерёнка в правом верхнем углу главной и консоли. У сотрудника в настройках только оформление, у менеджеров и администраторов — оформление и уведомления (бывший колокольчик). Переключатель темы в макете работает.',frames:()=>P7,fix:()=>true}
 ];
 const S={b:BATCH.length-1,t:'light'};
 (location.hash.slice(1).split('-')).forEach((x,i)=>{if(i===0&&BATCH[+x-1])S.b=+x-1;if(i===1&&(x==='light'||x==='dark'))S.t=x});
@@ -640,6 +687,7 @@ function draw(){
 document.addEventListener('click',e=>{
   const o=e.target.closest('.a-opt');
   if(o)return;
+  const sg=e.target.closest('.a-seg button');if(sg){mockTheme=sg.dataset.th;if(mockTheme!=='tg')S.t=mockTheme;draw();document.querySelectorAll('.a-seg button').forEach(b=>b.classList.toggle('on',b.dataset.th===mockTheme));return}
   if(e.target.matches('.a-check input')){const b=e.target.closest('.a').querySelector('[data-need]');if(b)b.disabled=!e.target.checked;return}
   const b=e.target.closest('.seg button');if(!b)return;
   if(b.dataset.b)S.b=+b.dataset.b;if(b.dataset.t)S.t=b.dataset.t;draw();
