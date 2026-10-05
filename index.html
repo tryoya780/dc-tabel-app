@@ -371,7 +371,7 @@ function ordCard(r){
   if(!own.length)h+='<p class="muted" style="margin:0">Наряд пока пуст. Укажите, кто нужен, к какому времени и сколько человек.</p>';
   else{
     const multi=(r.days||[]).length>1,day=multi?r.day:'',mine=own.filter(x=>!day||x.day===day),by={},order=[];
-    mine.forEach(x=>{if(!by[x.role]){by[x.role]={n:0,sum:0,t:[]};order.push(x.role)}const c=by[x.role];c.n+=x.n;c.sum+=x.hours*x.n*x.rate;c.t.push('к '+x.start+' до '+x.end+' · '+x.n+' чел.')});
+    mine.forEach(x=>{if(!by[x.role]){by[x.role]={n:0,sum:0,t:[]};order.push(x.role)}const c=by[x.role];c.n+=x.n;c.sum+=x.hours*x.n*x.rate;c.t.push('к '+x.start+' до '+x.end+' · '+x.n+' чел.'+(o.state==='pending'&&!x.ok?' · <span class="warn">ждёт согласования</span>':''))});
     let sum=0,n=0;
     h+=order.map(k=>{const c=by[k];sum+=c.sum;n+=c.n;return '<div class="row"><span>'+k+' · '+c.n+' чел.<br><span class="muted" style="font-size:13px">'+c.t.join('<br>')+'</span></span><b>'+rub(c.sum)+'</b></div>'}).join('');
     if(!order.length)h+='<p class="muted" style="margin:0">На '+ruDay(day)+' в наряде никого нет.</p>';
