@@ -305,9 +305,14 @@ body.tgback #s-ord h1,body.tgback #s-arch h1{margin-top:4px!important}
 .btn.txt.red{color:var(--bad)}
 /* шторка прижата к низу автоотступом, а не выравниванием: длинное содержимое прокручивается с начала, верх не уезжает за экран */
 #modal{justify-content:flex-start;padding:max(16px,env(safe-area-inset-top)) 0 0}
+#modal .mgrip{height:26px;margin:-22px -24px 2px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
+#modal .mgrip i{width:40px;height:4px;border-radius:2px;background:var(--line)}
+html.dark #modal .mgrip i{background:#3a3a3a}
+#modal .box.drag{transition:none}
+#modal .btn.sec{background:var(--sf2)}
 #modal .mfoot{position:sticky;bottom:0;z-index:2;background:var(--bg);margin:16px -24px calc(-22px - env(safe-area-inset-bottom));padding:12px 24px calc(22px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
 #modal .mfoot .btn:first-child{margin-top:0}
-#modal .box{position:relative;background:var(--bg);border:0;border-radius:26px 26px 0 0;max-width:none;margin:auto 0 0;padding:22px 24px calc(22px + env(safe-area-inset-bottom))}
+#modal .box{position:relative;background:var(--bg);box-shadow:0 -1px 0 var(--line);border:0;border-radius:26px 26px 0 0;max-width:none;margin:auto 0 0;padding:22px 24px calc(22px + env(safe-area-inset-bottom))}
 @media (min-width:700px){#modal{justify-content:flex-start;padding:16px}#modal .box{max-width:440px;border-radius:26px;margin:auto}}
 .shh h1{font-size:23px;margin:0 0 3px}
 .shh p{margin:0;font-size:14.5px;color:var(--mut)}
@@ -493,7 +498,7 @@ select.fld{-webkit-appearance:none;appearance:none}
 <div class="toast" id="toast"></div>
 <div class="scrim" id="scrim" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer"><div class="dh"><div class="grip"></div><div><h1 id="dr-title"></h1><div class="muted" id="dr-sub"></div></div><button class="x" onclick="closeDrawer()" aria-label="Закрыть">×</button></div><div id="dr-body"></div></aside>
-<div id="modal"><div class="box" id="modal-box"></div></div>
+<div id="modal"><div class="box"><div class="mgrip" id="modal-grip"><i></i></div><div id="modal-box"></div></div></div>
 <div id="busy"><div class="spin"></div><div class="t" id="busy-t">Загружаю…</div><div class="s" id="busy-s"></div></div>
 
 <script>
@@ -539,7 +544,7 @@ document.addEventListener('click',e=>{if(e.target&&e.target.id==='modal')modalCl
 const shHead=(t,sub)=>'<div class="shh"><h1>'+t+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>';
 function kickAsk(i){
   const x=conData.shifts[i];if(!x)return;const row=x.inRow;
-  modalOpen(shHead('Выгнать с мероприятия',x.fio+' · '+x.role)+'<p class="cap" style="margin:14px 0 0;font-size:14.5px">Смена закроется сейчас, оплата 0. Причину увидят сотрудник в боте и администратор в таблице.</p>'+
+  modalOpen(shHead('Выгнать с мероприятия',x.fio+' · '+x.role)+'<p class="cap" style="margin:14px 0 0;font-size:14.5px">Смена закроется сейчас, оплата 0. Причину увидит сотрудник в боте.</p>'+
     '<div class="field"><label for="kick-why">Причина</label><textarea id="kick-why" placeholder="Нетрезв, грязная форма, конфликт…"></textarea></div>'+
     '<label class="check"><input type="checkbox" id="kick-stop"><span>Добавить в стоп-лист. По номеру и Telegram больше не сможет отметиться ни на одном мероприятии.</span></label>'+
     '<div class="ferr" id="m-err"></div><button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn stop" style="margin-top:6px" onclick="kickGo('+row+')">Выгнать</button>');
@@ -738,7 +743,7 @@ function evcDays(k){evcN=Math.max(1,Math.min(14,evcN+k));evcTill()}
 function evCreateAsk(){
   const mg=(conMeta&&conMeta.managers)||[];evcN=1;
   const f=(id,lab,type,extra)=>'<div><label class="flab" for="'+id+'">'+lab+'</label><input id="'+id+'" class="fld" type="'+(type||'text')+'" '+(extra||'')+'></div>';
-  modalOpen('<div class="mh">Новое мероприятие</div><p class="muted" style="margin:0 0 4px;font-size:13px">Номер вида DC-ГГММДД-NN присвоится сам.</p>'+
+  modalOpen('<div class="mh">Новое мероприятие</div>'+
     f('evc-name','Название (как в смете, его видят сотрудники)')+f('evc-bx','Номер сделки в Битрикс','number','inputmode="numeric"')+
     '<div class="fsec">Когда</div><div class="g2">'+f('evc-date','Первый день','date','value="'+new Date().toISOString().slice(0,10)+'" onchange="evcTill()"')+
       '<div><span class="flab">Сколько дней</span><div class="stp"><button type="button" onclick="evcDays(-1)" aria-label="Меньше дней">−</button><b id="evc-days">1</b><button type="button" onclick="evcDays(1)" aria-label="Больше дней">+</button></div></div></div>'+
@@ -1433,6 +1438,13 @@ async function ntfToggle(key,el){
   try{const r=await api('con.act',{act:'prefs',off:off},true);if(!r||!r.ok)throw r||{}}
   catch(e){x.on=was;el.checked=was;toast(e.msg||'Не удалось сохранить')}
 }
+/* окно-шторку тоже можно смахнуть вниз за полоску сверху */
+(function(){const g=document.getElementById('modal-grip'),b=g.parentNode;let y0=null,dy=0;
+  g.addEventListener('touchstart',e=>{y0=e.touches[0].clientY;dy=0;b.classList.add('drag')},{passive:true});
+  g.addEventListener('touchmove',e=>{if(y0===null)return;dy=Math.max(0,e.touches[0].clientY-y0);b.style.transform='translateY('+dy+'px)'},{passive:true});
+  const end=()=>{if(y0===null)return;b.classList.remove('drag');b.style.transform='';if(dy>70)modalClose();y0=null;dy=0};
+  g.addEventListener('touchend',end);g.addEventListener('touchcancel',end);
+})();
 /* смахнуть шторку вниз за шапку: тянется за пальцем, при сдвиге больше 70 px закрывается */
 (function(){const d=document.getElementById('drawer'),h=d.querySelector('.dh');let y0=null,dy=0;
   h.addEventListener('touchstart',e=>{if(innerWidth>=700||e.target.closest('button'))return;y0=e.touches[0].clientY;dy=0;d.classList.add('drag')},{passive:true});
@@ -1478,7 +1490,7 @@ async function conAct(act,row,role,extra){
 /* панель действий наверху карточки: только то, что нужно сейчас; остальное в «Ещё» */
 /* отчёт: если сервер отдал цифры (data) — структурой, иначе прежним текстом */
 function reportHtml(r){
-  const send='<div class="foot noprint"><button class="btn" onclick="conAct(\'reportSend\')">Отправить в чат бота</button></div><p class="hint noprint">Отчёт придёт сообщением от бота: оттуда его можно переслать. Таблица с тем же отчётом — лист 08.</p>';
+  const send='<div class="foot noprint"><button class="btn" onclick="conAct(\'reportSend\')">Отправить в чат бота</button></div><p class="hint noprint">Отчёт придёт сообщением от бота: оттуда его можно переслать.</p>';
   const d=r.data;if(!d)return '<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:14px 0 0">'+String(r.text||'').replace(/</g,'&lt;')+'</pre>'+send;
   const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><b>'+v+'</b></div>',diff=d.plan-d.fact;
   const fw=n=>n+' '+(n%10===1&&n%100!==11?'флаг':(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'флага':'флагов'));
@@ -1542,7 +1554,6 @@ function payOpen(){
     h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
       '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
   });
-  h+='<p class="hint" style="margin-top:18px">Отметки видны администратору и в таблице, лист 08</p>';
   openDrawer(h,'Выплаты наличными','Свой персонал · подрядчику платят по безналу');
 }
 async function payToggle(i){
