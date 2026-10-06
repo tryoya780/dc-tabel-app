@@ -218,6 +218,16 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ib{width:44px;height:44px;margin-right:-10px;border:0;background:none;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt);position:relative}
 .ib svg{width:22px;height:22px}.ib:active{background:var(--sf2)}
 .con h1{margin-top:10px}
+.hrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.hrow.first{align-items:flex-start}
+.hrow h1{min-width:0;flex:1}
+.hrow .lnk{flex:none;padding:0;margin:0;font-weight:500}
+.hrow .st.dot{flex:none;gap:0;margin-top:16px}
+.hrow .st.dot i{width:12px;height:12px}
+.hrow .st.dot.off i{box-shadow:inset 0 0 0 2px var(--mut)}
+.hrow .st.dot.fill i{animation-name:fillp2}
+@keyframes fillp2{0%,100%{box-shadow:inset 0 0 0 2px var(--txt)}50%{box-shadow:inset 0 0 0 6px var(--txt)}}
+body.tgback #s-conev .hrow.first h1{margin-top:4px!important}body.tgback #s-conev .hrow .st.dot{margin-top:12px}
 body.tgback #s-ord h1,body.tgback #s-arch h1{margin-top:4px!important}
 #con-tabs{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;gap:24px;margin:16px 0 0}
 #con-tabs button{flex:none;padding:10px 0 11px;margin-bottom:-1px;border-radius:0;border-bottom:2px solid transparent;font-size:16px;font-weight:550}
@@ -460,8 +470,7 @@ select.fld{-webkit-appearance:none;appearance:none}
 </div>
 
 <div id="s-con" class="scr wrap con">
-  <div class="ctop"><a class="lnk" href="#" onclick="show('s-home');return false">Отметиться</a></div>
-  <h1>Консоль</h1>
+  <div class="hrow"><h1>Консоль</h1><a class="lnk" href="#" onclick="show('s-home');return false">Отметиться</a></div>
   <div class="muted" id="con-me"></div>
   <div class="segs noprint" id="con-tabs"><button data-t="events" onclick="conTabGo('events')">Мероприятия</button><button data-t="flags" onclick="conTabGo('flags')">Флаги<span class="badge" id="fl-badge"></span></button></div>
   <div id="con-list"></div>
@@ -478,8 +487,8 @@ select.fld{-webkit-appearance:none;appearance:none}
 </div>
 
 <div id="s-conev" class="scr wrap con">
-  <div class="ctop" style="justify-content:space-between;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conBack();return false">‹ Мероприятия</a><span class="st" id="ce-status" style="margin-left:auto"><i></i><span></span></span></div>
-  <h1 id="ce-name" style="margin-top:8px"></h1>
+  <div class="ctop navrow" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conBack();return false">‹ Мероприятия</a></div>
+  <div class="hrow first"><h1 id="ce-name" style="margin-top:8px"></h1><span class="st dot" id="ce-status"><i></i></span></div>
   <div class="muted" id="ce-sub"></div>
   <div id="ce-body"></div>
 </div>
@@ -1304,7 +1313,7 @@ async function conOpen(id,day,quiet){
     const key='E'+JSON.stringify([r.stats,r.shifts.map(x=>Object.assign({},x,{factH:0})),r.orders,r.dz,r.journal,r.event.status,r.day,r.order,r.event.bx,r.pay]);if(quiet&&key===lastJson)return;lastJson=key;
     const keepY=quiet?window.scrollY:0;
     const ev=r.event,st=r.stats;
-    {const cs=document.getElementById('ce-status');cs.className='st '+(EV_ST[ev.status]===undefined?'off':EV_ST[ev.status]);cs.lastChild.textContent=ev.status}
+    {const cs=document.getElementById('ce-status');cs.className='st dot '+(EV_ST[ev.status]===undefined?'off':EV_ST[ev.status]);cs.title=ev.status;cs.setAttribute('aria-label',ev.status)} // кружок без слова: статус подписан в title
     document.getElementById('ce-name').innerHTML=ev.name;
     document.getElementById('ce-sub').innerHTML=[(r.days&&r.days.length>1?ruDay(r.days[0])+'–'+ruDay(r.days[r.days.length-1])+' · '+r.days.length+' дн.':ruDate(ev.date)),ev.venue&&ev.venue!==ev.name?ev.venue:'',ev.start+'–'+ev.end,ev.guests?ev.guests+' гостей':'',ev.bx?'сделка '+ev.bx:(r.me.admin?'<a class="lnk" href="#" onclick="bxAsk();return false">указать номер сделки</a>':''),ev.mgr?'менеджер '+ev.mgr:'',ev.code?'код <b style="color:var(--txt)">'+ev.code+'</b>':''].filter(Boolean).join(' · ');
     conData=r;
