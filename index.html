@@ -210,6 +210,14 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ctx>div:first-child{flex:1;min-width:0}.ctx>.lnk{flex:none}.ctx b{display:block;font-weight:600}.ctx span{color:var(--mut);font-size:15px}
 .ctx .notew{flex-basis:100%;margin-top:6px}
 .cam{border-radius:22px}
+/* селфи: экран ровно в высоту окна, окно камеры ужимается, чтобы кнопка всегда была видна внизу; на высоких экранах камера прежняя, 3:4 */
+@supports (height:1cqh) and selector(:has(*)){
+  body:has(#s-cam.on){height:var(--tg-viewport-stable-height,100dvh);min-height:0;box-sizing:border-box;overflow:hidden}
+  #s-cam.on{min-height:0}
+  #s-cam .camw{flex:1 1 0;min-height:120px;container-type:size}
+  #s-cam .grow{display:none}
+  #s-cam .cam{aspect-ratio:auto;height:min(100cqh,133.33cqw)}
+}
 #ev-name:not(:empty)::after{content:" · "}
 /* ── консоль (редизайн, вариант A): мероприятия карточками на подложке, очередь решений на подложке, фильтры одной строкой ── */
 .scr.con.on{display:flex;flex-direction:column}
@@ -460,7 +468,8 @@ select.fld{-webkit-appearance:none;appearance:none}
 <div id="s-cam" class="scr emp">
   <h1 id="cam-title">Селфи</h1>
   <div class="ctx" id="cam-sub"></div>
-  <div class="cam" id="cam-box"><video id="video" autoplay playsinline muted></video><img id="shot" style="display:none"><div class="cam-msg">Камера недоступна. Без селфи с камеры отметиться нельзя: разрешите Telegram доступ к камере в настройках телефона и откройте приложение заново или обратитесь к менеджеру на площадке.</div></div>
+  <div class="camw"><div class="cam" id="cam-box"><video id="video" autoplay playsinline muted></video><img id="shot" style="display:none"><div class="cam-msg">Камера недоступна. Без селфи с камеры отметиться нельзя: разрешите Telegram доступ к камере в настройках телефона и откройте приложение заново или обратитесь к менеджеру на площадке.</div></div>
+  </div>
   <input type="file" id="file" accept="image/*" capture="user" style="display:none">
   <div class="grow"></div>
   <p class="hint">Снимок делается камерой прямо сейчас</p>
