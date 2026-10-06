@@ -210,6 +210,7 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ctx>div:first-child{flex:1;min-width:0}.ctx>.lnk{flex:none}.ctx b{display:block;font-weight:600}.ctx span{color:var(--mut);font-size:15px}
 .ctx .notew{flex-basis:100%;margin-top:6px}
 .cam{border-radius:22px}
+.tlh h2{display:inline-block}
 .rolee{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px}.rolee svg{width:16px;height:16px;flex:none}
 .rsel .cat{padding:13px 12px;margin-top:6px;border:0;border-radius:12px;background:var(--sf2)}.rsel .cat.sel{box-shadow:inset 0 0 0 1.5px var(--txt)}.rsel .cat.full{opacity:.55}
 /* селфи: экран ровно в высоту окна, окно камеры ужимается, чтобы кнопка всегда была видна внизу; на высоких экранах камера прежняя, 3:4 */
@@ -1454,11 +1455,14 @@ function timeline(r){
   const nm=c=>{const a=String(c).split(' '),s0=a[0]==='Официанты'&&a.length>1?a.slice(1).join(' '):a[0];return cats.filter(q=>q!==c&&String(q).indexOf(s0)>=0).length?c:s0};
   const chips=cats.length>1?'<div class="chipsx" style="margin-bottom:10px">'+['',...cats].map(c=>'<button class="chip'+(c===cur?' on':'')+'" onclick="tlPick('+(c?cats.indexOf(c)+1:0)+')">'+(c?nm(c):'Все')+' '+(c?sh.filter(x=>x.role===c).length:sh.length)+'</button>').join('')+'</div>':'';
   tlCats=cats;
-  return '<div id="tl-box"><h2>Лента смен</h2>'+chips+'<div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{if(cur&&x.role!==cur)return '';const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
+  // лента сворачивается заголовком; по умолчанию раскрыта, свёрнутое состояние помнится для всех мероприятий
+  return '<details id="tl-box" class="jrn"'+(tlOff()?'':' open')+' ontoggle="tlSave(!this.open)"><summary class="tlh"><h2>Лента смен</h2></summary>'+chips+'<div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{if(cur&&x.role!==cur)return '';const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
     return '<div class="rw" onclick="openShift('+i+')"><div class="nm">'+shortFio(x.fio)+(cur?'':'<small>'+x.role+'</small>')+'</div><div class="tr">'+(w?'<div class="win" style="left:'+px(w.startTs)+'%;width:'+(px(w.endTs)-px(w.startTs))+'%"></div>':'')+
-      '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(2,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+(nowIn?'<div class="nowl" style="left:'+px(r.now)+'%"></div>':'')+'</div></div>'}).join('')+'</div></div>';
+      '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(2,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+(nowIn?'<div class="nowl" style="left:'+px(r.now)+'%"></div>':'')+'</div></div>'}).join('')+'</div></details>';
 }
 let tlCat={},tlCats=[];
+function tlOff(){try{return localStorage.getItem('tlOff')==='1'}catch(e){return false}}
+function tlSave(off){try{localStorage.setItem('tlOff',off?'1':'')}catch(e){}}
 function tlPick(k){tlCat[ceId]=k?tlCats[k-1]:'';const b=document.getElementById('tl-box');if(b&&conData)b.outerHTML=timeline(conData)}
 function shortFio(f){const p=String(f||'').split(/\s+/);return p.length>1?p[0]+' '+p.slice(1).map(x=>x[0]+'.').join(''):f}
 /* кнопки решения по карточке «ждёт»: левая — как по правилу (снимает ожидание), правая — исключение в пользу человека */
