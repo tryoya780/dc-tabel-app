@@ -1080,7 +1080,7 @@ function retake(){openCam()}
 /* приход/уход с повтором: «сервер занят», обрыв связи или пустой ответ → ждём и пробуем ещё, до 3 попыток.
    Если после повтора сервер отвечает «смена уже открыта» / «открытых смен нет» — предыдущая попытка на самом деле записалась. */
 async function apiRetry(action,data){
-  const WAIT=[4000,7000,10000];let tries=0;
+  const WAIT=[3000,5000,8000,10000,12000];let tries=0; // до пяти повторов после первой попытки: обрыв связи, занятый сервер, мусорный ответ
   for(;;){
     try{return await api(action,data)}
     catch(e){
@@ -1128,7 +1128,9 @@ async function sendShot(){
     if(e.error==='need_contact')return show('s-contact');
     if(e.error==='need_fio')return show('s-fio');
     if(e.error==='consent'){stopCam();try{me=Object.assign(me||{},await api('me',{},true))}catch(_){}me.consent=false;showConsent();return} // сервер требует согласие (кэш профиля устарел или текст обновили)
-    toast(e.msg||'Ошибка отправки');
+    // связи не было: фото остаётся в приложении, снимать заново не нужно — достаточно нажать «Отправить» ещё раз
+    if(['busy','net','bad'].indexOf(e.error)>=0)toast((mode==='in'?'Смена не открыта':'Смена не закрыта')+': сервер не ответил после 6 попыток. Фото сохранено — проверьте связь и нажмите «Отправить» ещё раз.','warn');
+    else toast(e.msg||'Ошибка отправки');
     // повтор бессмыслен: смена уже открыта/закрыта, мероприятие закрыто, человек выгнан, мест нет — домой с обновлением профиля
     if(['open','noshift','closed','kicked','stop','full','token','notfound'].indexOf(e.error)>=0){stopCam();try{localStorage.removeItem('me')}catch(_){}init()}
   }finally{b.disabled=false;b.textContent='Отправить'}
@@ -1586,15 +1588,16 @@ function payOpen(){
   pay.forEach((x,i)=>{
     if(x.role!==cat){cat=x.role;h+='<div class="sec2" style="margin-top:26px">'+x.role+'</div>'}
     h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
-      '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
+      '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" data-pay="'+i+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
   });
   openDrawer(h,'Выплаты наличными','Свой персонал · подрядчику платят по безналу');
 }
 async function payToggle(i){
   const x=(conData.pay||[])[i];if(!x)return;
   if(x.paid&&!(await ask('Снять отметку «выдано» у '+unesc(x.fio)+'?')))return;
-  try{const r=await api('con.act',{id:ceId,act:'paySet',key:unesc(x.key),on:!x.paid});x.paid=!!r.paid;toast(r.msg||'Готово',true);const y=document.getElementById('drawer').scrollTop;payOpen();document.getElementById('drawer').scrollTop=y}
-  catch(e){toast(e.msg||'Не удалось сохранить')}
+  const btn=document.querySelector('#drawer button[data-pay="'+i+'"]');if(btn){if(btn.disabled)return;btn.disabled=true;btn.textContent='Сохраняю…'} // двойное нажатие при медленной сети не проходит
+  try{const r=await api('con.act',{id:ceId,act:'paySet',key:unesc(x.key),on:!x.paid},true,40000);x.paid=!!r.paid;toast(r.msg||'Готово',true);const y=document.getElementById('drawer').scrollTop;payOpen();document.getElementById('drawer').scrollTop=y}
+  catch(e){toast(e.msg||'Не удалось сохранить');if(btn){btn.disabled=false;btn.textContent=x.paid?'Выдано':'Выдать'}}
 }
 function conClose(){
   const n=conData.shifts.filter(x=>x.open).length;
