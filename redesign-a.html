@@ -262,6 +262,7 @@ body[data-t=dark] .a-sheet{box-shadow:0 -1px 0 #2e2e2e;background:#161616}
 .a-tg input{appearance:none;-webkit-appearance:none;flex:none;width:24px;height:24px;margin:0;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--mut);cursor:pointer;display:grid;place-items:center}
 .a-tg input:checked{background:var(--tx);box-shadow:none}
 .a-tg input:checked::after{content:"";width:11px;height:6px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}
+.dotonly{gap:0;margin-top:14px}.dotonly i{width:12px;height:12px}
 .a-note{font-size:14.5px;color:var(--mut);margin-top:16px}
 .a-warn{margin-top:18px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--warn) 11%,transparent);font-size:14.5px}
 .a-warn .st{margin-bottom:6px}
@@ -344,8 +345,7 @@ selfie:()=>[['После сканирования QR',`<div class="a">${brand()}
   <p class="hint" style="margin:14px 0 12px">Снимок делается камерой прямо сейчас</p>
   <button class="btn">${I.cam}Сделать фото</button></div>`]],
 admin:()=>[['Карточка мероприятия · администратор',`<div class="a">
-  <div class="a-top"><button class="lnk" style="color:var(--mut)">${I.back}Мероприятия</button>${st('ok','Открыто')}</div>
-  <h1 class="h1 sm">${EV.name}</h1>
+  <div class="a-top" style="align-items:flex-start"><h1 class="h1 sm" style="margin-top:6px">${EV.name}</h1><span class="st ok dotonly" title="Открыто"><i></i></span></div>
   <p class="mut" style="font-size:14.5px">${EV.date} · ${EV.venue} · ${EV.time} · ${EV.guests} гостей · код <b style="color:var(--tx)">${EV.code}</b></p>
   <div class="a-acts"><button class="btn sm sec">Дозаказ</button><button class="btn sm sec">QR-листы</button><button class="btn sm sec ico" aria-label="Ещё">•••</button></div>
   <div class="a-box"><h2 class="a-h2">Требуют решения <span>4</span></h2>
@@ -453,8 +453,7 @@ const P3=[
 ];
 
 /* ===== пачка 4: консоль ===== */
-const conHead=(tab)=>`<div class="a-top">${brand()}<div style="display:flex;align-items:center;gap:14px"><button class="lnk">Отметиться</button><button class="a-ib" aria-label="Уведомления">${I.bell}</button></div></div>
-  <h1 class="h1 sm" style="margin-top:22px">Консоль</h1><p class="mut" style="font-size:14.5px">Смирнова Анна · администратор</p>
+const conHead=(tab)=>`<div class="a-top" style="align-items:baseline"><h1 class="h1 sm" style="margin-top:6px">Консоль</h1><button class="lnk">Отметиться</button></div><p class="mut" style="font-size:14.5px">Смирнова Анна · администратор</p>
   <div class="a-tabs"><button class="${tab==='ev'?'on':''}">Мероприятия</button><button class="${tab==='fl'?'on':''}">Флаги<em>3</em></button></div>`;
 const evRow=(n,stt,m,l,pct)=>`<button class="a-ev"><div class="h"><b>${n}</b>${stt}</div><div class="m">${m}</div><div class="m">${l}</div>${pct?'<div class="meter"><i style="width:'+pct+'%"></i></div>':''}</button>`;
 const flItem=(tag,who,role,pay,why,a,b)=>`<div class="a-q">${st('warn',tag)}<div class="who"><button class="a-who">${who}</button><span class="pay">${pay}</span></div><p>${role}. ${why}</p>
