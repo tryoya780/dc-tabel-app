@@ -369,9 +369,10 @@ select.fld{-webkit-appearance:none;appearance:none}
 .payr .btn.done{background:none;color:var(--ok);font-weight:550}
 .qrbox{width:230px;max-width:100%;margin:22px auto 0;padding:16px;border-radius:20px;background:#fff}
 .qrbox img{display:block;width:100%}
+.jrn summary{cursor:pointer;list-style:none}.jrn summary::-webkit-details-marker{display:none}.jrn summary::after{content:'›';display:inline-block;margin-left:6px;color:var(--mut);transition:transform .15s}.jrn[open] summary::after{transform:rotate(90deg)}
 .qrbox figcaption{text-align:center;color:#111;font-size:13px;font-weight:600;margin-top:8px}
 .qcode{text-align:center;font-size:36px;font-weight:650;letter-spacing:.06em;margin-top:18px;font-variant-numeric:tabular-nums}
-@media print{.qrbox{margin:20px auto;page-break-inside:avoid}}
+@media print{.qrbox{width:70mm;margin:12mm auto 0;padding:0;page-break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -574,6 +575,7 @@ async function kickGo(row){
 }
 /* дозаказ из консоли: все категории списком со счётчиком, причина одна; администратор добавляет сразу, менеджер отправляет на подтверждение */
 let dzN={};
+let jrnOpen=''; // карточка, где журнал раскрыт: тихое обновление его не сворачивает
 function dzAsk(){
   const r=conData,cats=r.stats.cats.map(c=>unesc(c.name)),roles=cats.concat(((r.roles||[]).map(unesc)).filter(x=>cats.indexOf(x)<0));dzN={};
   const info=n=>{const c=r.stats.cats.filter(q=>unesc(q.name)===n)[0],R=ordRole(n);return{rate:R?+R.rate||0:0,h:c?+c.min||0:0}};
@@ -1394,7 +1396,8 @@ async function conOpen(id,day,quiet){
     const pay=r.pay||[],paySum=pay.reduce((n,x)=>n+x.sum,0),payDone=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0);
     h+='<div class="sec2">Оплата</div><button class="crow" onclick="payOpen()"><div>Свои · наличными<small>'+pay.length+' чел.'+(pay.length?' · выдано '+rub(payDone):'')+'</small></div><div class="r">'+rub(paySum)+' ›</div></button>'+
       '<div class="crow" style="cursor:default"><div>Подрядчик · безнал<small>'+sub.length+' чел.</small></div><div class="r">'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</div></div>';
-    if(r.journal.length)h+='<div class="sec2">Журнал</div><div class="kvs t">'+r.journal.slice().reverse().map(j=>'<div class="kv" style="display:block"><b style="text-align:left;display:block">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</b><span class="k" style="font-size:13px">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</span></div>').join('')+'</div>';
+    // журнал свёрнут по умолчанию: данные уже в ответе, раскрытие ничего не подгружает; раскрытый не сворачивается при тихом обновлении
+    if(r.journal.length)h+='<details class="jrn"'+(jrnOpen===ceId?' open':'')+' ontoggle="jrnOpen=this.open?ceId:\'\'"><summary class="sec2">Журнал <span>'+r.journal.length+'</span></summary><div class="kvs t">'+r.journal.slice().reverse().map(j=>'<div class="kv" style="display:block"><b style="text-align:left;display:block">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</b><span class="k" style="font-size:13px">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</span></div>').join('')+'</div></details>';
     h+='<p class="upd noprint">Обновлено в '+stampNow()+' · <a class="lnk" href="#" style="padding:0;margin:0;font-size:13px" onclick="conOpen(ceId,ceDay);return false">обновить</a></p>';
     document.getElementById('ce-body').innerHTML=h;
     show('s-conev');
@@ -1530,7 +1533,7 @@ async function conAct(act,row,role,extra){
       openDrawer(r.qr.map(q=>'<figure class="qrbox"><img src="'+q.img+'" alt="QR-код">'+(one?'':'<figcaption>'+escS(q.role)+'</figcaption>')+'</figure>').join('')+
         '<div class="qcode">'+escS(String(r.code).replace(/^(\d{3})(\d{3})$/,'$1 $2'))+'</div><p class="hint" style="margin-top:4px">Код для тех, у кого не работает сканер</p>'+
         '<p class="hint noprint" style="margin:22px 0 0">Лист и код придут сообщением от бота: оттуда их можно переслать. На компьютере лист можно распечатать: Ctrl+P.</p>'+
-        '<div class="foot noprint"><button class="btn" onclick="conAct(\'qrSend\')">Отправить в чат бота</button></div>','QR-лист',one?'Один на всё мероприятие и все категории':'');
+        '<div class="foot noprint"><button class="btn" onclick="conAct(\'qrSend\')">Отправить в чат бота</button></div>','QR-лист','');
       return true;
     }
     if(act==='qrSend'||act==='reportSend'){toast(r.msg||'Отправлено',true);return true} // панель с QR остаётся открытой
