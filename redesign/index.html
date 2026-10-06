@@ -619,7 +619,7 @@ function mgrBlock(o){
   const list=(b.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0));
   let h='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">Менеджеры</span><span class="muted">'+(list.length?rub(list.reduce((n,x)=>n+(x.sum||x.rate*x.people),0)):'')+'</span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">фиксированная оплата · из сметы бухгалтерии</div>';
   h+=list.length?list.map(x=>'<div class="oln" style="cursor:default"><span>'+x.label+(x.people>1?' · '+x.people+' чел.':'')+'</span><span>'+rub(x.sum||x.rate*x.people)+'</span></div>').join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">В смете суммы менеджерам пока не указаны.</p>';
-  if(b.pm||b.bm)h+='<p class="muted" style="margin:10px 0 0;font-size:13px">'+[b.pm?'менеджер проекта '+b.pm:'',b.bm?'банкетный менеджер '+b.bm:''].filter(Boolean).join(' · ')+'</p>';
+  if(b.pm||b.bm)h+='<p class="muted" style="margin:10px 0 8px;font-size:13px">'+[b.pm?'менеджер проекта '+b.pm:'',b.bm?'банкетный менеджер '+b.bm:''].filter(Boolean).join(' · ')+'</p>';
   return h+'</div>';
 }
 function ordCard(r){
@@ -697,7 +697,12 @@ function ordSet(k,v){
 function ordSum(rows){let n=0,sum=0;rows.forEach(x=>{const R=ordRole(x.role),k=parseInt(x.n,10)||0;n+=k;sum+=ordNum(x.hours)*k*(R?R.rate:0)});return{n:n,sum:sum}}
 function ordBar(){
   const d=ordSum(ordEd.filter(x=>x.day===ordDay)),all=ordSum(ordEd),multi=ordDays.length>1;
-  document.getElementById('ord-bar').innerHTML='<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
+  // пока строка группы открыта, панель внизу относится к ней: «Готово» закрывает строку; «Сохранить» возвращается, когда строка закрыта
+  // (иначе при клавиатуре панель наезжала на маленькую ссылку «Готово» в карточке)
+  const op=ordOpen>=0?ordEd[ordOpen]:null;
+  document.getElementById('ord-bar').innerHTML=op
+    ?'<div class="tot2"><span>'+escS(op.role)+'<br><span class="muted">'+(op.start?'к '+op.start+(op.end?' до '+op.end:''):'время не указано')+(op.n?' · '+op.n+' чел.':'')+'</span></span></div><button class="btn" onclick="ordCloseRow()">Готово</button>'
+    :'<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
   ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role)),m=ordMax(x.role);e.textContent=t.n+(m?' из '+m:'')+' чел. · '+rub(t.sum);e.className=m&&t.n>m?'warn':'muted'}});
 }
 const ordMax=role=>{const b=conData.order.book;return b&&b.found&&b.max&&b.max[role]>0?b.max[role]:0};
@@ -724,7 +729,7 @@ function ordDraw(){
         '<div><label class="flab" for="oe-n">Человек</label><input class="fld" id="oe-n" type="number" inputmode="numeric" min="1" max="300" value="'+escS(x.n)+'" oninput="ordSet(\'n\',this.value)"></div></div>'+
         (ordEndEdit&&!x.locked?'<label class="flab" for="oe-end">Работают до</label><input class="fld" id="oe-end" type="time" value="'+escS(x.end)+'" oninput="ordSet(\'end\',this.value)">':'')+
         '<div class="oef">'+(x.locked?'<span class="muted">В этой группе уже есть отметки: время менять нельзя</span>':(ordEndEdit?'<span class="muted" id="oe-cap">работают до '+(x.end||'—')+'</span>':'<a class="lnk" href="#" id="oe-cap" onclick="ordEndToggle();return false">работают до '+(x.end||'—')+'</a>'))+
-        '<span style="margin-left:auto;display:flex;gap:18px">'+(x.locked?'':'<a class="lnk" href="#" style="color:var(--bad)" onclick="ordDelRow('+i+');return false">Удалить</a>')+'<a class="lnk" href="#" style="font-weight:600" onclick="ordCloseRow();return false">Готово</a></span></div></div>';
+        '<span style="margin-left:auto;display:flex;gap:18px">'+(x.locked?'':'<a class="lnk" href="#" style="color:var(--bad)" onclick="ordDelRow('+i+');return false">Удалить</a>')+'</span></div></div>';
     });
     h+='<div style="padding-top:12px"><a class="lnk" href="#" data-r="'+escS(role)+'" onclick="ordAddRow(this.dataset.r);return false">+ время прихода</a></div></div>';
   });
@@ -733,7 +738,7 @@ function ordDraw(){
   h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
   if(multi&&!ordBaseDay(ordDay))h+='<button class="btn txt red" style="margin-top:4px" onclick="ordDelDay()">Убрать день '+dayLbl(ordDay)+'</button>';
-  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'В пределах максимума из сметы бухгалтерии наряд согласуется сам; если максимум в смете не указан, наряд уйдёт администратору.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
+  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'Если наряд совпадает со сметой бухгалтерии, он согласуется сам; любое отличие уйдёт администратору, после согласования наряд запишется в смету.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
     (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
   document.getElementById('ord-body').innerHTML=h;ordBar();
 }
