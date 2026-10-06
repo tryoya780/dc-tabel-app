@@ -626,22 +626,43 @@ function mgrBlock(o){
   if(((o&&o.people)||[]).length&&((o&&o.fixed)||[]).length)h+='<button class="btn txt" style="margin-top:4px" onclick="ordMgAdd()">+ Менеджер</button>';
   return h+'</div>';
 }
-function ordMgSum(i,v){const x=ordMg[i];if(!x)return;x.sum=Math.max(0,Math.round(ordNum(v)));ordDirty=true;ordBar()}
-function ordMgDel(i){ordMg.splice(i,1);ordDirty=true;ordDraw()}
-function ordMgAdd(){
-  const o=conData.order,people=o.people||[],ev=o.evMgr||'';
-  const list=people.slice().sort((a,b)=>(b.phone===ev)-(a.phone===ev));
-  modalOpen('<div class="mh">Кто из менеджеров?</div>'+list.map(p=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordMgRole('+people.indexOf(p)+')">'+escS(p.fio)+'<span class="muted" style="float:right">'+(p.phone===ev?'менеджер мероприятия':escS(p.role))+'</span></button>').join('')+'<button class="btn sec" style="margin-top:14px" onclick="modalClose()">Отмена</button>');
+function ordMgSum(i,v){const x=ordMg[i];if(!x)return;x.sum=Math.max(0,Math.round(ordNum(v)));ordDirty=true;ordBar();const e=document.querySelector('#ord-body .ocat:last-of-type .oct .muted');if(e)e.textContent=rub(ordMg.reduce((n,y)=>n+(+y.sum||0),0))}
+function ordMgDel(i){ordMg.splice(i,1);ordMg.forEach(x=>x.role=ordMgRoleOf(x));ordDirty=true;ordDraw()}
+const MG_ROLE={own:'Банкетный менеджер проекта',own2:'Банкетный менеджер DC',hired:'Вызывной банкетный менеджер'};
+function ordMgRoleOf(p,list){ // роль для книги назначает сервер; здесь только подпись: первый наш — проекта, следующие — DC, вызывной — вызывной
+  if(p.kind==='hired')return MG_ROLE.hired;const own=(list||ordMg).filter(x=>x.kind==='own');return own.length&&own[0].phone!==p.phone?MG_ROLE.own2:MG_ROLE.own;
 }
-function ordMgRole(pi){
-  const o=conData.order,p=(o.people||[])[pi];if(!p)return;
-  const roles=o.fixed||[];
-  if(roles.length===1){ordMgPut(p,roles[0]);return}
-  modalOpen('<div class="mh">'+escS(p.fio)+' — в какой роли?</div>'+roles.map((r,k)=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordMgPut(conData.order.people['+pi+'],conData.order.fixed['+k+'])">'+escS(r.role)+'<span class="muted" style="float:right">'+rub(p.rate||r.sum)+'</span></button>').join('')+'<button class="btn sec" style="margin-top:14px" onclick="modalClose()">Отмена</button>');
+let mgQ='';
+function ordMgAdd(q){
+  const o=conData.order,people=o.people||[],ev=o.evMgr||'',have={};ordMg.forEach(x=>have[x.phone]=1);mgQ=q||'';
+  const f=p=>!have[p.phone]&&(!mgQ||unesc(p.fio).toLowerCase().indexOf(mgQ.toLowerCase())>=0);
+  const own=people.filter(p=>p.kind==='own'&&f(p)).sort((a,b)=>(b.phone===ev)-(a.phone===ev)),hired=people.filter(p=>p.kind==='hired'&&f(p));
+  const btn=p=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordMgPut(conData.order.people['+people.indexOf(p)+'])">'+escS(p.fio)+'<span class="muted" style="float:right">'+(p.phone===ev?'менеджер мероприятия · ':'')+rub(p.rate)+'</span></button>';
+  let h='<div class="mh">Кто из менеджеров?</div>';
+  if(people.length>8)h+='<input class="fld" type="search" placeholder="Фамилия" value="'+escS(mgQ)+'" oninput="ordMgAdd(this.value)" style="margin:4px 0 6px">';
+  h+='<div class="fsec" style="margin-top:8px">Наши</div>'+(own.length?own.map(btn).join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">'+(mgQ?'Не найдено':'Все уже в наряде')+'</p>');
+  h+='<div class="fsec" style="margin-top:14px">Вызывные</div>'+(hired.length?hired.map(btn).join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">'+(mgQ?'Не найдено':'Пока никого')+'</p>');
+  h+='<button class="btn txt" style="margin-top:10px" onclick="ordMgNew()">+ Новый вызывной</button><button class="btn sec" style="margin-top:8px" onclick="modalClose()">Отмена</button>';
+  modalOpen(h);if(mgQ){const e=document.querySelector('#modal-box input[type=search]');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}
 }
-function ordMgPut(p,r){
-  if(ordMg.some(x=>x.phone===p.phone&&x.role===r.role)){toast(unesc(p.fio)+' уже в наряде в этой роли');modalClose();return}
-  ordMg.push({role:unesc(r.role),phone:p.phone,fio:unesc(p.fio),sum:p.rate||r.sum});ordDirty=true;modalClose();ordDraw();
+function ordMgNew(){
+  const f=(id,lab,type,extra)=>'<div><label class="flab" for="'+id+'">'+lab+'</label><input id="'+id+'" class="fld" type="'+(type||'text')+'" '+(extra||'')+'></div>';
+  modalOpen('<div class="mh">Новый вызывной менеджер</div><p class="muted" style="margin:0 0 4px;font-size:13px">Попадёт в справочник и будет в списке в следующий раз.</p>'+
+    f('mgn-fio','Фамилия Имя Отчество')+f('mgn-phone','Телефон','tel','inputmode="numeric" placeholder="79161234567"')+f('mgn-sum','Сумма за смену, ₽','number','inputmode="numeric"')+
+    '<div class="ferr" id="m-err"></div><div class="acts" style="margin-top:16px"><button class="btn" onclick="ordMgNewGo()">Добавить в наряд</button><button class="btn sec" onclick="ordMgAdd()">Назад</button></div>');
+}
+async function ordMgNewGo(){
+  const g=id=>document.getElementById(id).value.trim(),d={fio:g('mgn-fio'),phone:g('mgn-phone').replace(/\D/g,''),sum:g('mgn-sum')};
+  if(d.phone.length===11&&d.phone[0]==='8')d.phone='7'+d.phone.slice(1);
+  if(d.fio.split(/\s+/).length<2||d.phone.length!==11||!(+d.sum>0)){mErr('Нужны фамилия и имя, телефон из 11 цифр и сумма');return}
+  mErr('');
+  try{const r=await api('con.act',{id:ceId,act:'mgrNew',fio:d.fio,phone:d.phone,sum:+d.sum});
+    const p=r.person;conData.order.people=(conData.order.people||[]).filter(x=>x.phone!==p.phone).concat([p]);toast(r.msg||'Добавлен',true);ordMgPut(p)}
+  catch(e){mErr(e.msg||'Не получилось добавить')}
+}
+function ordMgPut(p){
+  if(ordMg.some(x=>x.phone===p.phone)){toast(unesc(p.fio)+' уже в наряде');modalClose();return}
+  ordMg.push({phone:p.phone,fio:unesc(p.fio),kind:p.kind,sum:+p.rate||0,role:ordMgRoleOf(p)});ordDirty=true;modalClose();ordDraw();
 }
 function ordCard(r){
   const o=r.order;if(!o)return '';
@@ -676,7 +697,7 @@ const ordNum=v=>parseFloat(String(v).replace(',','.'))||0;
 function ordEdit(){
   const o=conData.order,ev=conData.event,used={};(o.used||[]).forEach(u=>used[unesc(u)]=1);
   ordEd=o.rows.filter(x=>!x.dz).map(x=>{const role=unesc(x.role);return{role:role,day:x.day,start:x.start,hours:x.hours||hmDiff(x.start,x.end)||'',end:x.end,n:x.n,locked:!!used[role+'|'+x.day+'|'+x.start+'|'+x.end]}});
-  ordMg=(o.mgrs||[]).map(x=>({role:unesc(x.role),phone:x.phone,fio:unesc(x.fio),sum:+x.sum||0}));
+  ordMg=(o.mgrs||[]).map(x=>({role:unesc(x.role),phone:x.phone,fio:unesc(x.fio),sum:+x.sum||0,kind:/вызывн/i.test(unesc(x.role))?'hired':'own'}));
   const set={};for(let k=0;k<(+ev.days||1);k++)set[dayAdd(ev.date,k)]=1;ordEd.forEach(x=>set[x.day]=1);
   ordDays=Object.keys(set).sort();ordDay=ordDays.indexOf(ceDay)>=0?ceDay:ordDays[0];ordOpen=-1;ordDirty=false;ordEndEdit=false;
   document.getElementById('ord-ev').innerHTML=ev.name;
@@ -761,7 +782,7 @@ function ordDraw(){
   h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
   if(multi&&!ordBaseDay(ordDay))h+='<button class="btn txt red" style="margin-top:4px" onclick="ordDelDay()">Убрать день '+dayLbl(ordDay)+'</button>';
-  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'Если наряд совпадает со сметой бухгалтерии, он согласуется сам; любое отличие уйдёт администратору, после согласования наряд запишется в смету.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
+  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован»'+(o.book&&o.book.found?' и запишется в смету бухгалтерии.':'.'):(o.book&&o.book.found?'Если наряд совпадает со сметой бухгалтерии, он согласуется сам; любое отличие уйдёт администратору, после согласования наряд запишется в смету.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
     (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
   document.getElementById('ord-body').innerHTML=h;ordBar();
 }
@@ -773,7 +794,7 @@ async function ordGo(){
     rows.push({role:x.role,day:x.day,start:x.start,hours:h,end:x.end,n:n});
   }
   if(!rows.length){toast('Добавьте хотя бы одну категорию');return}
-  if(await conAct('ordSave',0,'',{rows:rows,mgrs:ordMg.map(x=>({role:x.role,phone:x.phone,sum:x.sum}))}))ordDirty=false;
+  if(await conAct('ordSave',0,'',{rows:rows,mgrs:ordMg.map(x=>({phone:x.phone,sum:x.sum}))}))ordDirty=false;
 }
 /* создание мероприятия администратором */
 let evcN=1;
