@@ -613,14 +613,33 @@ const hrs=h=>String(Math.round((+h||0)*100)/100).replace('.',',')+' ч';
 function hmAdd(st,h){const m=String(st||'').match(/^(\d{1,2}):(\d{2})$/);if(!m||!(h>0))return '';const t=(+m[1]*60+ +m[2]+Math.round(h*60))%1440;return ('0'+Math.floor(t/60)).slice(-2)+':'+('0'+t%60).slice(-2)}
 function hmDiff(st,en){const a=String(st||'').match(/^(\d{1,2}):(\d{2})$/),b=String(en||'').match(/^(\d{1,2}):(\d{2})$/);if(!a||!b)return '';let d=(+b[1]*60+ +b[2])-(+a[1]*60+ +a[2]);if(d<=0)d+=1440;return Math.round(d/60*4)/4}
 function ordRole(name){return ((conData&&conData.order&&conData.order.roles)||[]).filter(q=>unesc(q.role)===name)[0]}
-/* менеджеры с фиксированной оплатой: читаются из сметы бухгалтерии, в приложении только показываются */
+/* менеджеры с фиксированной оплатой за проект: роли и суммы по умолчанию — лист 03, ставка человека — лист 13; правятся в наряде */
+let ordMg=[];
 function mgrBlock(o){
-  const b=o&&o.book;if(!b||!b.found)return '';
-  const list=(b.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0));
-  let h='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">Менеджеры</span><span class="muted">'+(list.length?rub(list.reduce((n,x)=>n+(x.sum||x.rate*x.people),0)):'')+'</span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">фиксированная оплата · из сметы бухгалтерии</div>';
-  h+=list.length?list.map(x=>'<div class="oln" style="cursor:default"><span>'+x.label+(x.people>1?' · '+x.people+' чел.':'')+'</span><span>'+rub(x.sum||x.rate*x.people)+'</span></div>').join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">В смете суммы менеджерам пока не указаны.</p>';
-  if(b.pm||b.bm)h+='<p class="muted" style="margin:10px 0 8px;font-size:13px">'+[b.pm?'менеджер проекта '+b.pm:'',b.bm?'банкетный менеджер '+b.bm:''].filter(Boolean).join(' · ')+'</p>';
+  const sum=ordMg.reduce((n,x)=>n+(+x.sum||0),0);
+  let h='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">Менеджеры</span><span class="muted">'+(ordMg.length?rub(sum):'')+'</span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">фиксированная оплата за проект</div>';
+  if(!ordMg.length)h+='<p class="muted" style="margin:8px 0 4px;font-size:14px">Менеджеров в наряде пока нет.</p>';
+  ordMg.forEach((x,i)=>{h+='<div class="oln" style="cursor:default;display:block"><div>'+escS(x.fio)+'<br><small>'+escS(x.role)+'</small></div>'+
+    '<div style="display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:8px"><span class="muted" style="font-size:13px;margin-right:auto">сумма за проект</span><input class="fld" type="number" inputmode="numeric" value="'+(+x.sum||0)+'" style="width:120px;margin:0;text-align:right" onchange="ordMgSum('+i+',this.value)" aria-label="Сумма за проект"><a class="lnk" href="#" style="color:var(--bad)" onclick="ordMgDel('+i+');return false">Убрать</a></div></div>'});
+  if(((o&&o.people)||[]).length&&((o&&o.fixed)||[]).length)h+='<button class="btn txt" style="margin-top:4px" onclick="ordMgAdd()">+ Менеджер</button>';
   return h+'</div>';
+}
+function ordMgSum(i,v){const x=ordMg[i];if(!x)return;x.sum=Math.max(0,Math.round(ordNum(v)));ordDirty=true;ordBar()}
+function ordMgDel(i){ordMg.splice(i,1);ordDirty=true;ordDraw()}
+function ordMgAdd(){
+  const o=conData.order,people=o.people||[],ev=o.evMgr||'';
+  const list=people.slice().sort((a,b)=>(b.phone===ev)-(a.phone===ev));
+  modalOpen('<div class="mh">Кто из менеджеров?</div>'+list.map(p=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordMgRole('+people.indexOf(p)+')">'+escS(p.fio)+'<span class="muted" style="float:right">'+(p.phone===ev?'менеджер мероприятия':escS(p.role))+'</span></button>').join('')+'<button class="btn sec" style="margin-top:14px" onclick="modalClose()">Отмена</button>');
+}
+function ordMgRole(pi){
+  const o=conData.order,p=(o.people||[])[pi];if(!p)return;
+  const roles=o.fixed||[];
+  if(roles.length===1){ordMgPut(p,roles[0]);return}
+  modalOpen('<div class="mh">'+escS(p.fio)+' — в какой роли?</div>'+roles.map((r,k)=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordMgPut(conData.order.people['+pi+'],conData.order.fixed['+k+'])">'+escS(r.role)+'<span class="muted" style="float:right">'+rub(p.rate||r.sum)+'</span></button>').join('')+'<button class="btn sec" style="margin-top:14px" onclick="modalClose()">Отмена</button>');
+}
+function ordMgPut(p,r){
+  if(ordMg.some(x=>x.phone===p.phone&&x.role===r.role)){toast(unesc(p.fio)+' уже в наряде в этой роли');modalClose();return}
+  ordMg.push({role:unesc(r.role),phone:p.phone,fio:unesc(p.fio),sum:p.rate||r.sum});ordDirty=true;modalClose();ordDraw();
 }
 function ordCard(r){
   const o=r.order;if(!o)return '';
@@ -636,8 +655,9 @@ function ordCard(r){
     else h+='<div class="row"><span class="muted">'+(multi?'Всего за '+ruDay(day):'Всего')+' · '+n+' чел.</span><b>'+rub(sum)+'</b></div>';
     if(multi){const all=own.reduce((m,x)=>m+x.hours*x.n*x.rate,0);h+='<div class="row"><span class="muted">За все дни ('+r.days.length+')</span><b>'+rub(all)+'</b></div>'}
   }
-  {const bk=o.book,ml=bk&&bk.found?(bk.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0)):[];
-    if(ml.length)h+='<div class="row"><span class="muted">Менеджеры (фикс из сметы) · '+ml.length+'</span><b>'+rub(ml.reduce((n,x)=>n+(x.sum||x.rate*x.people),0))+'</b></div>';
+  {const ml=o.mgrs||[];
+    ml.forEach(x=>{h+='<div class="row"><span>'+x.fio+'<br><span class="muted" style="font-size:13px">'+x.role+(o.state==='pending'&&!x.ok?' · <span class="warn">ждёт согласования</span>':'')+'</span></span><b>'+rub(x.sum)+'</b></div>'});
+    if(ml.length>1)h+='<div class="row"><span class="muted">Менеджеры · '+ml.length+'</span><b>'+rub(ml.reduce((n,x)=>n+x.sum,0))+'</b></div>';
     if(o.pushed)h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Факт выгружен в бухгалтерию '+o.pushed.slice(8,10)+'.'+o.pushed.slice(5,7)+' в '+o.pushed.slice(11,16)+'</p>'}
   let b='';
   if(o.canApprove)b+='<button class="btn" onclick="ask(\'Согласовать наряд? После этого мероприятие можно открывать.\').then(ok=>{if(ok)conAct(\'ordApprove\')})">Согласовать</button>';
@@ -654,6 +674,7 @@ const ordNum=v=>parseFloat(String(v).replace(',','.'))||0;
 function ordEdit(){
   const o=conData.order,ev=conData.event,used={};(o.used||[]).forEach(u=>used[unesc(u)]=1);
   ordEd=o.rows.filter(x=>!x.dz).map(x=>{const role=unesc(x.role);return{role:role,day:x.day,start:x.start,hours:x.hours||hmDiff(x.start,x.end)||'',end:x.end,n:x.n,locked:!!used[role+'|'+x.day+'|'+x.start+'|'+x.end]}});
+  ordMg=(o.mgrs||[]).map(x=>({role:unesc(x.role),phone:x.phone,fio:unesc(x.fio),sum:+x.sum||0}));
   const set={};for(let k=0;k<(+ev.days||1);k++)set[dayAdd(ev.date,k)]=1;ordEd.forEach(x=>set[x.day]=1);
   ordDays=Object.keys(set).sort();ordDay=ordDays.indexOf(ceDay)>=0?ceDay:ordDays[0];ordOpen=-1;ordDirty=false;ordEndEdit=false;
   document.getElementById('ord-ev').innerHTML=ev.name;
@@ -702,7 +723,7 @@ function ordBar(){
   const op=ordOpen>=0?ordEd[ordOpen]:null;
   document.getElementById('ord-bar').innerHTML=op
     ?'<div class="tot2"><span>'+escS(op.role)+'<br><span class="muted">'+(op.start?'к '+op.start+(op.end?' до '+op.end:''):'время не указано')+(op.n?' · '+op.n+' чел.':'')+'</span></span></div><button class="btn" onclick="ordCloseRow()">Готово</button>'
-    :'<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
+    :'<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+(ordMg.length?'<br>менеджеры '+rub(ordMg.reduce((n,x)=>n+(+x.sum||0),0)):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
   ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role)),m=ordMax(x.role);e.textContent=t.n+(m?' из '+m:'')+' чел. · '+rub(t.sum);e.className=m&&t.n>m?'warn':'muted'}});
 }
 const ordMax=role=>{const b=conData.order.book;return b&&b.found&&b.max&&b.max[role]>0?b.max[role]:0};
@@ -750,7 +771,7 @@ async function ordGo(){
     rows.push({role:x.role,day:x.day,start:x.start,hours:h,end:x.end,n:n});
   }
   if(!rows.length){toast('Добавьте хотя бы одну категорию');return}
-  if(await conAct('ordSave',0,'',{rows:rows}))ordDirty=false;
+  if(await conAct('ordSave',0,'',{rows:rows,mgrs:ordMg.map(x=>({role:x.role,phone:x.phone,sum:x.sum}))}))ordDirty=false;
 }
 /* создание мероприятия администратором */
 let evcN=1;
@@ -1583,11 +1604,11 @@ function payOpen(){
   const sum=pay.reduce((n,x)=>n+x.sum,0),done=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0),openN=conData.shifts.filter(x=>x.open&&x.own).length;
   let h='<div class="bigv" style="margin-top:18px"><b>'+rub(sum-done)+'</b><span>осталось выдать · выдано '+rub(done)+' из '+rub(sum)+'</span></div>';
   if(openN)h+='<p class="cap" style="margin:10px 0 0;font-size:13.5px">Ещё в смене: '+openN+' чел. Они появятся в списке после ухода.</p>';
-  if(!pay.length)h+='<p class="muted" style="margin:16px 0 0">Закрытых смен своего персонала пока нет.</p>';
+  if(!pay.length)h+='<p class="muted" style="margin:16px 0 0">Закрытых смен своего персонала и менеджеров с фиксом пока нет.</p>';
   let cat='';
   pay.forEach((x,i)=>{
     if(x.role!==cat){cat=x.role;h+='<div class="sec2" style="margin-top:26px">'+x.role+'</div>'}
-    h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
+    h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(x.fixed?'фикс за проект':(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate))+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
       '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" data-pay="'+i+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
   });
   openDrawer(h,'Выплаты наличными','Свой персонал · подрядчику платят по безналу');
