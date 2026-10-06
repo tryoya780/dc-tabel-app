@@ -210,6 +210,8 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ctx>div:first-child{flex:1;min-width:0}.ctx>.lnk{flex:none}.ctx b{display:block;font-weight:600}.ctx span{color:var(--mut);font-size:15px}
 .ctx .notew{flex-basis:100%;margin-top:6px}
 .cam{border-radius:22px}
+.rolee{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px}.rolee svg{width:16px;height:16px;flex:none}
+.rsel .cat{padding:13px 12px;margin-top:6px;border:0;border-radius:12px;background:var(--sf2)}.rsel .cat.sel{box-shadow:inset 0 0 0 1.5px var(--txt)}.rsel .cat.full{opacity:.55}
 /* селфи: экран ровно в высоту окна, окно камеры ужимается, чтобы кнопка всегда была видна внизу; на высоких экранах камера прежняя, 3:4 */
 @supports (height:1cqh) and selector(:has(*)){
   body:has(#s-cam.on){height:var(--tg-viewport-stable-height,100dvh);min-height:0;box-sizing:border-box;overflow:hidden}
@@ -1480,7 +1482,28 @@ function openShift(i){
   h+='<p class="hint">'+(x.open?'Часы и сумма появятся после закрытия смены':x.flg?({open:'Если часы неверные — кнопки в блоке флага',ask:'Запрос правки ждёт администратора',done:'Флаг разобран. Спорный случай — к администратору'})[x.flg.state]:'Флагов нет, всё посчитано по правилам')+'</p>';
   if(x.open)h+='<div class="foot"><button class="btn txt red" onclick="kickAsk('+i+')">Выгнать</button><button class="btn sec" style="background:var(--sf2)" onclick="releaseAsk('+i+')">Отпустить сейчас</button></div>';
   if(x.kicked&&conMe&&conMe.admin)h+='<div class="foot"><button class="btn sec" style="background:var(--sf2)" onclick="ask(\'Вернуть на смену? Пометка «выгнан» снимется, смена снова откроется, стоп-лист снимется.\').then(ok=>{if(ok){closeDrawer();conAct(\'unkick\','+x.inRow+')}})">Вернуть на смену</button></div>';
-  openDrawer(h,x.fio,x.role+(g?' · к '+g.start+', до '+g.end:''));
+  // категория под ФИО: пока мероприятие не закрыто, менеджер и администратор меняют её по нажатию (карандаш)
+  const canRole=ev.status!=='Закрыто'&&!x.kicked,grp=g?'к '+g.start+', до '+g.end:'';
+  openDrawer(h,x.fio,canRole?'<button class="rolee" onclick="roleAsk('+i+')">'+x.role+PEN_IC+'</button> '+grp:x.role+(g?' · '+grp:''));
+}
+const PEN_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+/* «Сменить категорию»: строка = категория + группа этого дня; без свободных мест выбрать нельзя (своя категория не в счёт) */
+let roleOpts=[],roleK=-1;
+function roleAsk(i){
+  const x=conData.shifts[i];if(!x)return;
+  roleOpts=(conData.windows||[]).filter(w=>!(w.role===x.role&&w.key===x.win));roleK=-1;
+  const free=r=>{const c=conData.stats.cats.filter(q=>q.name===r)[0];return c?Math.max(0,c.limit-c.came):0};
+  const rows=roleOpts.map((w,k)=>{const f=w.role===x.role?-1:free(w.role),dis=f===0;
+    return '<div class="cat'+(dis?' full':'')+'"'+(dis?'':' onclick="roleSel('+k+')"')+' data-k="'+k+'"><div><b>'+w.role+'</b><small style="display:block">к '+w.start+', до '+w.end+(w.rate?' · '+rub(w.rate)+'/ч':'')+'</small></div><div>'+(dis?'мест нет':f>0?'своб. '+f:'')+'</div></div>'}).join('');
+  modalOpen(shHead(x.fio+' — в какую категорию?','Сейчас: '+x.role)+'<div class="rsel">'+(rows||'<p class="cap">Других категорий и групп в этот день нет.</p>')+'</div>'+
+    '<p class="cap" style="margin:12px 0 0;font-size:14px">Приход остаётся '+(x.first||x.in)+'. Часы и сумма считаются по новой категории. Человеку придёт сообщение.</p>'+
+    '<div class="ferr" id="m-err"></div><div class="mfoot"><button class="btn txt" onclick="modalClose()">Отмена</button><button class="btn" id="role-go" style="margin-top:6px" onclick="roleGo('+i+')">Сменить</button></div>');
+}
+function roleSel(k){roleK=k;document.querySelectorAll('#modal .rsel .cat').forEach(e=>e.classList.toggle('sel',+e.dataset.k===k))}
+function roleGo(i){
+  const x=conData.shifts[i],w=roleOpts[roleK];
+  if(!w){document.getElementById('m-err').textContent='Выберите категорию';return}
+  modalClose();closeDrawer();conAct('role',x.inRow,unesc(w.role),{win:unesc(w.key)});
 }
 function openCat(ci){ // индекс категории, а не имя: значения из данных в inline-обработчики не попадают
   const r=conData,c=r.stats.cats[ci];if(!c)return;const name=c.name;
