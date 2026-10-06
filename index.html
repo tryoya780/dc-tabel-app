@@ -6,39 +6,47 @@
 <title>Diamond Табель</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#141210;--card:#1d1a16;--line:#2c2721;--txt:#eae4d6;--mut:#9a9082;--brass:#c9a961;--brass2:#e6c97a;--ok:#5fbf7a;--bad:#e06b5f}
+:root{--bg:#fff;--card:#f3f3f2;--sf2:#f3f3f2;--line:#ebebea;--txt:#161616;--mut:#686868;--brass:#8F5A12;--brass2:#161616;--ok:#1E7F4A;--bad:#C0362C;--warn:#A8590B;--warn-bg:rgba(168,89,11,.11);--pri:#161616;--pri-tx:#fff;--on-bad:#fff;--gold:#B8864F;--veil:rgba(255,255,255,.86)}
+html.dark{--bg:#101010;--card:#1d1d1d;--sf2:#1d1d1d;--line:#262626;--txt:#ededed;--mut:#9c9c9c;--brass:#C99A67;--brass2:#ededed;--ok:#56C28A;--bad:#EF6E63;--warn:#E2A545;--warn-bg:rgba(226,165,69,.12);--pri:#ededed;--pri-tx:#101010;--on-bad:#1a0b09;--gold:#C99A67;--veil:rgba(16,16,16,.86)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.35}
-body{min-height:100vh;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
-h1{font-size:22px;margin:0 0 4px;font-weight:600}
-.brand{font-size:12px;letter-spacing:.2em;color:var(--brass);text-transform:uppercase;margin-bottom:14px}
+body{min-height:100vh;padding:18px 20px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+h1{font-size:26px;line-height:1.16;letter-spacing:-.02em;margin:0 0 6px;font-weight:650}
 .sub{color:var(--mut);font-size:14px;margin:0 0 16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px}
 .row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}.row b{white-space:nowrap}
 .row:last-child{border-bottom:0}
 .row b{font-weight:600}
 .big{font-size:34px;font-weight:600;letter-spacing:-.01em;margin:6px 0}
-.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:600;color:#1a1408;background:var(--brass);margin-top:10px;cursor:pointer}
-.btn:active{background:var(--brass2)}
-.btn.sec{background:transparent;color:var(--txt);border:1px solid var(--line)}
-.btn.sec:active{background:var(--line)}
-.btn.red{background:var(--bad);color:#fff}
-.btn.red:active{filter:brightness(.9)}
-.btn[disabled]{opacity:.5;pointer-events:none}
-.btn:focus-visible{outline:2px solid var(--brass2);outline-offset:2px}
+.btn{display:block;width:100%;border:0;border-radius:16px;min-height:56px;padding:16px;font:inherit;font-size:17px;font-weight:600;color:var(--pri-tx);background:var(--pri);margin-top:10px;cursor:pointer;transition:transform .08s,filter .15s}
+.btn:active{transform:scale(.985);filter:brightness(.9)}
+.btn.sec{background:var(--sf2);color:var(--txt)}
+.card .btn.sec,.drawer .btn.sec,#modal .btn.sec{background:var(--bg)}
+.btn.red,.btn.stop{background:var(--bad);color:var(--on-bad)}
+.btn.txt{background:none;color:var(--txt);min-height:44px;padding:10px;font-size:15px;font-weight:500;margin-top:6px}
+.btn.txt:active{background:var(--sf2);transform:none;filter:none}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.btn:focus-visible,.lnk:focus-visible,.cat:focus-visible{outline:2px solid var(--line);outline-offset:2px}
+.btn svg.i{width:22px;height:22px;vertical-align:-5px;margin-right:10px}
+.top .btn,.acts .btn,.abar .btn,.obar .btn,.row .btn{min-height:0}
 .btn.wide{grid-column:1/-1}
-.stale #open-card .btn,.stale #in-card .btn{pointer-events:none;opacity:.6}
-input{width:100%;border:1px solid var(--line);background:#0f0d0b;color:var(--txt);border-radius:12px;padding:14px;font-size:22px;letter-spacing:.2em;text-align:center;outline:none}
+.stale #out-card .btn,.stale #in-card .btn{pointer-events:none;opacity:.6}
+input{width:100%;border:0;background:var(--sf2);color:var(--txt);border-radius:12px;padding:14px;font:inherit;font-size:22px;letter-spacing:.2em;text-align:center;outline:none}
+input:focus-visible,textarea:focus-visible{outline:2px solid var(--line);outline-offset:2px}
+.card input,.drawer input,#modal input{background:var(--bg)}
 input.txt{letter-spacing:0;font-size:18px;text-align:left}
-.cat{display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:var(--card)}
-.cat.sel{border-color:var(--brass)}
-.cat.full{opacity:.45}
-.cat small{color:var(--mut)}
-.scr{display:none}.scr.on{display:block}
-body.tgback .navback{display:none}
-.toast{position:fixed;left:16px;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));background:#2a1f1c;border:1px solid var(--bad);color:#fff;padding:12px 14px;border-radius:12px;font-size:15px;display:none;z-index:50}
-.toast.ok{background:#1c2a20;border-color:var(--ok)}
-.toast.warn{background:#2a2416;border-color:#d9a03c}
+.cat{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.cat:last-child{border-bottom:0}
+.cat b{font-weight:600}
+.cat small{color:var(--mut);font-size:14px}
+.cat>div:last-child{color:var(--mut);flex:none}
+.cat.full{cursor:default}.cat.full b{color:var(--mut);font-weight:500}
+.scr{display:none}.scr.on{display:block;flex:1;min-width:0}
+.scr.emp.on{display:flex;flex-direction:column}
+body.tgback .navback,body.tgback .navrow{display:none}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));background:var(--bad);color:var(--on-bad);padding:13px 16px;border-radius:14px;font-size:15px;font-weight:500;display:none;z-index:50}
+.toast.ok{background:var(--txt);color:var(--bg)}
+.toast.warn{background:var(--warn);color:var(--bg)}
 .cam{position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4;width:100%}
 @media (max-height:760px){.cam{aspect-ratio:1}}
 .cam-msg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut);font-size:15px}
@@ -47,9 +55,9 @@ body.tgback .navback{display:none}
 .cam img{transform:none}
 .status{color:var(--mut);font-size:14px;text-align:center;margin-top:8px}
 .ok{color:var(--ok)}.bad{color:var(--bad)}
-.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--brass);border-radius:50%;animation:s 1s linear infinite;margin:40px auto}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--txt);border-radius:50%;animation:s 1s linear infinite;margin:40px auto}
 @keyframes s{to{transform:rotate(360deg)}}
-.wrap{max-width:760px;margin:0 auto}
+.wrap{max-width:760px;margin:0 auto;width:100%}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
 .top .btn{width:auto;margin:0;padding:12px 16px;font-size:15px}
 .top .btn.ico{width:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative}.btn.ico svg{width:22px;height:22px}
@@ -58,7 +66,7 @@ body.tgback .navback{display:none}
 .pill.open{color:var(--ok);border-color:var(--ok)}.pill.closed{color:var(--mut)}.pill.new{color:var(--brass);border-color:var(--brass)}
 .evc{cursor:pointer}
 .evc h3{margin:0 0 2px;font-size:17px}
-.bar{height:8px;background:#0f0d0b;border-radius:6px;overflow:hidden;margin:8px 0 4px;position:relative}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0 4px;position:relative}
 .bar i{display:block;height:100%;background:var(--brass)}
 .bar.over i{background:var(--bad)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
@@ -70,14 +78,14 @@ body.tgback .navback{display:none}
 .sh .n{font-weight:600}.sh .m{color:var(--mut);font-size:13px}
 .sh .r{text-align:right;white-space:nowrap}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--mut)}
-.dot.on{background:var(--ok)}.dot.auto{background:var(--bad)}.dot.pend{background:#d9a03c}
-.stepbox.ok{border-color:var(--ok);background:rgba(95,191,122,.08)}.stepbox.pend{border-color:#d9a03c;background:rgba(217,160,60,.08)}.stepbox.bad{border-color:var(--bad);background:rgba(224,107,95,.08)}.stepbox.mut{border-color:var(--line);background:transparent}
+.dot.on{background:var(--ok)}.dot.auto{background:var(--bad)}.dot.pend{background:var(--warn)}
+.stepbox.ok{border-color:var(--ok);background:rgba(95,191,122,.08)}.stepbox.pend{border-color:var(--warn);background:rgba(217,160,60,.08)}.stepbox.bad{border-color:var(--bad);background:rgba(224,107,95,.08)}.stepbox.mut{border-color:var(--line);background:transparent}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .acts .btn{margin:0;padding:12px;font-size:15px}
 .abar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
 .abar .btn{flex:1 1 auto;width:auto;margin:0;padding:12px 14px;font-size:15px}
 .lnk{color:var(--brass);text-decoration:none;font-size:15px;display:inline-block;padding:10px 6px;margin:-10px -6px;line-height:24px}
-.fld{width:100%;min-width:0;margin-top:8px;padding:12px;font-size:16px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);box-sizing:border-box;letter-spacing:0;text-align:left;display:block}
+.fld{width:100%;min-width:0;margin-top:8px;padding:12px;font-size:16px;border-radius:10px;background:var(--bg);color:var(--txt);border:1px solid var(--line);box-sizing:border-box;letter-spacing:0;text-align:left;display:block}
 input[type=date].fld,input[type=time].fld{-webkit-appearance:none;appearance:none;min-height:46px;-webkit-min-logical-width:0} /* iOS: у date/time своя внутренняя ширина, иначе поле вылезает за модалку */
 .flab{display:block;margin:10px 0 -4px;font-size:13px;color:var(--mut)}
 .mh{font-size:20px;font-weight:600;margin:0 0 4px}
@@ -91,17 +99,17 @@ input[type=date].fld,input[type=time].fld{-webkit-appearance:none;appearance:non
 .obar .btn{width:auto;margin:0;padding:13px 20px;flex:0 0 auto}
 .fsec{margin:18px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass)}
 .g2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 8px}.g2.eq{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-.stp{display:flex;align-items:center;justify-content:space-between;margin-top:8px;border:1px solid var(--brass);border-radius:10px;background:var(--bg);min-height:46px}
+.stp{display:flex;align-items:center;justify-content:space-between;margin-top:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:46px}
 .stp button{border:0;background:transparent;color:var(--txt);font-size:22px;width:46px;height:44px;cursor:pointer}.stp b{font-size:17px;font-weight:600}
-.segs{display:flex;gap:4px;background:#0f0d0b;border:1px solid var(--line);border-radius:12px;padding:4px;margin:0 0 14px}
+.segs{display:flex;gap:4px;background:var(--line);border:1px solid var(--line);border-radius:12px;padding:4px;margin:0 0 14px}
 .segs button{flex:1;border:0;background:transparent;color:var(--mut);font-size:15px;font-weight:600;padding:10px 6px;border-radius:9px;cursor:pointer}
 .segs button.on{background:var(--card);color:var(--txt);box-shadow:0 0 0 1px var(--line)}
-.badge{display:inline-block;min-width:20px;padding:1px 6px;border-radius:999px;background:#d9a03c;color:#1a1408;font-size:12px;line-height:18px;margin-left:4px;vertical-align:1px}
+.badge{display:inline-block;min-width:20px;padding:1px 6px;border-radius:999px;background:var(--warn);color:var(--pri-tx);font-size:12px;line-height:18px;margin-left:4px;vertical-align:1px}
 .badge:empty{display:none}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
 .chip{border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:999px;padding:8px 12px;font-size:14px;cursor:pointer}
 .chip.on{border-color:var(--brass);color:var(--txt)}
-.warn{color:#d9a03c}
+.warn{color:var(--warn)}
 .flrow{padding:10px 0;border-bottom:1px solid var(--line)}.flrow:last-child{border-bottom:0}
 .flrow .sh{border-bottom:0;padding:0;cursor:pointer}
 .flrow .acts{margin-top:8px}
@@ -114,12 +122,12 @@ input[type=date].fld,input[type=time].fld{-webkit-appearance:none;appearance:non
 .qrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .qrs img{width:100%;border-radius:10px;background:#fff}
 .qrs figcaption{text-align:center;margin-top:6px;font-weight:600}
-h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text-transform:uppercase}
+h2{font-size:13px;font-weight:600;margin:22px 0 8px;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
 .muted{color:var(--mut);font-size:14px}
 @media print{body{background:#fff;color:#000;padding:0}body>*{display:none!important}.drawer{display:block!important;position:static;transform:none;max-height:none;width:auto;border:0;background:#fff;color:#000;padding:0}.drawer .dh,.drawer .noprint{display:none!important}.qrs{grid-template-columns:1fr 1fr}.qrs figure{page-break-inside:avoid}}
 .toks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .tok{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--mut);box-sizing:border-box}
-.tok.on{background:var(--ok);border-color:var(--ok)}.tok.left{background:var(--line);border-color:var(--mut)}.tok.no{border-style:dashed;border-color:var(--line)}.tok.no.late{border-color:var(--bad)}.tok.pend{background:#d9a03c;border-color:#d9a03c}
+.tok.on{background:var(--ok);border-color:var(--ok)}.tok.left{background:var(--line);border-color:var(--mut)}.tok.no{border-style:dashed;border-color:var(--line)}.tok.no.late{border-color:var(--bad)}.tok.pend{background:var(--warn);border-color:var(--warn)}
 .tok.more{width:auto;height:18px;border:0;color:var(--mut);font-size:12px;line-height:18px;padding:0 2px}
 .legend{display:none;gap:10px 14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin:6px 0 0}.legend.on{display:flex}
 .legend .tok{width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px}
@@ -132,13 +140,13 @@ h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text
 .tl .nm{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl .nm small{display:block;color:var(--mut);font-size:12px}
 @media (max-width:520px){.tl .rw{grid-template-columns:1fr;gap:4px;padding:8px 0}.tl .nm{white-space:normal}.tl .nm small{display:inline}.tl .nm small::before{content:' · '}}
-.tl .tr{position:relative;height:16px;background:#0f0d0b;border-radius:4px}
+.tl .tr{position:relative;height:16px;background:var(--line);border-radius:4px}
 .tl .win{position:absolute;top:0;bottom:0;background:rgba(201,169,97,.12);border-left:1px dashed var(--brass);border-right:1px dashed var(--brass)}
-.tl .bar{position:absolute;top:3px;bottom:3px;border-radius:3px;background:var(--brass);margin:0}
-.tl .bar.open{background:var(--ok)}.tl .bar.auto{background:var(--bad)}.tl .bar.pend{background:#d9a03c}
+.tl .bar{position:absolute;top:3px;bottom:3px;border-radius:3px;background:var(--mut);margin:0}
+.tl .bar.open{background:var(--ok)}.tl .bar.auto{background:var(--bad)}.tl .bar.pend{background:var(--warn)}
 .tl .mk{position:absolute;top:0;bottom:0;width:2px;background:var(--txt);opacity:.7}
 .tl .nowl{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--bad)}
-.drawer{position:fixed;inset:auto 0 0 0;max-height:85vh;overflow:auto;background:var(--card);border-top:1px solid var(--brass);border-radius:18px 18px 0 0;padding:0 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s;z-index:30}
+.drawer{position:fixed;inset:auto 0 0 0;max-height:85vh;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:0 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s;z-index:30}
 .drawer.on{transform:none}
 .drawer .dh{position:sticky;top:0;z-index:1;background:var(--card);padding:14px 0 8px;touch-action:pan-x;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:1px solid var(--line)}
 .drawer .dh h1{margin:8px 0 2px;font-size:20px}
@@ -149,147 +157,375 @@ h2{font-size:16px;margin:18px 0 8px;color:var(--brass);letter-spacing:.04em;text
 .drawer .x:active{background:var(--line)}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .kv:last-child{border-bottom:0}.kv .k{color:var(--mut)}
-.stepbox{border:1px solid var(--brass);border-radius:12px;padding:10px 12px;margin:10px 0;background:rgba(201,169,97,.06);font-size:14px}
+.stepbox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;background:rgba(201,169,97,.06);font-size:14px}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:29}.scrim.on{display:block}
-@media (min-width:700px){.drawer{left:auto;right:0;top:0;bottom:0;max-height:none;width:420px;border-radius:0;border-left:1px solid var(--brass);border-top:0;transform:translateX(105%)}.drawer.on{transform:none}}
-#busy{position:fixed;inset:0;background:rgba(20,18,16,.78);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column;gap:12px}
+@media (min-width:700px){.drawer{left:auto;right:0;top:0;bottom:0;max-height:none;width:420px;border-radius:0;border-left:1px solid var(--line);border-top:0;transform:translateX(105%)}.drawer.on{transform:none}}
+#busy{position:fixed;inset:0;background:var(--veil);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column;gap:12px}
 #busy.on{display:flex}
 #busy .spin{margin:0}
 #busy .t{color:var(--txt);font-size:15px}#busy .s{color:var(--mut);font-size:13px;min-height:16px}
 body.busy .btn{pointer-events:none;opacity:.6}
-#modal{position:fixed;inset:0;background:rgba(20,18,16,.78);display:none;flex-direction:column;align-items:center;justify-content:flex-start;overflow:auto;z-index:40;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;flex-direction:column;align-items:center;justify-content:flex-start;overflow:auto;z-index:40;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
 #modal.on{display:flex}
-#modal .box{background:var(--card);border:1px solid var(--brass);border-radius:16px;padding:18px 16px;width:100%;max-width:420px;margin:auto 0}
-#modal textarea{width:100%;min-height:80px;background:var(--bg);color:var(--txt);border:1px solid var(--brass);border-radius:10px;padding:12px;font-size:16px;font-family:inherit;box-sizing:border-box;margin-top:8px}
+#modal .box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;width:100%;max-width:420px;margin:auto 0}
+#modal textarea{width:100%;min-height:80px;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;font-family:inherit;box-sizing:border-box;margin-top:8px}
 #modal .ph-wrap{margin:10px 0;min-height:80px;text-align:center}#modal .ph-img{width:100%;max-height:70vh;object-fit:contain;border-radius:10px;background:#000}
 #modal label.ck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}
 #modal label.ck input{width:20px;height:20px;margin-top:1px}
-.ntf{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.ntf:last-child{border-bottom:0}.ntf input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--brass)}.ntf .t{font-size:16px}.ntf .d{font-size:13px;color:var(--mut);margin-top:2px}
+.ntf{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.ntf:last-child{border-bottom:0}.ntf input{-webkit-appearance:none;appearance:none;flex:none;width:24px;height:24px;margin:0;padding:0;border-radius:7px;background:none!important;box-shadow:inset 0 0 0 1.5px var(--mut);display:grid;place-items:center}.ntf input:checked{background:var(--txt)!important;box-shadow:none}.ntf input:checked::after{content:"";width:11px;height:6px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}.ntf .t{font-size:16px}.ntf .d{font-size:13px;color:var(--mut);margin-top:2px}
 .acts.pb .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;line-height:1.15;min-height:64px;text-wrap:balance}.acts.pb .btn small,.btn small{font-size:12px;font-weight:400;opacity:.75}
+/* ── экраны сотрудника (редизайн, вариант A): главная кнопка прижата к низу, статус — точка и слово ── */
+.grow{flex:1;min-height:18px}
+.emp h1{margin-top:14px}
+.lead{font-size:17px;color:var(--mut);margin:0}
+.hint{font-size:13px;color:var(--mut);text-align:center;margin:14px 0 2px}
+.st{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--txt)}
+.st i{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.st.ok i{background:var(--ok)}.st.warn i{background:var(--warn)}.st.bad i{background:var(--bad)}
+#open-card,#done-card{margin-top:10px}
+.bigv{margin:24px 0}
+.bigv b{display:block;font-size:52px;line-height:1;letter-spacing:-.035em;font-weight:650;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bigv span{display:block;margin-top:8px;color:var(--mut);font-size:16px}
+h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color:var(--txt);text-transform:none}
+.kvs{margin-top:14px}
+.kvs .kv{padding:12px 0;font-size:15.5px;gap:14px}
+.kvs .kv b{font-weight:550;text-align:right}
+.notew{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--warn-bg);font-size:14.5px}
+.notew .st{margin-bottom:6px}
+.noten{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--sf2);font-size:14.5px}.noten:empty{display:none}
+#last-card{margin-top:40px;padding-top:18px;border-top:1px solid var(--line)}
+#last-card .lab{font-size:13px;color:var(--mut);margin-bottom:8px}
+.lrow{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.lrow b{font-weight:600}.lrow .m{font-size:14px;color:var(--mut);margin-top:2px}.lrow .s{white-space:nowrap}
+.field{margin-top:20px}
+.field label{display:block;font-size:13px;color:var(--mut);margin-bottom:8px}
+.field small{display:block;font-size:13px;color:var(--mut);margin-top:8px}
+.doc{margin-top:16px;padding:16px;border-radius:16px;background:var(--sf2);font-size:15px;line-height:1.45;white-space:pre-wrap}
+.cap{font-size:13px;color:var(--mut);margin:8px 4px 0}
+.check{display:flex;gap:12px;align-items:flex-start;margin-top:18px;font-size:15px}
+.check input{-webkit-appearance:none;appearance:none;flex:none;width:24px;height:24px;margin:0;padding:0;border-radius:7px;background:none;box-shadow:inset 0 0 0 1.5px var(--mut);display:grid;place-items:center}
+.check input:checked{background:var(--txt);box-shadow:none}
+.check input:checked::after{content:"";width:11px;height:6px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}
+.ctx{display:flex;justify-content:space-between;align-items:flex-start;gap:6px 12px;flex-wrap:wrap;margin:8px 0 16px}
+.ctx>div:first-child{flex:1;min-width:0}.ctx>.lnk{flex:none}.ctx b{display:block;font-weight:600}.ctx span{color:var(--mut);font-size:15px}
+.ctx .notew{flex-basis:100%;margin-top:6px}
+.cam{border-radius:22px}
+#ev-name:not(:empty)::after{content:" · "}
+/* ── консоль (редизайн, вариант A): мероприятия карточками на подложке, очередь решений на подложке, фильтры одной строкой ── */
+.scr.con.on{display:flex;flex-direction:column}
+.ctop{display:flex;justify-content:flex-end;align-items:center;gap:14px;height:34px;margin-top:-6px}
+.ctop .lnk{padding:10px 0;margin:0;font-weight:500}
+.ib{width:44px;height:44px;margin-right:-10px;border:0;background:none;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt);position:relative}
+.ib svg{width:22px;height:22px}.ib:active{background:var(--sf2)}
+.con h1{margin-top:10px}
+.hrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.hrow.first{align-items:flex-start}
+.hrow h1{min-width:0;flex:1}
+.hrow .lnk{flex:none;padding:0;margin:0;font-weight:500}
+.hrow .st.dot{flex:none;gap:0;margin:12px -10px 0 0;padding:4px 10px;background:none;border:0;cursor:pointer;min-width:44px;min-height:32px;justify-content:center}
+.hrow .st.dot i{width:12px;height:12px}
+.hrow .st.dot.off i{box-shadow:inset 0 0 0 2px var(--mut)}
+.hrow .st.dot.fill i{animation-name:fillp2}
+@keyframes fillp2{0%,100%{box-shadow:inset 0 0 0 2px var(--txt)}50%{box-shadow:inset 0 0 0 6px var(--txt)}}
+body.tgback #s-conev .hrow.first h1{margin-top:4px!important}body.tgback #s-conev .hrow .st.dot{margin-top:12px}
+body.tgback #s-ord h1,body.tgback #s-arch h1{margin-top:4px!important}
+#con-tabs{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;gap:24px;margin:16px 0 0}
+#con-tabs button{flex:none;padding:10px 0 11px;margin-bottom:-1px;border-radius:0;border-bottom:2px solid transparent;font-size:16px;font-weight:550}
+#con-tabs button.on{background:none;box-shadow:none;border-color:var(--txt)}
+#con-tabs .badge{background:none;color:var(--warn);padding:0;margin-left:5px;min-width:0;font-size:inherit;line-height:inherit;vertical-align:0}
+.evs{margin:14px -8px 0}
+.evr{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--sf2);border:0;border-radius:18px;padding:14px 16px 16px;margin-top:8px;cursor:pointer}
+.evr:active{filter:brightness(.96)}.evr:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.evr .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.evr .h b{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.evr .m{font-size:14px;color:var(--mut);margin-top:3px}
+.evr .sum{white-space:nowrap;font-weight:600;font-size:15.5px}
+.evr .st{white-space:nowrap}
+.meter{height:3px;border-radius:2px;background:rgba(128,128,128,.22);overflow:hidden;margin:12px 0 0}
+.meter i{display:block;height:100%;background:var(--txt);border-radius:2px}.meter.over i{background:var(--bad)}
+.st.off i{background:none;box-shadow:inset 0 0 0 1.5px var(--mut)}
+.st.fill i{background:none;box-shadow:inset 0 0 0 1.5px var(--txt);animation:fillp 1.6s ease-in-out infinite}
+@keyframes fillp{0%,100%{box-shadow:inset 0 0 0 1.5px var(--txt)}50%{box-shadow:inset 0 0 0 4px var(--txt)}}
+@media (prefers-reduced-motion:reduce){.st.fill i{animation:none}}
+.chipsx{display:flex;gap:6px;margin:16px -20px 0;padding:0 20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chipsx::-webkit-scrollbar{display:none}
+.chipsx .chip{flex:none;white-space:nowrap;border:0;background:var(--sf2);color:var(--mut);padding:8px 13px;font:inherit;font-size:14px;font-weight:550}
+.chipsx .chip.on{background:var(--txt);color:var(--bg)}
+.qbox{background:var(--sf2);border-radius:20px;margin:14px -8px 0;padding:0 16px 16px}
+.qbox .grp{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;background:none;border:0;padding:16px 0 0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.qbox .grp b{font-size:15.5px;font-weight:600}.qbox .grp span{font-size:13px;color:var(--mut);white-space:nowrap}
+.qbox .flrow{padding:14px 0 16px;border-bottom:1px solid rgba(128,128,128,.2)}
+.qbox .flrow:last-child{border-bottom:0;padding-bottom:0}
+.qbox .who{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:6px}
+.pname{background:none;border:0;padding:0;font:inherit;font-size:17px;font-weight:600;color:var(--txt);text-align:left;cursor:pointer}
+.qbox .pay{white-space:nowrap;font-size:14.5px;font-weight:600}
+.qd{font-size:14.5px;color:var(--mut);margin:4px 0 0}
+.qbox .acts{margin-top:12px}
+.qbox .btn.sec{background:var(--bg)}
+.acts.pb .btn{border-radius:12px;min-height:54px;padding:6px}
+.flrow.busy .who,.flrow.busy .qd{opacity:.55}
+.mon2{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 0;font-size:13px;color:var(--mut)}
+.mon2 b{font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.mon2+.evs{margin-top:4px}
+.srch{position:relative;margin-top:16px}
+.srch svg{position:absolute;left:14px;top:14px;width:20px;height:20px;color:var(--mut)}
+.srch input{height:48px;padding:0 14px 0 44px;font-size:16px;letter-spacing:0;text-align:left}
+.srch input::placeholder{color:var(--mut)}
+.upd{font-size:13px;color:var(--mut);text-align:center;margin:22px 0 0}
+/* ── карточка мероприятия, шторки человека и категории, окна действий (редизайн, вариант A) ── */
+.abar{gap:8px;margin:16px 0 4px}
+.abar .btn{background:var(--sf2);color:var(--txt);min-height:44px;padding:10px 14px;font-size:15px;border-radius:12px}
+.sec2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:34px 0 4px;display:flex;gap:8px;align-items:baseline}
+.sec2 span{color:var(--txt);letter-spacing:0;font-size:14px}
+.qbox .sec2{margin:0;padding-top:16px}
+.qbox.first{margin-top:22px}
+.qbox .q{padding:14px 0 16px;border-bottom:1px solid rgba(128,128,128,.2)}
+.qbox .q:last-child{border-bottom:0;padding-bottom:0}
+.qbox .who .role{color:var(--mut);font-size:15px;white-space:nowrap}
+.qbox .acts.pb{margin:12px 0 0!important}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 10px}
+.nums b{display:block;font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.nums b i{font-style:normal;color:var(--mut);font-size:17px;font-weight:500}
+.nums small{font-size:13px;color:var(--mut)}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:12px 0;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;font-size:15.5px;color:inherit;text-align:left;cursor:pointer}
+.crow small{display:block;color:var(--mut);font-size:13px}
+.crow .r{text-align:right;white-space:nowrap;font-weight:550}
+.cppl{padding:2px 0 8px;border-bottom:1px solid var(--line)}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:8px 0 8px 14px;border:0;background:none;font:inherit;font-size:14.5px;color:inherit;text-align:left;cursor:pointer}
+.prow .m{color:var(--mut);white-space:nowrap}
+.drawer .prow{padding:11px 0;font-size:15.5px;border-bottom:1px solid var(--line)}
+.fund{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-top:10px}
+.fund b{font-size:24px;font-weight:650;letter-spacing:-.02em}
+.fund2{display:flex;justify-content:space-between;gap:14px;font-size:14px;color:var(--mut);margin-top:8px}
+.kvs.t{margin-top:4px}
+.drawer{background:var(--bg);border-top:0;border-radius:26px 26px 0 0;padding:0 24px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -1px 0 var(--line)}
+.drawer .dh{background:var(--bg);border-bottom:0;padding:20px 0 6px;margin-bottom:0}
+.drawer .dh h1{margin:8px 0 3px;font-size:23px}
+.drawer .dh .muted{font-size:14.5px}
+.drawer .grip{top:10px}
+.drawer .x{width:36px;height:36px;border-radius:50%;background:var(--sf2);font-size:20px;margin-top:8px}
+.drawer .bigv{margin:14px 0 0}
+.drawer .qbox{margin-top:20px}
+.drawer .foot{margin-top:18px}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.pic{position:relative;height:84px;border:0;border-radius:16px;background:var(--sf2);color:var(--txt);font:inherit;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;padding:0 14px 0 50px;text-align:left;cursor:pointer}
+.pic svg{position:absolute;left:14px;top:50%;width:24px;height:24px;transform:translateY(-50%);color:var(--mut)}
+.pic b{font-size:15px;font-weight:600}.pic small{font-size:13px;color:var(--mut)}
+.pic.no{padding:0 12px;align-items:center;text-align:center;font-size:13px;color:var(--mut);cursor:default}
+.btn.txt.red{color:var(--bad)}
+/* шторка прижата к низу автоотступом, а не выравниванием: длинное содержимое прокручивается с начала, верх не уезжает за экран */
+#modal{justify-content:flex-start;padding:max(16px,env(safe-area-inset-top)) 0 0}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--sf2);border-radius:14px;padding:4px;margin-top:10px}
+.seg3 button{border:0;background:none;border-radius:10px;height:44px;font:inherit;font-size:14.5px;font-weight:550;color:var(--mut);cursor:pointer}
+.seg3 button.on{background:var(--bg);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+#modal .mgrip{height:26px;margin:-22px -24px 2px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
+#modal .mgrip i{width:40px;height:4px;border-radius:2px;background:var(--line)}
+html.dark #modal .mgrip i{background:#3a3a3a}
+#modal .box.drag{transition:none}
+#modal .btn.sec{background:var(--sf2)}
+#modal .mfoot{position:sticky;bottom:0;z-index:2;background:var(--bg);margin:16px -24px calc(-22px - env(safe-area-inset-bottom));padding:12px 24px calc(22px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+#modal .mfoot .btn:first-child{margin-top:0}
+#modal .box{position:relative;background:var(--bg);box-shadow:0 -1px 0 var(--line);border:0;border-radius:26px 26px 0 0;max-width:none;margin:auto 0 0;padding:22px 24px calc(22px + env(safe-area-inset-bottom))}
+@media (min-width:700px){#modal{justify-content:flex-start;padding:16px}#modal .box{max-width:440px;border-radius:26px;margin:auto}}
+.shh h1{font-size:23px;margin:0 0 3px}
+.shh p{margin:0;font-size:14.5px;color:var(--mut)}
+#modal textarea{border:0;background:var(--sf2);border-radius:12px;padding:14px 16px;font-size:17px;margin-top:0;min-height:96px;resize:none}
+#modal .field input{background:var(--sf2)}
+.dzr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dzr b{display:block;font-weight:600;font-size:16px}.dzr small{font-size:13px;color:var(--mut)}
+.dzr.z>div:first-child b{font-weight:500}
+.stp2{display:flex;align-items:center;justify-content:space-between;flex:none;width:148px;height:48px;border-radius:12px;background:var(--sf2);padding:0 4px}
+.stp2 button{width:42px;height:40px;border:0;border-radius:10px;background:var(--bg);font:inherit;font-size:22px;color:var(--txt);cursor:pointer}
+.stp2 b{font-size:18px;font-weight:650}.dzr.z .stp2 b{color:var(--mut);font-weight:500}
+.tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--mut)}
+.tot b{font-size:22px;font-weight:650;letter-spacing:-.02em;color:var(--txt)}
+/* ── наряд, новое мероприятие, выплаты, QR-лист, отчёт (редизайн, вариант A) ── */
+.ocat{padding:14px 16px 6px;margin-top:8px!important;margin-bottom:0}
+.ocn{font-size:17px;font-weight:600;color:var(--txt)}
+.oct>span:last-child{font-size:14px;white-space:nowrap;font-weight:550}
+.oln{border-bottom:0;border-top:1px solid rgba(128,128,128,.2);padding:13px 0}
+.ocat>.muted+.oln,.ocat>.muted+.oed{margin-top:10px}
+.oed{background:var(--bg);border:0;border-radius:14px;padding:4px 12px 6px;margin:0 -4px 8px}
+.oed .fld{border:2px solid var(--sf2);background:none;border-radius:10px;font-weight:550}
+.ocat>div:last-child{border-top:1px solid rgba(128,128,128,.2);margin-top:0}
+.fld{border:0;background:var(--sf2);border-radius:12px;min-height:52px;padding:12px 14px;font:inherit;font-size:17px;color:var(--txt)}
+select.fld{-webkit-appearance:none;appearance:none}
+#modal .fld,.drawer .fld{background:var(--sf2)}
+.flab{margin:14px 0 -2px;font-size:13px;color:var(--mut)}
+.fsec{margin:26px 0 0;padding-top:0;border-top:0;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.stp{border:0;background:var(--sf2);border-radius:12px;min-height:52px;padding:0 6px}
+.stp button{width:48px;height:44px;border-radius:10px;background:var(--bg)}
+.stp b{font-size:20px;font-weight:650}
+.mh{font-size:23px;font-weight:650;letter-spacing:-.02em;margin:0 0 3px}
+.obar{flex-direction:column;align-items:stretch;gap:12px;padding:14px 20px calc(22px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.obar .tot2{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;color:var(--mut)}
+.obar .tot2 b{font-size:20px;font-weight:650;letter-spacing:-.02em;color:var(--txt);white-space:nowrap}
+.obar .btn{width:100%;min-height:56px;padding:16px}
+#ord-body{padding-bottom:170px}
+.payr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.payr b{font-weight:600;font-size:16px;display:block}.payr small{font-size:13px;color:var(--mut)}
+.payr .r{display:flex;align-items:center;gap:10px;flex:none}.payr .r>b{font-size:15.5px}
+.payr .btn{width:92px;min-height:40px;margin:0;padding:8px 0;font-size:14px;border-radius:10px}
+.payr .btn.done{background:none;color:var(--ok);font-weight:550}
+.qrbox{width:230px;max-width:100%;margin:22px auto 0;padding:16px;border-radius:20px;background:#fff}
+.qrbox img{display:block;width:100%}
+.qrbox figcaption{text-align:center;color:#111;font-size:13px;font-weight:600;margin-top:8px}
+.qcode{text-align:center;font-size:36px;font-weight:650;letter-spacing:.06em;margin-top:18px;font-variant-numeric:tabular-nums}
+@media print{.qrbox{margin:20px auto;page-break-inside:avoid}}
 </style>
 </head>
 <body>
-<div class="brand">Diamond · Табель</div>
 
 <div id="s-load" class="scr on"><div class="spin"></div><div class="status">Загрузка…</div></div>
 
-<div id="s-home" class="scr">
+<div id="s-home" class="scr emp">
   <h1 id="hi">Здравствуйте</h1>
-  <p class="sub" id="hi-sub">Отметьте приход на мероприятие</p>
-  <div id="open-card" class="card" style="display:none">
-    <div class="row"><span>Мероприятие</span><b id="o-ev"></b></div>
-    <div class="row"><span>Категория</span><b id="o-role"></b></div>
-    <div class="row"><span>Смена открыта</span><b id="o-since"></b></div>
-    <div class="row"><span>Минимум за выход</span><b id="o-pay"></b></div>
-    <p class="sub bad" id="o-pend" style="display:none;margin:10px 0 0"></p>
-    <button class="btn red" onclick="startOut()">Закрыть смену</button>
-  </div>
-  <div id="last-card" class="card" style="display:none"></div>
-  <button class="btn sec" id="btn-con" style="display:none;margin:0 0 14px" onclick="conList()">Консоль</button>
-  <div id="in-card">
-    <button class="btn" id="btn-scan" onclick="scanQR()">Сканировать QR</button>
-    <div class="card" style="margin-top:12px">
-      <div class="sub" style="margin-bottom:8px">или введите шестизначный код с листа</div>
-      <input id="code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" enterkeyhint="go" onkeydown="if(event.key==='Enter')byCode()">
-      <button class="btn sec" onclick="byCode()">Найти мероприятие</button>
+  <p class="lead" id="hi-sub">Смена не открыта</p>
+  <div id="open-card" style="display:none">
+    <div class="st ok"><i></i>Смена открыта</div>
+    <div class="bigv"><b id="o-dur"></b><span id="o-who"></span></div>
+    <h2 class="evn" id="o-ev"></h2>
+    <p class="lead" style="font-size:16px" id="o-meta"></p>
+    <div class="kvs">
+      <div class="kv"><span class="k">Категория</span><b id="o-role"></b></div>
+      <div class="kv" id="o-call-row"><span class="k">Вызов</span><b id="o-call"></b></div>
+      <div class="kv"><span class="k">Часы считаются</span><b id="o-since"></b></div>
+      <div class="kv"><span class="k">Минимум за выход</span><b id="o-pay"></b></div>
     </div>
+    <div class="notew" id="o-pend" style="display:none"></div>
+  </div>
+  <div id="last-card" style="display:none"></div>
+  <p class="upd" id="home-set" style="display:none;text-align:left;margin-top:18px"><a class="lnk" href="#" style="padding:0;margin:0;font-size:14px" onclick="settingsOpen();return false">Настройки</a></p>
+  <div class="grow"></div>
+  <button class="btn txt" id="btn-con" style="display:none" onclick="conList()">Консоль</button>
+  <div id="in-card">
+    <div class="field" id="code-box" style="display:none"><label for="code">Шестизначный код с листа</label><input id="code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" enterkeyhint="go" onkeydown="if(event.key==='Enter')byCode()"></div>
+    <button class="btn txt" id="btn-alt" onclick="codeMode(!codeOn)">Ввести код с листа</button>
+    <button class="btn" id="btn-scan" onclick="scanQR()"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM18 14h2M14 18v2"/></svg>Сканировать QR</button>
+    <button class="btn" id="btn-code" style="display:none" onclick="byCode()">Найти мероприятие</button>
+  </div>
+  <div id="out-card" style="display:none">
+    <p class="hint" id="o-hint"></p>
+    <button class="btn stop" onclick="startOut()">Закрыть смену</button>
   </div>
 </div>
 
-<div id="s-consent" class="scr">
-  <h1>Согласие на обработку персональных данных</h1>
-  <div class="card" id="consent-text" style="white-space:pre-wrap;font-size:15px;line-height:1.45"></div>
-  <p class="sub" id="consent-link"></p>
-  <label class="ck" style="display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px"><input type="checkbox" id="consent-ck" onchange="document.getElementById('consent-btn').disabled=!this.checked"><span>Я прочитал и даю согласие на обработку моих персональных данных, включая фотографию, для учёта рабочего времени и расчёта оплаты.</span></label>
-  <button class="btn wide" id="consent-btn" disabled onclick="consentGo()">Продолжить</button>
+<div id="s-consent" class="scr emp">
+  <h1>Согласие на обработку данных</h1>
+  <div class="doc" id="consent-text"></div>
+  <p class="cap">Данные видят только администраторы и менеджер вашего мероприятия.</p>
+  <p id="consent-link" style="margin:14px 0 0"></p>
+  <label class="check"><input type="checkbox" id="consent-ck" onchange="document.getElementById('consent-btn').disabled=!this.checked"><span>Я прочитал и даю согласие на обработку моих персональных данных, включая фотографию, для учёта рабочего времени и расчёта оплаты.</span></label>
+  <div class="grow"></div>
+  <button class="btn" id="consent-btn" disabled onclick="consentGo()">Продолжить</button>
 </div>
-<div id="s-cats" class="scr">
-  <h1 id="ev-name"></h1>
-  <p class="sub" id="ev-sub"></p>
-  <p class="sub" style="color:var(--txt)">Нажмите на свою категорию</p>
-  <div id="cats"></div>
-  <button class="btn sec navback" onclick="show('s-home')">Назад</button>
-</div>
-
-<div id="s-win" class="scr">
-  <h1>К какому времени вы вызваны?</h1>
-  <p class="sub" id="win-sub"></p>
-  <p class="sub" style="color:var(--txt)">В этой категории несколько групп с разным временем. Выберите свою: по ней считаются минимум и окно прихода.</p>
-  <div id="wins"></div>
-  <button class="btn sec navback" onclick="show('s-cats')">Назад</button>
+<div id="s-cats" class="scr emp">
+  <h1>Ваша категория</h1>
+  <p class="lead" style="font-size:16px"><span id="ev-name"></span><span id="ev-sub"></span></p>
+  <div id="cats" style="margin-top:14px"></div>
+  <p class="cap" style="margin:16px 0 0">Нажмите на свою категорию. Если ошиблись, на экране селфи есть «Изменить».</p>
+  <div class="grow"></div>
+  <button class="btn txt navback" onclick="show('s-home')">Назад</button>
 </div>
 
-<div id="s-contact" class="scr">
+<div id="s-win" class="scr emp">
+  <h1>К какому времени вас вызвали?</h1>
+  <p class="lead" style="font-size:16px" id="win-sub"></p>
+  <div id="wins" style="margin-top:14px"></div>
+  <p class="cap" style="margin:16px 0 0">В категории несколько групп с разным временем. По вашей группе считаются окно прихода и минимум за выход. Если ошиблись, на экране селфи есть «Изменить».</p>
+  <div class="grow"></div>
+  <button class="btn txt navback" onclick="show('s-cats')">Назад</button>
+</div>
+
+<div id="s-contact" class="scr emp">
   <h1>Подтвердите номер</h1>
-  <p class="sub">Telegram передаст ваш номер телефона. Это нужно один раз.</p>
-  <button class="btn" onclick="askContact()">Поделиться номером</button>
-  <p class="status" id="contact-status"></p>
-  <button class="btn sec" id="btn-contact-chat" style="display:none" onclick="contactFromChat()">Я поделился номером в чате</button>
-  <button class="btn sec navback" onclick="show('s-cats')">Назад</button>
+  <p class="lead">Telegram передаст ваш номер телефона. По нему мы находим вас в списке персонала. Это нужно один раз.</p>
+  <div class="noten" id="contact-status"></div>
+  <div class="grow"></div>
+  <button class="btn txt navback" onclick="show('s-cats')">Назад</button>
+  <button class="btn txt" id="btn-contact-again" style="display:none" onclick="askContact()">Поделиться ещё раз</button>
+  <button class="btn" id="btn-contact" onclick="askContact()">Поделиться номером</button>
+  <button class="btn" id="btn-contact-chat" style="display:none" onclick="contactFromChat()">Я поделился номером в чате</button>
 </div>
 
-<div id="s-fio" class="scr">
+<div id="s-fio" class="scr emp">
   <h1>Как вас зовут?</h1>
-  <p class="sub">Фамилия, имя и отчество кириллицей</p>
-  <input class="txt" id="fio" placeholder="Иванов Иван Иванович" autocomplete="name" enterkeyhint="go" onkeydown="if(event.key==='Enter')afterFio()">
+  <div class="field"><label for="fio">Фамилия, имя и отчество</label><input class="txt" id="fio" autocomplete="name" enterkeyhint="go" onkeydown="if(event.key==='Enter')afterFio()"><small>Кириллицей, как в паспорте. По этим данным считают оплату.</small></div>
+  <div class="grow"></div>
+  <button class="btn txt navback" onclick="show('s-cats')">Назад</button>
   <button class="btn" onclick="afterFio()">Далее</button>
-  <button class="btn sec navback" onclick="show('s-cats')">Назад</button>
 </div>
 
-<div id="s-cam" class="scr">
+<div id="s-cam" class="scr emp">
   <h1 id="cam-title">Селфи</h1>
-  <p class="sub" id="cam-sub">Снимок делается камерой прямо сейчас</p>
+  <div class="ctx" id="cam-sub"></div>
   <div class="cam" id="cam-box"><video id="video" autoplay playsinline muted></video><img id="shot" style="display:none"><div class="cam-msg">Камера недоступна. Без селфи с камеры отметиться нельзя: разрешите Telegram доступ к камере в настройках телефона и откройте приложение заново или обратитесь к менеджеру на площадке.</div></div>
   <input type="file" id="file" accept="image/*" capture="user" style="display:none">
+  <div class="grow"></div>
+  <p class="hint">Снимок делается камерой прямо сейчас</p>
+  <button class="btn txt navback" onclick="stopCam();show(camBack)">Назад</button>
+  <button class="btn txt" id="btn-retake" style="display:none" onclick="retake()">Переснять</button>
   <button class="btn" id="btn-shot" onclick="takeShot()">Сделать фото</button>
   <button class="btn" id="btn-send" style="display:none" onclick="sendShot()">Отправить</button>
-  <button class="btn sec" id="btn-retake" style="display:none" onclick="retake()">Переснять</button>
-  <button class="btn sec navback" onclick="stopCam();show(camBack)">Назад</button>
 </div>
 
-<div id="s-con" class="scr wrap">
-  <div class="top"><div><h1 style="margin:0">Консоль</h1><div class="muted" id="con-me"></div></div><div style="display:flex;gap:8px;flex:none"><button class="btn sec ico" id="btn-ntf" onclick="ntfOpen()" aria-label="Уведомления" title="Уведомления"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button><button class="btn sec" onclick="show('s-home')">Отметиться</button></div></div>
+<div id="s-con" class="scr wrap con">
+  <div class="hrow"><h1>Консоль</h1><a class="lnk" href="#" onclick="show('s-home');return false">Отметиться</a></div>
+  <div class="muted" id="con-me"></div>
   <div class="segs noprint" id="con-tabs"><button data-t="events" onclick="conTabGo('events')">Мероприятия</button><button data-t="flags" onclick="conTabGo('flags')">Флаги<span class="badge" id="fl-badge"></span></button></div>
   <div id="con-list"></div>
+  <div class="grow"></div>
+  <div id="con-foot"></div>
 </div>
 
-<div id="s-arch" class="scr wrap">
-  <div class="top"><button class="btn sec navback" onclick="conList()">‹ Консоль</button></div>
-  <h1>Архив</h1>
-  <div class="muted" style="margin-bottom:10px">Закрытые мероприятия за последние 3 месяца. Старше — в таблице.</div>
-  <input class="txt" id="arch-q" placeholder="Поиск: название или номер" oninput="archDraw()" style="margin-bottom:12px">
+<div id="s-arch" class="scr wrap con">
+  <div class="ctop navrow" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conList();return false">‹ Консоль</a></div>
+  <h1 style="margin-top:8px">Архив</h1>
+  <div class="muted">Закрытые мероприятия за последние 3 месяца. Старше — в таблице.</div>
+  <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input class="txt" id="arch-q" placeholder="Название или номер" aria-label="Поиск по архиву" oninput="archDraw()"></div>
   <div id="arch-list"></div>
 </div>
 
-<div id="s-conev" class="scr wrap">
-  <div class="top"><button class="btn sec navback" onclick="conBack()">‹ Назад</button><span class="pill" id="ce-status"></span></div>
-  <h1 id="ce-name" style="margin-top:4px"></h1>
+<div id="s-conev" class="scr wrap con">
+  <div class="ctop navrow" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conBack();return false">‹ Мероприятия</a></div>
+  <div class="hrow first"><h1 id="ce-name" style="margin-top:8px"></h1><button class="st dot" id="ce-status" onclick="toast(this.title,true)" aria-label="Статус мероприятия"><i></i></button></div>
   <div class="muted" id="ce-sub"></div>
   <div id="ce-body"></div>
 </div>
 
-<div id="s-ord" class="scr wrap">
-  <div class="top"><button class="btn sec navback" onclick="ordBack()">‹ Назад</button><span class="muted" id="ord-ev"></span></div>
-  <h1 style="margin-top:4px">Наряд</h1>
+<div id="s-ord" class="scr wrap con">
+  <div class="ctop navrow" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="ordBack();return false">‹ <span id="ord-ev"></span></a></div>
+  <h1 style="margin-top:8px">Наряд</h1>
+  <div class="muted">Кто нужен, к какому времени и сколько человек</div>
   <div id="ord-body"></div>
   <div class="obar" id="ord-bar"></div>
 </div>
 
-<div id="s-done" class="scr">
-  <h1 id="done-title"></h1>
-  <div class="card" id="done-card"></div>
-  <button class="btn" onclick="init()">На главную</button>
+<div id="s-done" class="scr emp">
+  <div id="done-card"></div>
+  <div class="grow"></div>
+  <p class="hint" id="done-hint"></p>
+  <button class="btn" onclick="init()">Готово</button>
 </div>
 
 <div class="toast" id="toast"></div>
 <div class="scrim" id="scrim" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer"><div class="dh"><div class="grip"></div><div><h1 id="dr-title"></h1><div class="muted" id="dr-sub"></div></div><button class="x" onclick="closeDrawer()" aria-label="Закрыть">×</button></div><div id="dr-body"></div></aside>
-<div id="modal"><div class="box" id="modal-box"></div></div>
+<div id="modal"><div class="box"><div class="mgrip" id="modal-grip"><i></i></div><div id="modal-box"></div></div></div>
 <div id="busy"><div class="spin"></div><div class="t" id="busy-t">Загружаю…</div><div class="s" id="busy-s"></div></div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbyPd_656FGUQs8kCA9silxZXttqHBHrvKaOm5tWyL5DdMRlhpkuFR5pNhahqfCXZGhC/exec';
 const tg=window.Telegram&&window.Telegram.WebApp;
+/* тема: по настройке Telegram; вне Telegram — по системной; ?theme=dark|light — для проверки в браузере */
+function applyTheme(){
+  let q=new URLSearchParams(location.search).get('theme');
+  if(!q){try{const v=localStorage.getItem('theme');if(v==='dark'||v==='light')q=v}catch(e){}} // выбор в «Настройках»; пусто — «Авто», как в Telegram
+  const dark=q?q==='dark':(tg&&tg.platform&&tg.platform!=='unknown'?tg.colorScheme==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches));
+  document.documentElement.classList.toggle('dark',dark);
+  if(tg){const c=dark?'#101010':'#ffffff';try{tg.setHeaderColor&&tg.setHeaderColor(c);tg.setBackgroundColor&&tg.setBackgroundColor(c)}catch(e){}}
+}
+applyTheme();if(tg&&tg.onEvent)tg.onEvent('themeChanged',applyTheme);
 let me=null,ev=null,cats=[],cat='',win='',fio='',mode='in',camBack='s-cats',stream=null,photoB64='',lateTo='';
 
 function show(id){const el=document.getElementById(id);const same=el.classList.contains('on');document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));el.classList.add('on');if(!same)window.scrollTo(0,0);updBack()}
@@ -315,14 +551,17 @@ document.getElementById('toast').onclick=function(){this.style.display='none'};
 let asking=false; // пока открыто системное окно, тихое обновление не перерисовывает карточку
 function ask(msg){return new Promise(res=>{asking=true;const done=ok=>{asking=false;res(!!ok)};if(tg&&tg.showConfirm&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.2')){try{tg.showConfirm(msg,done);return}catch(e){}}done(window.confirm(msg))})}
 function modalClose(){document.getElementById('modal').classList.remove('on');updBack()}
-function modalOpen(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal').classList.add('on');updBack()}
+/* окно открывается с начала; нажатие на затемнение закрывает; кнопки длинных окон закреплены у нижнего края (.mfoot) */
+function modalOpen(html){const m=document.getElementById('modal');document.getElementById('modal-box').innerHTML=html;m.classList.add('on');m.scrollTop=0;updBack()}
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='modal')modalClose()});
 /* «Выгнать»: причина обязательна, стоп-лист по галочке */
+const shHead=(t,sub)=>'<div class="shh"><h1>'+t+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div>';
 function kickAsk(i){
-  const x=conData.shifts[i];if(!x)return;const row=x.inRow,fio=x.fio;
-  modalOpen('<div class="mh">Выгнать: '+fio+'</div><p class="muted" style="margin:0 0 10px">Смена закроется сейчас, оплата 0. Причину увидит сотрудник в боте и администратор в таблице.</p>'+
-    '<textarea id="kick-why" placeholder="Причина (обязательно): нетрезв, грязная форма, конфликт…"></textarea>'+
-    '<label class="ck"><input type="checkbox" id="kick-stop"><span>В стоп-лист: по номеру и Telegram. Больше не сможет отметиться ни на одном мероприятии.</span></label>'+
-    '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn red" onclick="kickGo('+row+')">Выгнать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
+  const x=conData.shifts[i];if(!x)return;const row=x.inRow;
+  modalOpen(shHead('Выгнать с мероприятия',x.fio+' · '+x.role)+'<p class="cap" style="margin:14px 0 0;font-size:14.5px">Смена закроется сейчас, оплата 0. Причину увидит сотрудник в боте.</p>'+
+    '<div class="field"><label for="kick-why">Причина</label><textarea id="kick-why" placeholder="Нетрезв, грязная форма, конфликт…"></textarea></div>'+
+    '<label class="check"><input type="checkbox" id="kick-stop"><span>Добавить в стоп-лист. По номеру и Telegram больше не сможет отметиться ни на одном мероприятии.</span></label>'+
+    '<div class="ferr" id="m-err"></div><button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn stop" style="margin-top:6px" onclick="kickGo('+row+')">Выгнать</button>');
   setTimeout(()=>document.getElementById('kick-why').focus(),50);
 }
 /* модалка закрывается только после успешного ответа: при ошибке ввод не теряется */
@@ -333,21 +572,40 @@ async function kickGo(row){
   if(stop&&!(await ask('Добавить в стоп-лист? Снять можно только в таблице.')))return;
   if(await conAct('kick',row,'',{reason:why,stop:stop})){modalClose();closeDrawer()}else mErr(conActErr);
 }
-/* дозаказ из консоли */
+/* дозаказ из консоли: все категории списком со счётчиком, причина одна; администратор добавляет сразу, менеджер отправляет на подтверждение */
+let dzN={};
 function dzAsk(){
-  const roles=(conData&&conData.roles)||[];
-  modalOpen('<div class="mh">Дозаказ</div><p class="muted" style="margin:0 0 6px">Администратор подтвердит в приложении, лимит вырастет. Код у входа тот же.</p>'+
-    '<select id="dz-role" class="fld">'+roles.map(r=>'<option>'+r+'</option>').join('')+'</select>'+
-    '<input id="dz-n" class="fld" type="number" inputmode="numeric" min="1" max="50" placeholder="Сколько человек">'+
-    '<textarea id="dz-why" placeholder="Причина: заказчик добавил 30 гостей…"></textarea>'+
-    '<div class="ferr" id="m-err"></div><div class="acts"><button class="btn" onclick="dzGo()">Отправить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
+  const r=conData,cats=r.stats.cats.map(c=>unesc(c.name)),roles=cats.concat(((r.roles||[]).map(unesc)).filter(x=>cats.indexOf(x)<0));dzN={};
+  const info=n=>{const c=r.stats.cats.filter(q=>unesc(q.name)===n)[0],R=ordRole(n);return{rate:R?+R.rate||0:0,h:c?+c.min||0:0}};
+  modalOpen(shHead('Дозаказ','Лимиты категорий вырастут, код у входа тот же')+'<div class="sec2" style="margin-top:20px">Сколько человек добавить</div>'+
+    roles.map((n,k)=>{const q=info(n);return '<div class="dzr z" data-k="'+k+'"><div><b>'+escS(n)+'</b><small>'+(q.rate?rub(q.rate)+'/ч':'')+(q.rate&&q.h?' · ':'')+(q.h?q.h+' ч':'')+'</small></div><div class="stp2"><button type="button" aria-label="Меньше" onclick="dzStep('+k+',-1)">−</button><b>0</b><button type="button" aria-label="Больше" onclick="dzStep('+k+',1)">+</button></div></div>'}).join('')+
+    '<div class="field"><label for="dz-why">Причина</label><textarea id="dz-why" style="min-height:76px" placeholder="Заказчик добавил 30 гостей…"></textarea></div>'+
+    '<div class="tot"><span id="dz-tot">Никого не добавлено</span><b id="dz-sum"></b></div>'+
+    '<div class="ferr" id="m-err"></div><div class="mfoot"><button class="btn txt" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="dzGo()">'+(conMe&&conMe.admin?'Добавить в наряд':'Отправить на подтверждение')+'</button></div>');
+  dzAsk.roles=roles;dzAsk.info=info;
+}
+function dzStep(k,d){
+  const n=Math.max(0,Math.min(50,(dzN[k]||0)+d));dzN[k]=n;
+  const el=document.querySelector('.dzr[data-k="'+k+'"]');if(el){el.classList.toggle('z',!n);el.querySelector('.stp2 b').textContent=n}
+  let ppl=0,cat=0,sum=0,all=true;Object.keys(dzN).forEach(q=>{const v=dzN[q];if(!v)return;ppl+=v;cat++;const f=dzAsk.info(dzAsk.roles[q]);if(f.rate&&f.h)sum+=v*f.rate*f.h;else all=false});
+  document.getElementById('dz-tot').textContent=ppl?ppl+' чел. · категорий: '+cat:'Никого не добавлено';
+  document.getElementById('dz-sum').textContent=ppl&&sum&&all?'≈ +'+rub(sum):'';
 }
 async function dzGo(){
-  const role=document.getElementById('dz-role').value,n=+document.getElementById('dz-n').value,why=document.getElementById('dz-why').value.trim();
-  if(!n||n<1||n>50){mErr('Число людей от 1 до 50');return}
+  const items=Object.keys(dzN).filter(k=>dzN[k]>0).map(k=>({role:dzAsk.roles[k],n:dzN[k]})),why=document.getElementById('dz-why').value.trim(),now=conMe&&conMe.admin?{now:1}:{};
+  if(!items.length){mErr('Добавьте хотя бы одного человека');return}
   if(!why){mErr('Укажите причину');return}
   mErr('');
-  if(await conAct('dzRequest',0,role,{n:n,why:why}))modalClose();else mErr(conActErr);
+  // новый сервер принимает список одним запросом (его признак — поле rel у смен или pend в списке мероприятий); старому шлём по одной категории, как раньше
+  const newSrv=!!((conData.shifts.length&&('rel' in conData.shifts[0]))||(conMeta&&conMeta.events&&conMeta.events.length&&conMeta.events[0].pend!==undefined));
+  if(newSrv||items.length===1){
+    if(await conAct('dzRequest',0,items[0].role,Object.assign({n:items[0].n,why:why,items:items},now))){modalClose();return}
+    mErr(conActErr);return;
+  }
+  for(let k=0;k<items.length;k++){
+    if(!(await conAct('dzRequest',0,items[k].role,Object.assign({n:items[k].n,why:why},now)))){mErr((k?'Отправлено: '+items.slice(0,k).map(x=>x.role+' +'+x.n).join(', ')+'. Дальше ошибка: ':'')+conActErr);return}
+  }
+  modalClose();
 }
 /* ── наряд: категория → группы (начало, часы, окончание, люди). Ставка из справочника, план считает сервер ── */
 let ordEd=[];
@@ -361,13 +619,13 @@ function mgrBlock(o){
   const list=(b.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0));
   let h='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">Менеджеры</span><span class="muted">'+(list.length?rub(list.reduce((n,x)=>n+(x.sum||x.rate*x.people),0)):'')+'</span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">фиксированная оплата · из сметы бухгалтерии</div>';
   h+=list.length?list.map(x=>'<div class="oln" style="cursor:default"><span>'+x.label+(x.people>1?' · '+x.people+' чел.':'')+'</span><span>'+rub(x.sum||x.rate*x.people)+'</span></div>').join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">В смете суммы менеджерам пока не указаны.</p>';
-  if(b.pm||b.bm)h+='<p class="muted" style="margin:10px 0 0;font-size:13px">'+[b.pm?'менеджер проекта '+b.pm:'',b.bm?'банкетный менеджер '+b.bm:''].filter(Boolean).join(' · ')+'</p>';
+  if(b.pm||b.bm)h+='<p class="muted" style="margin:10px 0 8px;font-size:13px">'+[b.pm?'менеджер проекта '+b.pm:'',b.bm?'банкетный менеджер '+b.bm:''].filter(Boolean).join(' · ')+'</p>';
   return h+'</div>';
 }
 function ordCard(r){
   const o=r.order;if(!o)return '';
   const ev=r.event,own=o.rows.filter(x=>!x.dz),stT={empty:'<span class="warn">не заполнен</span>',pending:'<span class="warn">ждёт согласования</span>',ok:'согласован'}[o.state]||'';
-  let h='<div class="sec-h"><h2>Наряд</h2><span class="muted">'+stT+'</span></div><div class="card">';
+  let h='<div class="sec2" style="justify-content:space-between">Наряд<span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--mut)">'+stT+'</span></div><div class="card" style="margin:8px -8px 0">';
   if(!own.length)h+='<p class="muted" style="margin:0">Наряд пока пуст. Укажите, кто нужен, к какому времени и сколько человек.</p>';
   else{
     const multi=(r.days||[]).length>1,day=multi?r.day:'',mine=own.filter(x=>!day||x.day===day),by={},order=[];
@@ -404,6 +662,14 @@ function ordEdit(){
 async function ordBack(){if(ordDirty&&!(await ask('Выйти без сохранения? Изменения наряда пропадут.')))return;ordDirty=false;conOpen(ceId,ceDay)}
 function ordPickDay(k){ordDay=ordDays[k];ordOpen=-1;ordEndEdit=false;ordDraw()}
 function ordAddDay(){const d=dayAdd(ordDays[ordDays.length-1],1);ordDays.push(d);ordDay=d;ordOpen=-1;ordDraw()}
+/* убрать день: только добавленный сверх дней мероприятия; группы с отметками не трогаем */
+function ordBaseDay(d){const ev=conData.event;for(let k=0;k<(+ev.days||1);k++)if(dayAdd(ev.date,k)===d)return true;return false}
+async function ordDelDay(){
+  const d=ordDay,mine=ordEd.filter(x=>x.day===d);
+  if(mine.some(x=>x.locked))return toast('В этом дне уже есть отметки: убрать его нельзя');
+  if(mine.length&&!(await ask('Убрать '+dayLbl(d)+' из наряда? Группы этого дня ('+mine.length+') удалятся.')))return;
+  ordEd=ordEd.filter(x=>x.day!==d);ordDays=ordDays.filter(x=>x!==d);ordDay=ordDays[Math.max(0,ordDays.length-1)];ordOpen=-1;ordEndEdit=false;if(mine.length)ordDirty=true;ordDraw();
+}
 function ordCopyDay(from){ordEd.filter(x=>x.day===from).forEach(x=>ordEd.push({role:x.role,day:ordDay,start:x.start,hours:x.hours,end:x.end,n:x.n,locked:false}));ordDirty=true;ordDraw()}
 function ordAddRow(role){
   const ev=conData.event,R=ordRole(role),same=ordEd.filter(x=>x.day===ordDay&&x.role===role).pop(),h=same&&ordNum(same.hours)>0?ordNum(same.hours):(R&&R.min?R.min:8),st=same?same.start:ev.start;
@@ -431,7 +697,12 @@ function ordSet(k,v){
 function ordSum(rows){let n=0,sum=0;rows.forEach(x=>{const R=ordRole(x.role),k=parseInt(x.n,10)||0;n+=k;sum+=ordNum(x.hours)*k*(R?R.rate:0)});return{n:n,sum:sum}}
 function ordBar(){
   const d=ordSum(ordEd.filter(x=>x.day===ordDay)),all=ordSum(ordEd),multi=ordDays.length>1;
-  document.getElementById('ord-bar').innerHTML='<div style="min-width:0"><b style="white-space:nowrap">'+d.n+' чел. · '+rub(d.sum)+'</b>'+(multi?'<div class="muted" style="font-size:13px">'+dayLbl(ordDay)+' · за все дни '+rub(all.sum)+'</div>':'')+'</div><button class="btn" onclick="ordGo()">Сохранить</button>';
+  // пока строка группы открыта, панель внизу относится к ней: «Готово» закрывает строку; «Сохранить» возвращается, когда строка закрыта
+  // (иначе при клавиатуре панель наезжала на маленькую ссылку «Готово» в карточке)
+  const op=ordOpen>=0?ordEd[ordOpen]:null;
+  document.getElementById('ord-bar').innerHTML=op
+    ?'<div class="tot2"><span>'+escS(op.role)+'<br><span class="muted">'+(op.start?'к '+op.start+(op.end?' до '+op.end:''):'время не указано')+(op.n?' · '+op.n+' чел.':'')+'</span></span></div><button class="btn" onclick="ordCloseRow()">Готово</button>'
+    :'<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
   ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role)),m=ordMax(x.role);e.textContent=t.n+(m?' из '+m:'')+' чел. · '+rub(t.sum);e.className=m&&t.n>m?'warn':'muted'}});
 }
 const ordMax=role=>{const b=conData.order.book;return b&&b.found&&b.max&&b.max[role]>0?b.max[role]:0};
@@ -439,7 +710,7 @@ const ordCatId=role=>((conData.order.roles||[]).findIndex(q=>unesc(q.role)===rol
 function ordDraw(){
   const o=conData.order,multi=ordDays.length>1;
   let h='';
-  if(multi)h+='<div class="segs" style="margin-top:10px">'+ordDays.map((d,k)=>'<button class="'+(d===ordDay?'on':'')+'" onclick="ordPickDay('+k+')">'+dayLbl(d)+'</button>').join('')+'<button onclick="ordAddDay()" aria-label="Добавить день">+ день</button></div>';
+  if(multi)h+='<div class="chipsx" style="margin-bottom:6px">'+ordDays.map((d,k)=>'<button class="chip'+(d===ordDay?' on':'')+'" onclick="ordPickDay('+k+')">'+dayLbl(d)+'</button>').join('')+'<button class="chip" onclick="ordAddDay()" aria-label="Добавить день">+ день</button></div>';
   const rows=ordEd.map((x,i)=>({x:x,i:i})).filter(r=>r.x.day===ordDay);
   const cats=(o.roles||[]).map(q=>unesc(q.role)).filter(r=>rows.some(y=>y.x.role===r));
   if(!cats.length){
@@ -458,14 +729,15 @@ function ordDraw(){
         '<div><label class="flab" for="oe-n">Человек</label><input class="fld" id="oe-n" type="number" inputmode="numeric" min="1" max="300" value="'+escS(x.n)+'" oninput="ordSet(\'n\',this.value)"></div></div>'+
         (ordEndEdit&&!x.locked?'<label class="flab" for="oe-end">Работают до</label><input class="fld" id="oe-end" type="time" value="'+escS(x.end)+'" oninput="ordSet(\'end\',this.value)">':'')+
         '<div class="oef">'+(x.locked?'<span class="muted">В этой группе уже есть отметки: время менять нельзя</span>':(ordEndEdit?'<span class="muted" id="oe-cap">работают до '+(x.end||'—')+'</span>':'<a class="lnk" href="#" id="oe-cap" onclick="ordEndToggle();return false">работают до '+(x.end||'—')+'</a>'))+
-        '<span style="margin-left:auto;display:flex;gap:18px">'+(x.locked?'':'<a class="lnk" href="#" style="color:var(--bad)" onclick="ordDelRow('+i+');return false">Удалить</a>')+'<a class="lnk" href="#" style="font-weight:600" onclick="ordCloseRow();return false">Готово</a></span></div></div>';
+        '<span style="margin-left:auto;display:flex;gap:18px">'+(x.locked?'':'<a class="lnk" href="#" style="color:var(--bad)" onclick="ordDelRow('+i+');return false">Удалить</a>')+'</span></div></div>';
     });
     h+='<div style="padding-top:12px"><a class="lnk" href="#" data-r="'+escS(role)+'" onclick="ordAddRow(this.dataset.r);return false">+ время прихода</a></div></div>';
   });
   const have={};rows.forEach(r=>have[r.x.role]=1);
-  if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn sec" onclick="ordAddCat()">+ Категория</button>';
+  if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn txt" style="margin-top:8px" onclick="ordAddCat()">+ Категория</button>';
   h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
+  if(multi&&!ordBaseDay(ordDay))h+='<button class="btn txt red" style="margin-top:4px" onclick="ordDelDay()">Убрать день '+dayLbl(ordDay)+'</button>';
   h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'Если наряд совпадает со сметой бухгалтерии, он согласуется сам; любое отличие уйдёт администратору, после согласования наряд запишется в смету.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
     (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
   document.getElementById('ord-body').innerHTML=h;ordBar();
@@ -490,7 +762,7 @@ function evcDays(k){evcN=Math.max(1,Math.min(14,evcN+k));evcTill()}
 function evCreateAsk(){
   const mg=(conMeta&&conMeta.managers)||[];evcN=1;
   const f=(id,lab,type,extra)=>'<div><label class="flab" for="'+id+'">'+lab+'</label><input id="'+id+'" class="fld" type="'+(type||'text')+'" '+(extra||'')+'></div>';
-  modalOpen('<div class="mh">Новое мероприятие</div><p class="muted" style="margin:0 0 4px;font-size:13px">Номер вида DC-ГГММДД-NN присвоится сам.</p>'+
+  modalOpen('<div class="mh">Новое мероприятие</div>'+
     f('evc-name','Название (как в смете, его видят сотрудники)')+f('evc-bx','Номер сделки в Битрикс','number','inputmode="numeric"')+
     '<div class="fsec">Когда</div><div class="g2">'+f('evc-date','Первый день','date','value="'+new Date().toISOString().slice(0,10)+'" onchange="evcTill()"')+
       '<div><span class="flab">Сколько дней</span><div class="stp"><button type="button" onclick="evcDays(-1)" aria-label="Меньше дней">−</button><b id="evc-days">1</b><button type="button" onclick="evcDays(1)" aria-label="Больше дней">+</button></div></div></div>'+
@@ -498,7 +770,7 @@ function evCreateAsk(){
     '<div class="g2 eq">'+f('evc-start','Начало','time')+f('evc-end','Окончание','time')+'</div>'+
     '<div class="fsec">Где и сколько гостей</div><div class="g2">'+f('evc-venue','Площадка')+f('evc-guests','Гостей','number','inputmode="numeric"')+'</div>'+
     '<div class="fsec">Кто ведёт</div><label class="flab" for="evc-mgr">Менеджер</label><select id="evc-mgr" class="fld"><option value="">Не назначен</option>'+mg.map(m=>'<option value="'+m.phone+'">'+m.fio+' · '+m.role+'</option>').join('')+'</select>'+
-    '<div class="ferr" id="m-err"></div><div class="acts" style="margin-top:16px"><button class="btn" onclick="evCreateGo()">Создать</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>');
+    '<div class="ferr" id="m-err"></div><div class="mfoot"><button class="btn txt" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="evCreateGo()">Создать</button></div>');
 }
 async function evCreateGo(){
   const g=id=>document.getElementById(id).value.trim();
@@ -510,7 +782,7 @@ async function evCreateGo(){
 /* новые мероприятия из книги бухгалтерии: вкладки проектов, для которых в Табеле ещё нет мероприятия с такой сделкой */
 let bnItems=[];
 async function bookNewAsk(){
-  modalOpen('<div class="mh">Новые из книги бухгалтерии</div><div id="bn-box"><p class="muted" style="margin:8px 0 0">Читаю книгу, это до полуминуты…</p></div><button class="btn sec wide" style="margin-top:16px" onclick="modalClose()">Закрыть</button>');
+  modalOpen('<div class="mh">Новые из книги бухгалтерии</div><div id="bn-box"><p class="muted" style="margin:8px 0 0">Читаю книгу, это до полуминуты…</p></div><div class="mfoot"><button class="btn sec" style="background:var(--sf2)" onclick="modalClose()">Закрыть</button></div>');
   try{const r=await api('con.act',{act:'bookNew'},true,60000);bnItems=r.items||[];bookNewDraw(r.past||0)}
   catch(e){const b=document.getElementById('bn-box');if(b)b.innerHTML='<p class="warn" style="margin:8px 0 0">'+escS(e.msg||'Не удалось прочитать книгу. Попробуйте ещё раз.')+'</p>'}
 }
@@ -550,10 +822,16 @@ async function releaseCatAsk(ci){
   if(!(await ask('Отпустить бригаду: '+n+' чел.? Смены закроются, минимум за выход сохранится.')))return;
   closeDrawer();conAct('releaseCat',0,unesc(c.name));
 }
-async function releaseAsk(i){
+/* «Отпустить»: своё окно вместо системного, с исходом заранее (поле rel приходит с сервера; без него — общий текст) */
+function releaseAsk(i){
   const x=conData.shifts[i];if(!x)return;
-  if(!(await ask('Отпустить '+unesc(x.fio)+' сейчас? Смена закроется. Если до конца окна больше 2 ч — по факту, если меньше — не меньше минимума.')))return;
-  closeDrawer();conAct('release',x.inRow);
+  const out=x.rel?'Зачтётся '+(x.rel.min?'минимум за выход: ':'факт: ')+h2(x.rel.h)+'.':'Если до конца окна больше 2 ч — зачтётся факт, если меньше — не меньше минимума.';
+  modalOpen(shHead('Отпустить сейчас?',x.fio+' · '+x.role)+'<p class="cap" style="margin:14px 0 0;font-size:14.5px">Смена закроется в '+stampNow()+' без селфи. '+out+'</p>'+
+    '<div class="ferr" id="m-err"></div><button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="releaseGo('+i+')">Отпустить</button>');
+}
+async function releaseGo(i){
+  const x=conData.shifts[i];if(!x)return;
+  modalClose();closeDrawer();conAct('release',x.inRow);
 }
 function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽'}
 function h2(n){const m=Math.round((+n||0)*60),h=Math.floor(m/60),r=m%60;return h?(r?h+' ч '+r+' мин':h+' ч'):m+' мин'}
@@ -586,20 +864,36 @@ async function api(action,data,quiet,toMs){
   }finally{if(!quiet)unbusy()}
 }
 
+/* главная: без сканера сразу показываем ввод кода; «Ввести код с листа» и «Сканировать QR» меняются местами */
+let scanOk=false,codeOn=false,freshIn=false;
+function codeMode(on){
+  codeOn=!!on;
+  document.getElementById('code-box').style.display=codeOn?'block':'none';
+  document.getElementById('btn-code').style.display=codeOn?'block':'none';
+  document.getElementById('btn-scan').style.display=!codeOn&&scanOk?'block':'none';
+  const a=document.getElementById('btn-alt');a.style.display=scanOk?'block':'none';a.textContent=codeOn?'Сканировать QR':'Ввести код с листа';
+  if(codeOn&&scanOk)setTimeout(()=>document.getElementById('code').focus(),50);
+}
+const nameFirst=f=>{const p=String(f||'').trim().split(/\s+/);return p.length>1?p[1]+' '+p[0]:(p[0]||'')};
 function renderMe(){
-  document.getElementById('hi').textContent=me.fio?('Здравствуйте, '+me.fio.split(' ').slice(1,2).join('')):'Здравствуйте';
-  if(me.stop){document.getElementById('hi-sub').textContent='Вы не допущены к работе на мероприятиях Diamond Catering. Обратитесь к координатору.';document.getElementById('in-card').style.display='none';return}
-  if(me.open){renderOpen(me.open);document.getElementById('open-card').style.display='block';document.getElementById('in-card').style.display='none';document.getElementById('hi-sub').textContent='У вас открыта смена'}
-  else{document.getElementById('open-card').style.display='none';document.getElementById('in-card').style.display='block';document.getElementById('hi-sub').textContent='Отметьте приход на мероприятие'}
+  const hi=document.getElementById('hi'),sub=document.getElementById('hi-sub'),oc=document.getElementById('open-card'),ic=document.getElementById('in-card'),out=document.getElementById('out-card');
+  hi.textContent=me.fio?('Здравствуйте, '+me.fio.split(' ').slice(1,2).join('')):'Здравствуйте';
+  hi.style.display=sub.style.display='';
+  if(me.stop){sub.textContent='Вы не допущены к работе на мероприятиях Diamond Catering. Обратитесь к координатору.';oc.style.display=ic.style.display=out.style.display='none';return}
+  if(me.open){renderOpen(me.open);oc.style.display=out.style.display='block';ic.style.display='none';hi.style.display=sub.style.display='none'}
+  else{oc.style.display=out.style.display='none';ic.style.display='block';sub.textContent=scanOk?'Смена не открыта. Отсканируйте QR-код у входа на площадку.':'Смена не открыта. Введите код с листа у входа на площадку.'}
   const lc=document.getElementById('last-card');
-  if(me.last&&!me.open){const L=me.last;lc.style.display='block';lc.innerHTML='<div class="sub" style="margin-bottom:6px">Последняя смена</div><div class="row"><span>'+escS(L.evName)+'</span><b>'+escS(L.date)+'</b></div><div class="row"><span>'+escS(L.role)+'</span><b>'+escS(L.since)+(L.till?' → '+escS(L.till):'')+'</b></div><div class="row"><span>Зачтено</span><b>'+h2(me.last.payH)+'</b></div>'+(me.last.sum==null?'':'<div class="row"><span>К выдаче</span><b>'+rub(me.last.sum)+'</b></div>')+(me.last.auto?'<p class="sub bad" style="margin:10px 0 0">Смена закрыта автоматически: вы не отметили уход. Часы уточняет администратор.</p>':'')}
+  if(me.last&&!me.open){const L=me.last;lc.style.display='block';lc.innerHTML='<div class="lab">Последняя смена</div><div class="lrow"><div><b>'+escS(L.evName)+'</b><div class="m">'+escS(L.date)+' · '+escS(L.since)+(L.till?' → '+escS(L.till):'')+' · зачтено '+h2(L.payH)+'</div><div class="m">'+escS(L.role)+'</div></div>'+(L.sum==null?'':'<b class="s">'+rub(L.sum)+'</b>')+'</div>'+(L.auto?'<div class="notew">Смена закрыта автоматически: вы не отметили уход. Часы уточняет администратор.</div>':'')}
   else lc.style.display='none';
 }
 async function init(){
-  if(tg){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#141210');tg.setBackgroundColor&&tg.setBackgroundColor('#141210');
+  if(tg){tg.ready();tg.expand();applyTheme();
     // системная «Назад» есть только внутри Telegram; в обычном браузере остаются кнопки на экранах
+    // «Настройки» в меню Telegram («•••»): есть с версии 7.0; где его нет — на главной остаётся текстовая ссылка
+    if(!window._setWired){window._setWired=1;try{if(tg.SettingsButton&&tg.isVersionAtLeast&&tg.isVersionAtLeast('7.0')&&tg.platform&&tg.platform!=='unknown'){tg.SettingsButton.onClick(settingsOpen);tg.SettingsButton.show();window._setMenu=1}}catch(e){}}
     if(tg.BackButton&&tg.platform&&tg.platform!=='unknown'&&!window._backWired){window._backWired=1;try{tg.BackButton.onClick(goBack);document.body.classList.add('tgback')}catch(e){}}}
-  document.getElementById('btn-scan').style.display=(tg&&tg.showScanQrPopup&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.4'))?'block':'none';
+  document.getElementById('home-set').style.display=window._setMenu?'none':'block';
+  scanOk=!!(tg&&tg.showScanQrPopup&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.4'));codeMode(!scanOk);freshIn=false;
   try{me=JSON.parse(localStorage.getItem('me')||'null')}catch(e){me=null}
   if(!me)me={phone:false,fio:'',open:null};
   me={phone:me.phone,fio:me.fio,staff:me.staff,open:null,last:null}; // из памяти только имя: карточка смены рисуется только по свежему ответу сервера
@@ -641,9 +935,25 @@ document.addEventListener('visibilitychange',async()=>{
 });
 function renderOpen(o){
   document.getElementById('o-ev').textContent=o.evName;document.getElementById('o-role').textContent=o.role;
-  document.getElementById('o-since').textContent=o.since+(o.payFrom?' · зачёт с '+o.payFrom:'');document.getElementById('o-pay').textContent=o.min+' ч';
-  document.getElementById('o-pend').style.display=o.pending?'block':'none';document.getElementById('o-pend').textContent=o.pending?o.pending+'. Если менеджер подтвердит — зачёт с фактического прихода, иначе с планового начала.':'';
+  document.getElementById('o-since').textContent='с '+(o.payFrom||o.since);document.getElementById('o-pay').textContent=o.min+' ч';
+  // площадка, день и вызов приходят с сервера не во всех версиях: без них строки не показываются
+  const dm=String(o.date||'').match(/^(\d{2})\.(\d{2})\.\d{4}$/),day=dm?+dm[1]+' '+['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][+dm[2]-1]:String(o.date||'');
+  document.getElementById('o-meta').textContent=[o.venue,day].filter(Boolean).join(' · ');
+  document.getElementById('o-call-row').style.display=o.call?'':'none';document.getElementById('o-call').textContent=o.call?'к '+o.call+(o.till?', смена до '+o.till:''):'';
+  const who=nameFirst(me.fio);document.getElementById('o-who').textContent=(who?who+' · ':'')+'приход в '+o.since;
+  durTick();
+  const pe=document.getElementById('o-pend');pe.style.display=o.pending?'block':'none';
+  pe.innerHTML=o.pending?'<div class="st warn"><i></i>Ждёт решения менеджера</div><div>'+pendText(o.pending,o.payFrom)+'</div>':'';
+  document.getElementById('o-hint').textContent=freshIn?'Перед уходом нажмите «Закрыть смену». Иначе утром смена закроется на половину минимума.':'Понадобится селфи на выходе. Часы и сумма появятся после закрытия.';
 }
+/* сколько идёт смена: по времени прихода и часам телефона; прогноза зачтённых часов и суммы нет */
+function durTick(){
+  const o=me&&me.open,e=document.getElementById('o-dur');if(!o||!e)return;
+  const m=String(o.since||'').match(/^(\d{1,2}):(\d{2})$/);if(!m){e.textContent='';return}
+  const d=new Date();let mins=d.getHours()*60+d.getMinutes()-(+m[1]*60+ +m[2]);if(mins<0)mins+=1440;
+  e.textContent=h2(mins/60);
+}
+setInterval(()=>{if(document.getElementById('s-home').classList.contains('on'))durTick()},20000);
 function scanQR(){
   tg.showScanQrPopup({text:'Наведите на QR-код у входа'},function(txt){
     if(!txt)return;
@@ -678,7 +988,7 @@ async function loadEvent(q){
 function showWins(c){
   document.getElementById('win-sub').textContent=ev.name+' · '+c.name;
   const box=document.getElementById('wins');box.innerHTML='';
-  c.wins.forEach(w=>{const d=document.createElement('div');d.className='cat';d.innerHTML='<div><b>к '+escS(w.start)+'</b><br><small>смена '+escS(w.start)+'–'+escS(w.end)+' · '+(+w.count||0)+' чел.</small></div><div>›</div>';d.onclick=()=>{win=w.key;afterCat()};box.appendChild(d)});
+  c.wins.forEach(w=>{const d=document.createElement('div');d.className='cat';d.innerHTML='<div><b>К '+escS(w.start)+'</b><br><small>смена '+escS(w.start)+'–'+escS(w.end)+' · '+(+w.count||0)+' чел.</small></div><div>›</div>';d.onclick=()=>{win=w.key;afterCat()};box.appendChild(d)});
   show('s-win');
 }
 function winLabel(){if(!win)return '';const c=cats.filter(x=>x.name===cat)[0],w=c&&c.wins?c.wins.filter(x=>x.key===win)[0]:null;return w?' · к '+w.start:''}
@@ -692,7 +1002,7 @@ function afterCat(){
 }
 function askContact(){
   const st=document.getElementById('contact-status');
-  if(!(tg&&tg.requestContact&&tg.isVersionAtLeast('6.9'))){st.textContent='Ваш Telegram не передаёт номер из приложения. Напишите боту в чат, нажмите там «Поделиться контактом», затем вернитесь сюда и нажмите кнопку ниже.';document.getElementById('btn-contact-chat').style.display='block';return}
+  if(!(tg&&tg.requestContact&&tg.isVersionAtLeast('6.9'))){st.textContent='Ваш Telegram не передаёт номер из приложения. Напишите боту в чат, нажмите там «Поделиться контактом», затем вернитесь сюда и нажмите кнопку ниже.';document.getElementById('btn-contact-chat').style.display='block';document.getElementById('btn-contact').style.display='none';document.getElementById('btn-contact-again').style.display='block';return}
   tg.requestContact(async function(sent,resp){
     if(!sent){st.textContent='Номер не передан. Без него отметиться нельзя.';return}
     try{
@@ -714,9 +1024,11 @@ async function contactFromChat(){
   catch(e){st.textContent=e.msg||'Не удалось проверить номер'}
 }
 function afterFio(){fio=document.getElementById('fio').value.trim();if(fio.split(/\s+/).length<2)return toast('Нужны фамилия и имя');if(/[A-Za-z]/.test(fio))return toast('Пишите кириллицей');startIn()}
-function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';document.getElementById('cam-sub').innerHTML=escS(ev.name)+' · <b>'+escS(cat)+escS(winLabel())+'</b> · <a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">сменить</a>'+(lateTo?'<br><span class="bad">Поздний приход: плановая регистрация закрылась в '+escS(lateTo)+'. Смена уйдёт менеджеру на подтверждение.</span>':'');openCam()}
+function startIn(){mode='in';camBack='s-cats';document.getElementById('cam-title').textContent='Селфи на входе';
+  const c0=cats.filter(x=>x.name===cat)[0];
+  document.getElementById('cam-sub').innerHTML='<div><b>'+escS(ev.name)+'</b><span>'+escS(cat)+escS(winLabel())+(c0&&c0.min?' · минимум '+escS(c0.min)+' ч':'')+'</span></div><a class="lnk" href="#" onclick="stopCam();show(\'s-cats\');return false">Изменить</a>'+(lateTo?'<div class="notew">Поздний приход: плановая регистрация закрылась в '+escS(lateTo)+'. Смена уйдёт менеджеру на подтверждение.</div>':'');openCam()}
 let outEv='';
-function startOut(){mode='out';camBack='s-home';outEv=me&&me.open?me.open.ev:'';document.getElementById('cam-title').textContent='Селфи на выходе';const rl=String(me&&me.open&&me.open.role||'');document.getElementById('cam-sub').innerHTML='Смена закроется после отправки. '+(/грузчик/i.test(rl)?'Снимите там, где заканчиваете работу: у машины, на складе или на площадке.':'Снимите так, чтобы за спиной был виден зал или площадка.');openCam()}
+function startOut(){mode='out';camBack='s-home';outEv=me&&me.open?me.open.ev:'';document.getElementById('cam-title').textContent='Селфи на выходе';const rl=String(me&&me.open&&me.open.role||'');document.getElementById('cam-sub').innerHTML='<div><span>Смена закроется после отправки. '+(/грузчик/i.test(rl)?'Снимите там, где заканчиваете работу: у машины, на складе или на площадке.':'Снимите так, чтобы за спиной был виден зал или площадка.')+'</span></div>';openCam()}
 
 async function openCam(){
   stopCam();photoB64='';document.getElementById('shot').style.display='none';document.getElementById('video').style.display='block';document.getElementById('cam-box').classList.remove('nocam');
@@ -790,18 +1102,27 @@ async function sendShot(){
   try{
     if(mode==='in'){
       const r=await apiRetry('checkin',{eventId:ev.id,token:ev.token,role:unesc(cat),win:win,fio:fio,photo:photoB64});
-      const o=r.open,dt=document.getElementById('done-title');dt.textContent='Смена открыта';dt.className=r.pending?'pend':'ok';
-      document.getElementById('done-card').innerHTML=(r.pending?'<div class="stepbox pend" style="margin:0 0 10px">Ждёт подтверждения менеджера: '+escS(r.pending)+'</div>':'')+'<div class="row"><span>Мероприятие</span><b>'+escS(o.evName)+'</b></div><div class="row"><span>Категория</span><b>'+escS(o.role)+'</b></div><div class="row"><span>Приход</span><b>'+escS(o.since)+(o.payFrom?' · зачёт с '+escS(o.payFrom):'')+'</b></div><div class="row"><span>Минимум за выход</span><b>'+escS(o.min)+' ч</b></div>'+(r.pending?'<p class="sub bad" style="margin:12px 0 0">'+pendText(r.pending,o.payFrom)+'</p>':'')+'<p class="sub" style="margin:12px 0 0">Перед уходом откройте приложение и нажмите «Закрыть смену», иначе утром смена закроется на половину минимума.</p>';
-    }else{
+      // после входа отдельного экрана нет: сразу главная с открытой сменой
+      me.open=Object.assign({},r.open,{pending:r.pending||''});me.last=null;if(fio&&!me.fio)me.fio=fio;freshIn=true;
+      try{localStorage.removeItem('me')}catch(e){}
+      if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
+      stopCam();renderMe();show('s-home');
+      return;
+    }
+    {
       const r=await apiRetry('checkout',{photo:photoB64});let c=r.closed,lost=false;
       if(!c){ // «открытых смен нет» после повтора: успех показываем только если сервер подтверждает закрытую смену по этому мероприятию
         try{const m=await api('me',{},true);if(!m.open&&m.last&&m.last.till&&(!outEv||m.last.ev===outEv))c=Object.assign({count:1,factH:m.last.payH,step:'',note:''},m.last);else lost=true}catch(_){lost=true}
       }
-      const dt=document.getElementById('done-title');dt.textContent=lost?'Уход не подтверждён':'Смена закрыта';dt.className=lost?'bad':'';
-      document.getElementById('done-card').innerHTML=lost?'<p class="sub bad">Сервер не нашёл ни открытой смены, ни записи об уходе. Проверьте квитанцию в чате бота; если её нет, скажите менеджеру на площадке прямо сейчас.</p>':'<div class="row"><span>Сотрудник</span><b>'+escS(c.fio)+'</b></div><div class="row"><span>Категория</span><b>'+escS(c.role)+'</b></div><div class="row"><span>Мероприятие</span><b>'+escS(c.evName)+'</b></div><div class="row"><span>Дата</span><b>'+escS(c.date)+'</b></div><div class="row"><span>Время</span><b>'+escS(c.since)+' → '+escS(c.till)+'</b></div>'+(c.count>1?'<div class="row"><span>Выходов за день</span><b>'+c.count+'</b></div>':'')+'<div class="row"><span>Факт</span><b>'+h2(c.factH)+'</b></div><div class="row"><span>Зачтено к оплате</span><b>'+h2(c.payH)+(c.step&&c.step.indexOf('минимум')>=0?' · минимум':'')+'</b></div>'+(c.note?'<div class="stepbox bad" style="margin:10px 0 0">'+escS(c.note)+' Вопросы к координатору.</div>':'')+(c.sum==null?'<p class="sub" style="margin:12px 0 0">Часы переданы вашему координатору.</p>':'<div class="big">'+rub(c.sum)+'</div><p class="sub">Если цифра не сходится, скажите сегодня, а не в конце месяца.</p>');
+      const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><b>'+v+'</b></div>';
+      document.getElementById('done-card').innerHTML=lost?'<div class="st bad"><i></i>Уход не подтверждён</div><p class="lead" style="margin-top:14px">Сервер не нашёл ни открытой смены, ни записи об уходе. Проверьте квитанцию в чате бота; если её нет, скажите менеджеру на площадке прямо сейчас.</p>':
+        '<div class="st"><i></i>Смена закрыта</div><div class="bigv"><b>'+(c.sum==null?h2(c.payH):rub(c.sum))+'</b><span>'+escS(nameFirst(c.fio||me.fio))+' · '+(c.sum==null?'зачтено к оплате':'к выдаче')+'</span></div>'+
+        '<h2 class="evn">'+escS(c.evName)+'</h2><p class="lead" style="font-size:16px">'+escS(c.date)+'</p><div class="kvs">'+kv('Категория',escS(c.role))+kv('Время',escS(c.since)+' → '+escS(c.till))+(c.count>1?kv('Выходов за день',c.count):'')+kv('Факт',h2(c.factH))+kv('Зачтено к оплате',h2(c.payH)+(c.step&&c.step.indexOf('минимум')>=0?' · минимум':''))+'</div>'+
+        (c.note?'<div class="notew">'+escS(c.note)+' Вопросы к координатору.</div>':'');
+      document.getElementById('done-hint').textContent=lost?'':(c.sum==null?'Часы переданы вашему координатору.':'Если цифра не сходится, скажите сегодня, а не в конце месяца.');
+      try{localStorage.removeItem('me')}catch(e){}
+      if(tg&&tg.HapticFeedback&&!lost)tg.HapticFeedback.notificationOccurred('success');
     }
-    try{localStorage.removeItem('me')}catch(e){}
-    if(tg&&tg.HapticFeedback&&!(mode==='out'&&document.getElementById('done-title').className==='bad'))tg.HapticFeedback.notificationOccurred('success');
     show('s-done');
   }catch(e){
     if(e.error==='need_contact')return show('s-contact');
@@ -825,13 +1146,24 @@ function conTabsDraw(){document.querySelectorAll('#con-tabs button').forEach(b=>
 function flBadge(open,askN){const n=(open||0)+(conMe&&conMe.admin?(askN||0):0);document.getElementById('fl-badge').textContent=n?String(n):''}
 function conBack(){if(conFrom==='arch')return conArch();if(conFrom==='flags'){conTab='flags'}conList()}
 function conList(quiet){conTabsDraw();return conTab==='flags'?conFlags(quiet):conEvents(quiet)}
-function evCard(e){
-  const d=document.createElement('div');d.className='card evc';
-  d.innerHTML='<div class="top" style="margin:0 0 4px"><h3>'+e.name+'</h3><span class="pill '+pillCls(e.status)+'">'+e.status+'</span></div>'+
-    '<div class="muted">'+[ruDate(e.date),e.venue&&e.venue!==e.name?e.venue:'',e.start+'–'+e.end,e.bx?'сделка '+e.bx:'',e.mgr||''].filter(Boolean).join(' · ')+'</div>'+
-    (e.limit?'<div class="bar'+(e.fact>e.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(e.fact,e.plan))+'%"></i></div>'+
-    '<div class="muted">факт '+rub(e.fact)+' из '+rub(e.plan)+' · вышло '+e.came+' из '+e.limit+(e.status==='Закрыто'?'':' · на объекте '+e.on)+
-    (e.flagsOpen||e.flagsAsk?' · <span class="warn">флагов: '+(e.flagsOpen+e.flagsAsk)+'</span>':'')+'</div>':'<div class="muted">наряд не согласован</div>');
+/* строка мероприятия: в списке — статус, цифры и полоса фонда; в архиве (arch) — факт и план справа */
+const EV_ST={'Открыто':'ok','Закрыто':'','Заполняется':'fill'};
+function evCard(e,arch){
+  const d=document.createElement('button');d.className='evr';
+  const todo=e.todo!==undefined?e.todo:((e.flagsOpen||0)+(e.flagsAsk||0)),todoT=todo?'<span class="warn">'+(e.todo!==undefined?'требуют решения ':'флагов: ')+todo+'</span>':'';
+  const over=e.fact>e.plan;
+  if(arch){
+    d.innerHTML='<div class="h"><b>'+e.name+'</b><span class="sum'+(over?' bad':'')+'">'+rub(e.fact)+'</span></div>'+
+      '<div class="h"><span class="m">'+[ruDate(e.date),todoT,over?'перерасход '+rub(e.fact-e.plan):''].filter(Boolean).join(' · ')+'</span><span class="m">из '+rub(e.plan)+'</span></div>';
+    return d;
+  }
+  const open=e.status==='Открыто',closed=e.status==='Закрыто';
+  const line=!e.limit?'<span class="warn">Наряд не согласован</span>':
+    (open||closed?[closed?'':'На объекте '+e.on,(closed?'Вышло ':'вышло ')+e.came+' из '+e.limit,todoT].filter(Boolean).join(' · '):'Наряд: '+e.limit+' чел. · план '+rub(e.plan));
+  d.innerHTML='<div class="h"><b>'+e.name+'</b><span class="st '+(EV_ST[e.status]===undefined?'off':EV_ST[e.status])+'"><i></i>'+e.status+'</span></div>'+
+    '<div class="m">'+[ruDate(e.date),e.venue&&e.venue!==e.name?e.venue:'',e.start+'–'+e.end,e.bx?'сделка '+e.bx:'',e.mgr||''].filter(Boolean).join(' · ')+'</div>'+
+    '<div class="m">'+line+'</div>'+
+    (e.limit&&(open||closed)?'<div class="meter'+(over?' over':'')+'"><i style="width:'+Math.min(100,pct(e.fact,e.plan))+'%"></i></div>':'');
   return d;
 }
 async function conEvents(quiet){
@@ -841,13 +1173,16 @@ async function conEvents(quiet){
     flBadge(r.flagsOpen,r.flagsAsk);
     const key='L'+JSON.stringify([r.events,r.archiveN]);if(quiet&&key===lastJson)return;lastJson=key;
     document.getElementById('con-me').innerHTML=r.me.fio+' · '+r.me.role;
-    const box=document.getElementById('con-list');box.innerHTML='';
-    if(!r.events.length)box.innerHTML='<p class="muted">Текущих мероприятий нет.</p>';
-    r.events.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='list';conOpen(e.id)};box.appendChild(d)});
-    if(r.archiveN){const a=document.createElement('button');a.className='btn sec';a.innerHTML='Архив · '+r.archiveN+' ›';a.onclick=()=>conArch();box.appendChild(a)} // пустой архив не показываем
-    if(r.me.admin){const b=document.createElement('button');b.className='btn';b.textContent='Новое мероприятие';b.onclick=evCreateAsk;box.appendChild(b)}
-    if(r.me.admin){const b=document.createElement('button');b.className='btn sec';b.textContent='Новые из книги бухгалтерии';b.onclick=bookNewAsk;box.appendChild(b)}
-    const u=document.createElement('p');u.className='muted';u.style.textAlign='center';u.textContent='обновлено '+stampNow()+'';box.appendChild(u);
+    const box=document.getElementById('con-list'),ft=document.getElementById('con-foot');box.innerHTML='';ft.innerHTML='';
+    if(!r.events.length)box.innerHTML='<p class="muted" style="margin-top:16px">Текущих мероприятий нет.</p>';
+    const list=document.createElement('div');list.className='evs';box.appendChild(list);
+    r.events.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='list';conOpen(e.id)};list.appendChild(d)});
+    const u=document.createElement('p');u.className='upd';u.innerHTML='Обновлено в '+stampNow()+' · <a class="lnk" href="#" style="padding:0;margin:0;font-size:13px" onclick="settingsOpen();return false">Настройки</a>';box.appendChild(u);
+    // внизу: главное действие последним, второстепенные над ним; пустой архив не показываем
+    const fb=(cls,t,fn)=>{const b=document.createElement('button');b.className='btn'+cls;b.textContent=t;b.onclick=fn;ft.appendChild(b)};
+    if(r.archiveN)fb(' txt','Архив · '+r.archiveN,()=>conArch());
+    if(r.me.admin)fb(' txt','Новые из книги бухгалтерии',bookNewAsk);
+    if(r.me.admin)fb('','Новое мероприятие',evCreateAsk);
     show('s-con');
   }catch(e){if(!quiet)toast(e.msg||'Нет доступа к консоли')}
 }
@@ -861,23 +1196,30 @@ async function conFlags(quiet){
     flBadge(r.counts.open,r.counts.ask);
     const key='F'+JSON.stringify([r.counts,r.groups,r.state]);if(quiet&&key===lastJson)return;lastJson=key;
     document.getElementById('con-me').innerHTML=r.me.fio+' · '+r.me.role;
-    let h='<div class="chips">'+FL_ST.map(([k,t])=>'<button class="chip'+(k===r.state?' on':'')+'" onclick="flChip(\''+k+'\')">'+t+(r.counts[k]?' · '+r.counts[k]:'')+'</button>').join('')+'</div>';
-    if(!r.groups.length)h+='<p class="muted">'+(r.state==='open'?'Неразобранных флагов нет.':r.state==='ask'?'Запросов правки нет.':'За 3 месяца разобранных флагов нет.')+'</p>';
+    const plural=n=>n+' '+(n%10===1&&n%100!==11?'флаг':(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'флага':'флагов'));
+    let h='<div class="chipsx">'+FL_ST.map(([k,t])=>'<button class="chip'+(k===r.state?' on':'')+'" onclick="flChip(\''+k+'\')">'+t+(r.counts[k]?' · '+r.counts[k]:'')+'</button>').join('')+'</div>';
+    if(!r.groups.length)h+='<p class="muted" style="margin-top:16px">'+(r.state==='open'?'Неразобранных флагов нет.':r.state==='ask'?'Запросов правки нет.':'За 3 месяца разобранных флагов нет.')+'</p>';
     r.groups.forEach((g,gi)=>{
-      h+='<div class="mon"><h2>'+g.name+'</h2><span class="muted">'+ruDate(g.date)+' · '+g.items.length+'</span></div><div class="card">'+
+      h+='<div class="qbox"><button class="grp" onclick="flEv('+gi+')"><b>'+g.name+'</b><span>'+ruDate(g.date).split(',')[0]+' · '+plural(g.items.length)+'</span></button>'+
         g.items.map((x,ii)=>flRow('flData.groups['+gi+'].items['+ii+']',x,'flOpen('+gi+','+ii+')')).join('')+'</div>';
     });
-    if(r.state==='open'&&r.groups.length)h+='<p class="muted" style="font-size:13px">«Всё верно» закрывает флаг без изменения денег. Кнопки с часами отправляют запрос администратору: часы меняет только он.</p>';
-    h+='<p class="muted" style="text-align:center;margin-top:14px">обновлено '+stampNow()+'</p>';
-    document.getElementById('con-list').innerHTML=h;
+    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» закрывает флаг без изменения денег. Кнопки с часами отправляют запрос администратору: часы меняет только он.')+'</p>';
+    h+='<p class="upd">Обновлено в '+stampNow()+'</p>';
+    document.getElementById('con-list').innerHTML=h;document.getElementById('con-foot').innerHTML='';
+    {const on=document.querySelector('.chipsx .chip.on'),bx=on&&on.parentNode;if(on&&bx.scrollWidth>bx.clientWidth)bx.scrollLeft=Math.max(0,on.offsetLeft-bx.offsetLeft-20)} // выбранный фильтр не должен прятаться за краем
     show('s-con');
   }catch(e){if(!quiet)toast(e.msg||'Нет доступа к консоли')}
 }
+/* заголовок группы флагов ведёт в карточку мероприятия, ФИО — в карточку работника */
+function flEv(gi){const g=flData.groups[gi],x=g&&g.items[0];if(!x)return;conFrom='flags';conOpen(x.ev,x.day)}
 /* строка флага: кто, причина, зачтено; под ней кнопки по типу флага */
+const FL_TAG={auto:'Автозакрытие',early:'Ранний уход',late:'Поздний приход',long:'Долгая смена'};
 function flRow(ref,x,open){
-  const pend=flPend[x.key];
-  return '<div class="flrow'+(pend?' busy':'')+'" data-key="'+x.key+'"><div class="sh"'+(open?' onclick="'+open+'"':'')+'><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+(x.in||'')+(x.out?'–'+x.out:'')+'</div><div class="m">'+x.text+'</div></div>'+
-    '<div class="r"><b>'+h2(x.pay)+'</b><div class="m">'+(x.own?rub(x.sum):'подрядчик')+'</div>'+(open?'<div class="m">›</div>':'')+'</div></div>'+(pend?'<p class="flask warn">'+pend+'</p>':flState_(ref,x))+'</div>';
+  const pend=flPend[x.key],tag=x.state==='done'?'<div class="st"><i></i>Разобрано</div>':'<div class="st warn"><i></i>'+(x.state==='ask'?'Запрос правки':(FL_TAG[x.main]||'Флаг'))+'</div>';
+  return '<div class="flrow'+(pend?' busy':'')+'" data-key="'+x.key+'">'+tag+
+    '<div class="who"><button class="pname"'+(open?' onclick="'+open+'"':'')+'>'+x.fio+'</button><span class="pay">'+h2(x.pay)+(x.own?' · '+rub(x.sum):'')+'</span></div>'+
+    '<p class="qd">'+x.role+' · '+(x.in||'')+(x.out?'–'+x.out:'')+'. '+x.text+(x.own?'':' Сумму считает подрядчик.')+'</p>'+
+    (pend?'<p class="flask warn">'+pend+'</p>':flState_(ref,x))+'</div>';
 }
 function flState_(ref,x){
   if(x.state==='open')return flBtns(ref,x);
@@ -890,38 +1232,41 @@ function flDone(r){
   return w?[w].concat(p.slice(1,3)).join(' · ')+(p[0]==='поправлено'&&p[3]?' · '+p[3]:''):'Поправлено администратором';
 }
 function flBtns(ref,x){
+  const adm=!!(conMe&&conMe.admin); // администратор правит часы сразу, менеджер отправляет запрос
   const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
+  const keep=h2(x.pay)+(x.own?' · '+rub(x.sum):''),minS=x.min+' ч'+(adm?(x.own&&x.rate?' · '+rub(x.min*x.rate):''):', запрос админу'),tillS=adm?'указать и пересчитать':'пересчёт, запрос админу';
   const ok=(t,sub)=>b('sec','ok',t||'Всё верно',sub||(h2(x.pay)+' остаётся'));
   let h='';
-  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Время ухода','пересчёт, запрос админу');
-  else if(x.main==='early')h=ok('Всё верно','по факту')+b('','min','Минимум',x.min+' ч, запрос админу');
-  else if(x.main==='late')h=ok('Опоздал','по факту, как сейчас')+b('','min','Вызывали','минимум '+x.min+' ч, запрос админу');
-  else if(x.main==='long')h=ok('Всё верно')+b('','until','Время ухода','пересчёт, запрос админу');
+  if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Время ухода',tillS);
+  else if(x.main==='early')h=ok('Оставить факт',keep)+b('','min','Зачесть минимум',minS);
+  else if(x.main==='late')h=ok('Опоздал','по факту, как сейчас')+b('','min','Вызывали','минимум '+minS);
+  else if(x.main==='long')h=ok('Всё верно')+b('','until','Время ухода',tillS);
   else h=ok().replace('class="btn sec"','class="btn sec wide"');
   return '<div class="acts pb">'+h+'</div>';
 }
 function flOpen(gi,ii){const x=flData.groups[gi].items[ii];conFrom='flags';deepPhone=x.key.split('|')[1];conOpen(x.ev,x.day)}
 let flCur=null;
 async function flDo(x,act){
-  if(act==='until'){flCur=x;return modalOpen('<div class="mh">'+(x.main==='long'?'Когда ушёл':'До скольки работал')+'</div><p class="muted" style="margin:0 0 6px">'+x.fio+' · пришёл '+x.in+'. Бот посчитает часы по обычным правилам и отправит запрос администратору.</p>'+
+  if(act==='until'){flCur=x;return modalOpen('<div class="mh">'+(x.main==='long'?'Когда ушёл':'До скольки работал')+'</div><p class="muted" style="margin:0 0 6px">'+x.fio+' · пришёл '+x.in+'. '+(conMe&&conMe.admin?'Часы посчитаются по обычным правилам и применятся сразу.':'Бот посчитает часы по обычным правилам и отправит запрос администратору.')+'</p>'+
     '<label class="flab" for="fl-till">'+(x.main==='long'?'Время ухода':'Работал до')+'</label><input type="time" class="fld" id="fl-till" value=""><input class="fld" id="fl-why" placeholder="Комментарий (необязательно)"><div class="ferr" id="m-err"></div>'+
-    '<div class="acts"><button class="btn" onclick="flUntilGo()">Отправить</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>')}
-  if(act==='min'&&!(await ask(x.fio+': попросить администратора зачесть минимум '+x.min+' ч?')))return;
+    '<div class="acts"><button class="btn" onclick="flUntilGo()">'+(conMe&&conMe.admin?'Пересчитать':'Отправить')+'</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>')}
+  const adm=!!(conMe&&conMe.admin);
+  if(act==='min'&&!(await ask(x.fio+(adm?': зачесть минимум '+x.min+' ч? Оплата пересчитается сразу.':': попросить администратора зачесть минимум '+x.min+' ч?'))))return;
   if(act==='apply'&&!(await ask('Применить: '+x.fio+' → '+h2(x.ask.h)+(x.own?', '+rub(Math.round(x.ask.h*x.rate)):'')+'?')))return;
   if(act==='reject'&&!(await ask('Отклонить запрос? Останется '+h2(x.pay)+'.')))return;
   const map={ok:'flagOk',min:'flagAsk',apply:'flagApply',reject:'flagReject'};
-  await flSend(x,map[act],act==='min'?{kind:'min'}:{});
+  await flSend(x,map[act],act==='min'?(adm?{kind:'min',now:1}:{kind:'min'}):{});
 }
 function flUntilGo(){
   const t=document.getElementById('fl-till').value,w=document.getElementById('fl-why').value.trim();
   if(!/^\d{1,2}:\d{2}$/.test(t))return mErr('Укажите время');
-  modalClose();flSend(flCur,'flagAsk',{kind:'until',till:t,why:w});
+  modalClose();flSend(flCur,'flagAsk',Object.assign({kind:'until',till:t,why:w},conMe&&conMe.admin?{now:1}:{}));
 }
 /* решение по флагу уходит в фоне: строка сразу показывает «сохраняю…», экран не блокируется; ответ сервера обновляет список тихо */
 const flPend={};
 function flMark(key,txt){document.querySelectorAll('.flrow[data-key="'+key+'"]').forEach(el=>{el.classList.add('busy');const a=el.querySelector('.acts,.flask');const p=document.createElement('p');p.className='flask warn';p.textContent=txt;if(a)a.replaceWith(p);else el.appendChild(p)})}
 async function flSend(x,act,extra){
-  const txt={flagOk:'Сохраняю…',flagAsk:'Отправляю запрос…',flagApply:'Применяю…',flagReject:'Отклоняю…'}[act]||'Сохраняю…';
+  const txt={flagOk:'Сохраняю…',flagAsk:extra&&extra.now?'Применяю…':'Отправляю запрос…',flagApply:'Применяю…',flagReject:'Отклоняю…'}[act]||'Сохраняю…';
   flPend[x.key]=txt;flMark(x.key,txt);
   try{
     const r=await api('con.act',Object.assign({id:unesc(x.ev),act:act,key:unesc(x.key)},extra||{}),true,60000);
@@ -940,12 +1285,13 @@ function archDraw(){
   if(!archData)return;const q=(document.getElementById('arch-q').value||'').trim().toLowerCase();
   const L=archData.events.filter(e=>!q||unesc(e.name).toLowerCase().indexOf(q)>=0||String(e.id).toLowerCase().indexOf(q)>=0);
   const box=document.getElementById('arch-list');box.innerHTML='';
-  if(!L.length){box.innerHTML='<p class="muted">'+(q?'Ничего не найдено.':'За 3 месяца закрытых мероприятий нет.')+'</p>';return}
+  if(!L.length){box.innerHTML='<p class="muted" style="margin-top:16px">'+(q?'Ничего не найдено.':'За 3 месяца закрытых мероприятий нет.')+'</p>';return}
   const M=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],by={};
   L.forEach(e=>{const k=String(e.date).slice(0,7);(by[k]=by[k]||[]).push(e)});
   Object.keys(by).sort().reverse().forEach(k=>{const es=by[k],f=es.reduce((n,e)=>n+(e.fact||0),0);
-    const hd=document.createElement('div');hd.className='mon';hd.innerHTML='<h2>'+M[+k.slice(5,7)-1]+' '+k.slice(0,4)+'</h2><span class="muted">'+es.length+' · факт '+rub(f)+'</span>';box.appendChild(hd);
-    es.forEach(e=>{const d=evCard(e);d.onclick=()=>{conFrom='arch';conOpen(e.id)};box.appendChild(d)});
+    const hd=document.createElement('div');hd.className='mon2';hd.innerHTML='<b>'+M[+k.slice(5,7)-1]+' '+k.slice(0,4)+'</b><span>'+es.length+' · факт '+rub(f)+'</span>';box.appendChild(hd);
+    const list=document.createElement('div');list.className='evs';box.appendChild(list);
+    es.forEach(e=>{const d=evCard(e,true);d.onclick=()=>{conFrom='arch';conOpen(e.id)};list.appendChild(d)});
   });
 }
 let ceId='',ceDay='',deepRow=0,deepPhone='',deepDz=false,lastJson='',conMeta=null,pollBusy=false;
@@ -972,43 +1318,61 @@ async function conOpen(id,day,quiet){
     const key='E'+JSON.stringify([r.stats,r.shifts.map(x=>Object.assign({},x,{factH:0})),r.orders,r.dz,r.journal,r.event.status,r.day,r.order,r.event.bx,r.pay]);if(quiet&&key===lastJson)return;lastJson=key;
     const keepY=quiet?window.scrollY:0;
     const ev=r.event,st=r.stats;
-    document.getElementById('ce-status').textContent=ev.status;document.getElementById('ce-status').className='pill '+pillCls(ev.status);
+    {const cs=document.getElementById('ce-status');cs.className='st dot '+(EV_ST[ev.status]===undefined?'off':EV_ST[ev.status]);cs.title=ev.status;cs.setAttribute('aria-label',ev.status)} // кружок без слова: статус подписан в title
     document.getElementById('ce-name').innerHTML=ev.name;
-    document.getElementById('ce-sub').innerHTML=[(r.days&&r.days.length>1?ruDay(r.days[0])+'–'+ruDay(r.days[r.days.length-1])+' · '+r.days.length+' дн.':ruDate(ev.date)),ev.venue&&ev.venue!==ev.name?ev.venue:'',ev.start+'–'+ev.end,ev.guests?'гостей '+ev.guests:'',ev.bx?'сделка '+ev.bx:(r.me.admin?'<a class="lnk" href="#" onclick="bxAsk();return false">указать номер сделки</a>':''),ev.mgr?'менеджер '+ev.mgr:'',ev.code?'код <b style="color:var(--txt)">'+ev.code+'</b>':''].filter(Boolean).join(' · ');
+    document.getElementById('ce-sub').innerHTML=[(r.days&&r.days.length>1?ruDay(r.days[0])+'–'+ruDay(r.days[r.days.length-1])+' · '+r.days.length+' дн.':ruDate(ev.date)),ev.venue&&ev.venue!==ev.name?ev.venue:'',ev.start+'–'+ev.end,ev.guests?ev.guests+' гостей':'',ev.bx?'сделка '+ev.bx:(r.me.admin?'<a class="lnk" href="#" onclick="bxAsk();return false">указать номер сделки</a>':''),ev.mgr?'менеджер '+ev.mgr:'',ev.code?'код <b style="color:var(--txt)">'+ev.code+'</b>':''].filter(Boolean).join(' · ');
     conData=r;
     let h=actionBar(ev,conMe,st);
     const preOpen=ev.status!=='Открыто'&&ev.status!=='Закрыто';
     if(preOpen)h+=ordCard(r); // до открытия наряд — главное дело в карточке
-    if(r.days&&r.days.length>1)h+='<div class="abar" style="margin:0 0 10px">'+r.days.map((d,k)=>'<button class="btn'+(d===r.day?'':' sec')+'" onclick="conDay('+k+')">'+ruDay(d)+'</button>').join('')+'</div>';
-    // главное для менеджера на площадке: подтверждения и дозаказы сразу под кнопками
-    const pend=r.shifts.filter(x=>x.pending&&x.open);
-    if(pend.length)h+='<h2>Ждут подтверждения · '+pend.length+'</h2><div class="card">'+pend.map(x=>{const i=r.shifts.indexOf(x);return '<div class="sh"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.in+' · '+x.pending+'</div></div><div class="r"><a class="lnk" href="#" onclick="openShift('+i+');return false">карточка ›</a></div></div>'+(x.fresh?'<p class="muted" style="margin:0 0 8px">Новое лицо: первый выход. Посмотрите фото.</p>':'')+pendBtns(x)+(x.photoIn?'<div class="acts" style="margin:0 0 12px"><button class="btn sec wide" onclick="openPhoto('+i+',\'in\')">Фото входа</button></div>':'')}).join('')+(pend.length>1?'<button class="btn sec" onclick="ask(\'Всех вызывали к этому времени? Каждому зачтётся минимум за выход.\').then(ok=>{if(ok)conAct(\'confirmAll\')})">Вызывали всех ('+pend.length+')</button>':'')+'</div>';
-    if((r.dz||[]).length)h+='<h2 id="dz-block">Запросы дозаказа · '+r.dz.length+'</h2><div class="card">'+r.dz.map((d,di)=>'<div class="sh"><div><div class="n">'+d.role+' +'+d.n+' · '+rub(d.sum)+'</div><div class="m">'+d.why+' · '+d.byFio+' · '+d.t+'</div></div><div class="r">'+(conMe.admin?'':'<span class="muted">ждёт</span>')+'</div></div>'+(conMe.admin?'<div class="acts" style="margin:0 0 12px"><button class="btn" onclick="dzDecide('+di+',true)">Подтвердить дозаказ</button><button class="btn sec" onclick="dzDecide('+di+',false)">Отклонить</button></div>':'')).join('')+'</div>';
-    h+='<div class="tiles"><div class="tile"><b>'+rub(st.fact)+'</b><small>факт ФОТ из '+rub(st.plan)+(r.days&&r.days.length>1?' · '+ruDay(r.day):'')+'</small></div>'+
-       '<div class="tile"><b>'+st.came+' / '+st.limit+'</b><small>вышло из лимита</small></div>'+
-       '<div class="tile"><b>'+st.on+'</b><small>сейчас на объекте</small></div>'+
-       '<div class="tile"><b'+(st.plan-st.fact<0?' class="bad"':'')+'>'+(st.plan-st.fact<0?'+':'')+rub(Math.abs(st.plan-st.fact))+'</b><small>'+(st.plan-st.fact>=0?(ev.status==='Закрыто'?'экономия к плану':'остаток плана'):'перерасход к плану')+'</small></div></div>';
-    h+='<div class="bar'+(st.fact>st.plan?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div><div class="muted">'+pct(st.fact,st.plan)+'% плана'+(ev.status==='Закрыто'?'':' · без подтверждения приход до '+ev.regTo+', уход до '+ev.qrTo)+'</div>';
+    if(r.days&&r.days.length>1)h+='<div class="chipsx" style="margin-top:14px">'+r.days.map((d,k)=>'<button class="chip'+(d===r.day?' on':'')+'" onclick="conDay('+k+')">'+ruDay(d)+'</button>').join('')+'</div>';
+    // очередь решений: ждущие подтверждения, запросы дозаказа и неразобранные флаги — одним списком в одном виде
+    const pend=r.shifts.filter(x=>x.pending&&x.open),flq=r.shifts.filter(x=>x.flg&&x.flg.state!=='done'&&!(x.pending&&x.open)),dzq=r.dz||[];
+    const qn=pend.length+dzq.length+flq.length;
+    if(qn){
+      h+='<div class="qbox first"><div class="sec2">Требуют решения <span>'+qn+'</span></div>';
+      h+=pend.map(x=>{const i=r.shifts.indexOf(x),early=/ранний/.test(x.pending);
+        return '<div class="q"><div class="st warn"><i></i>'+(early?'Ранний приход':'Поздний приход')+'</div><div class="who"><button class="pname" onclick="openShift('+i+')">'+x.fio+'</button><span class="role">'+x.role+'</span></div>'+
+          '<p class="qd">'+x.pending.charAt(0).toUpperCase()+x.pending.slice(1)+'. '+(early?'Пока часы идут с начала окна.':'Пока часы идут с прихода, без минимума.')+(x.fresh?' Новое лицо: посмотрите фото.':'')+'</p>'+pendBtns(x)+'</div>'}).join('');
+      h+=dzq.map((d,di)=>'<div class="q" id="'+(di?'':'dz-block')+'"><div class="st warn"><i></i>Дозаказ</div><div class="who"><b class="pname">'+d.role+' +'+d.n+'</b><span class="role">'+rub(d.sum)+'</span></div>'+
+        '<p class="qd">«'+d.why+'». Запросил '+d.byFio+' в '+d.t+'.'+(conMe.admin?'':' Ждёт администратора.')+'</p>'+
+        (conMe.admin?'<div class="acts pb"><button class="btn sec" onclick="dzDecide('+di+',false)"><span>Отклонить</span><small>план не меняется</small></button><button class="btn" onclick="dzDecide('+di+',true)"><span>Подтвердить</span><small>+'+rub(d.sum)+' к плану</small></button></div>':'')+'</div>').join('');
+      h+=flq.map(x=>{const i=r.shifts.indexOf(x),f=x.flg;
+        return '<div class="q flrow" data-key="'+f.key+'"><div class="st warn"><i></i>'+(f.state==='ask'?'Запрос правки':'Флаг · '+(FL_TAG[f.main]||'проверить').toLowerCase())+'</div><div class="who"><button class="pname" onclick="openShift('+i+')">'+x.fio+'</button><span class="role">'+x.role+'</span></div>'+
+          '<p class="qd">'+f.text+'</p>'+(flPend[f.key]?'<p class="flask warn">'+flPend[f.key]+'</p>':flState_('conData.shifts['+i+'].flg',f))+'</div>'}).join('');
+      if(pend.length>1)h+='<button class="btn txt" style="margin-top:10px" onclick="ask(\'Всех вызывали к этому времени? Каждому зачтётся минимум за выход.\').then(ok=>{if(ok)conAct(\'confirmAll\')})">Вызывали всех ('+pend.length+')</button>';
+      h+='</div>';
+    }
+    // кто сейчас на объекте: три числа и категории строками; раскрыты только те, где кто-то ждёт решения
+    const miss=Math.max(0,st.limit-st.came);
+    h+='<div class="sec2">'+(ev.status==='Закрыто'?'Люди':'Сейчас на объекте')+(r.days&&r.days.length>1?' · '+ruDay(r.day):'')+'</div>'+
+      '<div class="nums"><div><b>'+st.on+'</b><small>на объекте</small></div><div><b>'+st.came+'<i> / '+st.limit+'</i></b><small>вышло</small></div><div><b'+(miss&&ev.status==='Открыто'?' class="bad"':'')+'>'+miss+'</b><small>не вышли</small></div></div>';
     const wins={};(r.windows||[]).forEach(w=>{(wins[w.role]=wins[w.role]||[]).push(w)});
-    h+='<div class="sec-h"><h2>Категории</h2><button class="qbtn noprint" onclick="legendToggle()" aria-label="Обозначения">?</button></div><div class="tiles">'+st.cats.map((c,ci)=>{const ws=wins[c.name]||[];const sh=r.shifts.filter(x=>x.role===c.name);const w=ws.length===1?ws[0]:null;
-      // «не вышел» красный только после начала окна категории; при лимите больше 12 хвост сворачивается в «+N»
-      const started=ws.length&&Math.min.apply(null,ws.map(g=>g.startTs))<=r.now;const miss=Math.max(0,c.limit-sh.length);const shown=Math.max(0,Math.min(miss,12-sh.length));
-      const toks=sh.map(x=>'<span class="tok '+(x.open?(x.pending?'pend':'on'):'left')+'" title="'+x.fio+'"></span>').join('')+Array(shown).fill('<span class="tok no'+(started?' late':'')+'"></span>').join('')+(miss>shown?'<span class="tok more">+'+(miss-shown)+'</span>':'');
-      return '<div class="tile evc" onclick="openCat('+ci+')"><b>'+c.came+'<span class="muted" style="font-size:14px"> / '+c.limit+'</span></b><small>'+c.name+(w?' · '+w.start+'–'+w.end:'')+'</small>'+(ws.length>1?'<div class="muted" style="font-size:12px;margin-top:4px">'+ws.map(g=>{const n=sh.filter(x=>x.win===g.key).length;return 'к '+g.start+': '+n+' из '+g.count+(g.dz?' (дозаказ)':'')}).join(' · ')+'</div>':'')+'<div class="toks">'+toks+'</div><div class="muted" style="font-size:12px;margin-top:6px">'+rub(c.fact)+' из '+rub(c.plan)+'</div></div>'}).join('')+'</div>'+
-      '<div class="legend'+(legendOn?' on':'')+'" id="legend"><span><span class="tok on"></span>на объекте</span><span><span class="tok left"></span>ушёл</span><span><span class="tok pend"></span>ждёт подтверждения</span><span><span class="tok no"></span>не вышел</span><span><span class="tok no late"></span>не вышел, окно началось</span><span><i class="lg" style="background:var(--brass)"></i>смена закрыта</span><span><i class="lg" style="background:var(--ok)"></i>в смене сейчас</span><span><i class="lg" style="background:#d9a03c"></i>ждёт подтверждения</span><span><i class="lg" style="background:var(--bad)"></i>автозакрытие</span><span><i class="lg" style="background:rgba(201,169,97,.25);border:1px dashed var(--brass)"></i>плановое окно</span><span><i class="lg" style="width:2px;background:var(--txt)"></i>набран минимум</span><span><i class="lg" style="width:2px;background:var(--bad)"></i>сейчас</span></div>';
+    h+=st.cats.map((c,ci)=>{const ws=wins[c.name]||[],sh=r.shifts.map((x,i)=>Object.assign({i:i},x)).filter(x=>x.role===c.name),w=ws.length===1?ws[0]:null;
+      const started=ws.length&&Math.min.apply(null,ws.map(g=>g.startTs))<=r.now,cm=Math.max(0,c.limit-c.came),wait=sh.filter(x=>x.open&&x.pending);
+      const sub=[w?w.start+'–'+w.end:(ws.length>1?ws.map(g=>'к '+g.start).filter((t,k,a)=>a.indexOf(t)===k).join(', '):''),cm?'<span'+(started&&ev.status==='Открыто'?' class="bad"':'')+'>не вышли '+cm+'</span>':'',wait.length?'<span class="warn">ждёт '+wait.length+'</span>':''].filter(Boolean).join(' · ');
+      let o='<button class="crow" onclick="openCat('+ci+')"><div>'+c.name+(sub?'<small>'+sub+'</small>':'')+'</div><div class="r">'+(c.on===0&&c.came>0?'ушли '+c.came:c.on+' из '+c.limit)+'</div></button>';
+      if(wait.length){const onl=sh.filter(x=>x.open).sort((a,b)=>(b.pending?1:0)-(a.pending?1:0)),show=onl.slice(0,3);
+        o+='<div class="cppl">'+show.map(x=>'<button class="prow" onclick="openShift('+x.i+')"><span class="st '+(x.pending?'warn':'ok')+'"><i></i>'+shortFio(x.fio)+'</span><span class="m">с '+(x.first||x.in)+'</span></button>').join('')+
+          (onl.length>show.length?'<button class="prow lnk" style="color:var(--brass)" onclick="openCat('+ci+')">Ещё '+(onl.length-show.length)+' чел. ›</button>':'')+'</div>'}
+      return o}).join('');
     h+=timeline(r);
-    if(r.orders.length)h+='<h2>Дозаказы</h2><div class="card">'+r.orders.map(o=>{const p=o.why.split(' · подтвердил ');return '<div class="row"><span>'+o.role+' +'+o.n+' · '+p[0]+(p[1]?'<br><span class="muted" style="font-size:13px">подтвердил '+p[1]+'</span>':'')+'</span><b>'+rub(o.sum)+'</b></div>'}).join('')+'</div>';
+    // фонд оплаты: одна цифра и тонкая полоса
+    {const d=st.plan-st.fact;
+    h+='<div class="sec2">Фонд оплаты'+(r.days&&r.days.length>1?' · '+ruDay(r.day):'')+'</div><div class="fund"><b>'+rub(st.fact)+'</b><span class="muted">из '+rub(st.plan)+'</span></div>'+
+      '<div class="meter'+(d<0?' over':'')+'"><i style="width:'+Math.min(100,pct(st.fact,st.plan))+'%"></i></div>'+
+      '<div class="fund2"><span>'+pct(st.fact,st.plan)+'% плана</span><span'+(d<0?' class="bad"':'')+'>'+(d>=0?(ev.status==='Закрыто'?'экономия ':'остаток '):'перерасход ')+rub(Math.abs(d))+'</span></div>'+
+      (ev.status==='Закрыто'?'':'<p class="cap" style="margin:10px 0 0">Без подтверждения: приход до '+ev.regTo+', уход до '+ev.qrTo+'.</p>')}
+    if(r.orders.length)h+='<div class="sec2">Дозаказы</div><div class="kvs t">'+r.orders.map(o=>{const p=o.why.split(' · подтвердил ');return '<div class="kv"><span class="k">'+o.role+' +'+o.n+' · '+p[0]+(p[1]?'<br><span style="font-size:13px">подтвердил '+p[1]+'</span>':'')+'</span><b>'+rub(o.sum)+'</b></div>'}).join('')+'</div>';
     if(!preOpen)h+=ordCard(r);
-    // общий список смен убран: его заменяют лента и панели категорий
-
-    const fl=r.shifts.filter(x=>x.flg);
-    const stT={open:'<span class="warn">не разобрано</span>',ask:'<span class="warn">запрос правки</span>',done:'разобрано'};
-    if(fl.length)h+='<h2>Флаги · '+fl.filter(x=>x.flg.state!=='done').length+' из '+fl.length+'</h2><div class="card">'+fl.map(x=>'<div class="sh" onclick="openShift('+r.shifts.indexOf(x)+')"><div><div class="n">'+x.fio+'</div><div class="m">'+x.role+' · '+x.flg.text+'</div></div><div class="r"><div class="m">'+stT[x.flg.state]+'</div>›</div></div>').join('')+'</div>';
-    const own=r.shifts.filter(x=>!x.open&&x.own&&x.sum!=null),sub=r.shifts.filter(x=>!x.open&&!x.own);
+    const fld=r.shifts.filter(x=>x.flg&&x.flg.state==='done');
+    if(fld.length)h+='<div class="sec2">Разобранные флаги <span>'+fld.length+'</span></div>'+fld.map(x=>'<button class="prow" style="padding-left:0;border-bottom:1px solid var(--line);padding-top:11px;padding-bottom:11px;font-size:15.5px" onclick="openShift('+r.shifts.indexOf(x)+')"><span>'+shortFio(x.fio)+'<small style="display:block;color:var(--mut);font-size:13px">'+x.role+' · '+x.flg.text+'</small></span><span class="m">›</span></button>').join('');
+    const sub=r.shifts.filter(x=>!x.open&&!x.own);
     const pay=r.pay||[],paySum=pay.reduce((n,x)=>n+x.sum,0),payDone=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0);
-    h+='<h2>Реестры на оплату</h2><div class="tiles"><div class="tile evc" onclick="payOpen()"><b>'+rub(paySum)+'</b><small>свои · наличными · '+pay.length+' чел.'+(pay.length?' · выдано '+rub(payDone):'')+' ›</small></div><div class="tile"><b>'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</b><small>подрядчик · безнал · '+sub.length+' чел.</small></div></div>';
-    if(r.journal.length)h+='<h2>Журнал</h2><div class="card">'+r.journal.slice().reverse().map(j=>'<div class="sh"><div><div class="n">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</div><div class="m">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</div></div></div>').join('')+'</div>';
-    h+='<p class="muted noprint" style="text-align:center;margin-top:18px">обновлено '+stampNow()+' · <a class="lnk" href="#" onclick="conOpen(ceId,ceDay);return false">обновить</a></p>';
+    h+='<div class="sec2">Оплата</div><button class="crow" onclick="payOpen()"><div>Свои · наличными<small>'+pay.length+' чел.'+(pay.length?' · выдано '+rub(payDone):'')+'</small></div><div class="r">'+rub(paySum)+' ›</div></button>'+
+      '<div class="crow" style="cursor:default"><div>Подрядчик · безнал<small>'+sub.length+' чел.</small></div><div class="r">'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</div></div>';
+    if(r.journal.length)h+='<div class="sec2">Журнал</div><div class="kvs t">'+r.journal.slice().reverse().map(j=>'<div class="kv" style="display:block"><b style="text-align:left;display:block">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</b><span class="k" style="font-size:13px">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</span></div>').join('')+'</div>';
+    h+='<p class="upd noprint">Обновлено в '+stampNow()+' · <a class="lnk" href="#" style="padding:0;margin:0;font-size:13px" onclick="conOpen(ceId,ceDay);return false">обновить</a></p>';
     document.getElementById('ce-body').innerHTML=h;
     show('s-conev');
     if(quiet)window.scrollTo(0,keepY);
@@ -1038,54 +1402,69 @@ function pendBtns(x){
   const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="conAct(\''+act+'\','+x.inRow+')"><span>'+t+'</span><small>'+sub+'</small></button>';
   return '<div class="acts pb" style="margin:0 0 10px">'+(early?b('sec','ack','Пришёл рано','с начала окна')+b('','early','Работал','с прихода'):b('sec','ack','Опоздал','часы с прихода')+b('','confirm','Вызывали','минимум за выход'))+'</div>';
 }
+const CAM_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 function openShift(i){
   const x=conData.shifts[i],ev=conData.event;if(!x)return;
   const kv=(k,v,c)=>'<div class="kv"><span class="k">'+k+'</span><b'+(c?' class="'+c+'"':'')+'>'+v+'</b></div>';
-  const step=x.open?'в смене':(x.step||'');
-  let h='';
-  const sb=x.open?(x.pending?['pend','Ждёт решения: '+x.pending]:['ok','В смене с '+(x.first||x.in)+((x.outs||1)>1?' · '+x.outs+'-й выход с '+x.in:'')]):(x.kicked?['bad','Выгнан менеджером · '+x.kickWhy]:x.rejected?['bad','Отклонено менеджером']:x.auto?['bad','Автозакрытие: не отметил уход, ½ минимума']:['mut','Закрыта · '+step]);
-  h+='<div class="stepbox '+sb[0]+'">'+sb[1]+'</div>';
-  const g=(conData.windows||[]).filter(w=>w.key===x.win)[0];
-  if(g)h+=kv('Группа','к '+g.start+', до '+g.end);
-  h+=kv('Приход',(x.in||'—')+(x.early?(x.confirmed?' · зачтено с прихода':' · раньше плана, зачёт с начала окна'):''))+kv('Уход',x.out||'—')+(x.open?kv('В смене',h2(x.factH)):kv('Факт',h2(x.factH)))+kv('Минимум за выход',x.min+' ч')+kv('Ставка',x.rate+' ₽/ч')+(x.open?kv('Зачтено и сумма','после закрытия'):kv('Зачтено к оплате',h2(x.payH))+(x.sum!=null?kv('Сумма',rub(x.sum)):kv('Сумма','подрядчик, не показывается')))+(x.flag&&!x.flg?kv('Флаг',x.flag,'bad'):'')+kv('Отметка через',x.via==='APP'?'приложение':(x.via||'чат'));
-  const ph=(x.photoIn?'<button class="btn sec" onclick="openPhoto('+i+',\'in\')">Фото входа</button>':'')+(x.photoOut?'<button class="btn sec" onclick="openPhoto('+i+',\'out\')">Фото выхода</button>':'');
-  if(ph)h+='<div class="acts" style="margin-top:14px">'+ph+'</div>';
+  const g=(conData.windows||[]).filter(w=>w.key===x.win)[0],step=x.step||'';
+  const stt=x.open?(x.pending?['warn','Ждёт решения']:['ok','В смене']):(x.kicked?['bad','Выгнан менеджером']:x.rejected?['bad','Отклонено менеджером']:x.auto?['bad','Автозакрытие']:['','Смена закрыта']);
+  let h='<div style="margin-top:14px"><span class="st '+stt[0]+'"><i></i>'+stt[1]+'</span></div>';
+  h+=x.open?'<div class="bigv"><b>'+h2(x.factH)+'</b><span>в смене · приход в '+(x.first||x.in)+((x.outs||1)>1?' · '+x.outs+'-й выход с '+x.in:'')+'</span></div>':
+    '<div class="bigv"><b>'+(x.sum!=null&&x.own?rub(x.sum):h2(x.payH))+'</b><span>'+(x.sum!=null&&x.own?'зачтено '+h2(x.payH)+' · ':'зачтено · ')+(x.first||x.in)+' → '+(x.out||'—')+'</span></div>';
+  if(x.kicked&&x.kickWhy)h+='<div class="notew" style="background:var(--sf2)">Причина: '+x.kickWhy+'</div>';
+  if(x.auto)h+='<div class="notew" style="background:var(--sf2)">Не отметил уход: зачтена половина минимума.</div>';
+  if(x.pending&&x.open)h+='<div class="qbox"><div class="q"><p class="qd" style="margin:0">'+x.pending.charAt(0).toUpperCase()+x.pending.slice(1)+'. '+(/ранний/.test(x.pending)?'Пока часы идут с начала окна.':'Пока часы идут с прихода, без минимума.')+(x.fresh?' Новое лицо: посмотрите фото.':'')+'</p>'+pendBtns(x)+'</div></div>';
+  else if(x.open&&x.early&&!x.confirmed)h+='<div class="qbox"><div class="q"><p class="qd" style="margin:0">Пришёл раньше окна, часы идут с начала окна.</p><div class="acts pb"><button class="btn wide" onclick="closeDrawer();conAct(\'early\','+x.inRow+')"><span>Работал</span><small>с прихода</small></button></div></div></div>';
   if(x.flg){const f=x.flg,ref='conData.shifts['+i+'].flg';
-    h+='<h2 style="margin-top:14px">Флаг · '+({open:'не разобран',ask:'запрос правки',done:'разобран'})[f.state]+'</h2><div class="card">'+'<div class="flrow" data-key="'+f.key+'" style="padding:0">'+f.items.map(t=>'<div class="m" style="padding:4px 0'+(t.k==='info'||t.k==='fixed'?';color:var(--mut)':'')+'">'+t.t+'</div>').join('')+(flPend[f.key]?'<p class="flask warn">'+flPend[f.key]+'</p>':flState_(ref,f))+'</div></div>'}
-  if((x.its||[]).length>1)h+='<h2 style="margin-top:12px">Выходы за день</h2><div class="card">'+x.its.map(t=>'<div class="kv"><span class="k">'+t.in+'–'+(t.out||'…')+(t.rej?' · не зачтён':t.via==='менеджер'?' · закрыл менеджер':t.via==='авто'?' · автозакрытие':'')+'</span><b>'+(t.out?h2(t.h):'идёт')+'</b></div>').join('')+'<div class="kv"><span class="k">Итого факт</span><b>'+h2(x.factH)+'</b></div></div>';
-  if(x.pending&&x.open){h+='<p class="muted" style="margin-top:10px">'+(/ранний/.test(x.pending)?'Пришёл раньше окна. Пока часы идут с начала окна.':'Пришёл позже окна. Пока оплата по факту, без минимума.')+'</p>';h+=pendBtns(x).replace('margin:0 0 10px','margin:8px 0 0')}
-  else if(x.open&&x.early&&!x.confirmed)h+='<div class="acts" style="margin-top:10px"><button class="btn wide" onclick="closeDrawer();conAct(\'early\','+x.inRow+')"><span>Работал</span><small>с прихода</small></button></div>';
-  if(x.open)h+='<div class="acts" style="margin-top:16px"><button class="btn sec" onclick="releaseAsk('+i+')">Отпустить сейчас</button><button class="btn red" onclick="kickAsk('+i+')">Выгнать</button></div>';
-  if(x.kicked&&conMe&&conMe.admin)h+='<div class="acts" style="margin-top:12px"><button class="btn sec" onclick="ask(\'Вернуть на смену? Пометка «выгнан» снимется, смена снова откроется, стоп-лист снимется.\').then(ok=>{if(ok){closeDrawer();conAct(\'unkick\','+x.inRow+')}})">Вернуть на смену</button></div>';
-  h+='<p class="muted" style="margin-top:12px">'+(x.open?'Часы и сумма появятся после закрытия смены.':x.flg?({open:'Если часы неверные — кнопки в блоке «Флаг»: запрос уйдёт администратору.',ask:'Запрос правки ждёт администратора.',done:'Флаг разобран. Спорный случай — к администратору.'})[x.flg.state]:'Флагов нет, всё посчитано по правилам.')+'</p>';
-  openDrawer(h,x.fio,x.role+' · '+ev.name);
+    h+='<div class="qbox"><div class="q flrow" data-key="'+f.key+'"><div class="st'+(f.state==='done'?'':' warn')+'"><i></i>'+({open:'Флаг · '+(FL_TAG[f.main]||'проверить').toLowerCase(),ask:'Запрос правки',done:'Флаг разобран'})[f.state]+'</div>'+f.items.map(t=>'<p class="qd"'+(t.k==='info'||t.k==='fixed'?'':' style="color:var(--txt)"')+'>'+t.t+'</p>').join('')+(flPend[f.key]?'<p class="flask warn">'+flPend[f.key]+'</p>':flState_(ref,f))+'</div></div>'}
+  h+='<div class="pics">'+(x.photoIn?'<button class="pic" onclick="openPhoto('+i+',\'in\')">'+CAM_IC+'<b>Фото входа</b><small>'+x.in+'</small></button>':'<div class="pic no">Фото входа нет</div>')+
+    (x.photoOut?'<button class="pic" onclick="openPhoto('+i+',\'out\')">'+CAM_IC+'<b>Фото выхода</b><small>'+x.out+'</small></button>':'<div class="pic no">'+(x.open?'Фото выхода появится после закрытия':'Фото выхода нет')+'</div>')+'</div>';
+  if((x.its||[]).length>1)h+='<div class="sec2" style="margin-top:26px">Выходы за день</div><div class="kvs t">'+x.its.map(t=>kv(t.in+'–'+(t.out||'…')+(t.rej?' · не зачтён':t.via==='менеджер'?' · закрыл менеджер':t.via==='авто'?' · автозакрытие':''),t.out?h2(t.h):'идёт')).join('')+kv('Итого факт',h2(x.factH))+'</div>';
+  h+='<div class="kvs">'+(g?kv('Группа','к '+g.start+', до '+g.end):'')+kv('Приход',(x.in||'—')+(x.early?(x.confirmed?' · зачтено с прихода':' · зачёт с начала окна'):''))+(x.open?'':kv('Уход',x.out||'—')+kv('Факт',h2(x.factH))+kv('Зачтено к оплате',h2(x.payH))+(x.sum!=null?(x.own?'':kv('Сумма','считает подрядчик')):''))+
+    kv('Минимум за выход',x.min+' ч')+kv('Ставка',x.rate+' ₽/ч')+(x.flag&&!x.flg?kv('Пометка',x.flag,'bad'):'')+kv('Отметка через',x.via==='APP'?'приложение':(x.via||'чат'))+'</div>';
+  h+='<p class="hint">'+(x.open?'Часы и сумма появятся после закрытия смены':x.flg?({open:'Если часы неверные — кнопки в блоке флага',ask:'Запрос правки ждёт администратора',done:'Флаг разобран. Спорный случай — к администратору'})[x.flg.state]:'Флагов нет, всё посчитано по правилам')+'</p>';
+  if(x.open)h+='<div class="foot"><button class="btn txt red" onclick="kickAsk('+i+')">Выгнать</button><button class="btn sec" style="background:var(--sf2)" onclick="releaseAsk('+i+')">Отпустить сейчас</button></div>';
+  if(x.kicked&&conMe&&conMe.admin)h+='<div class="foot"><button class="btn sec" style="background:var(--sf2)" onclick="ask(\'Вернуть на смену? Пометка «выгнан» снимется, смена снова откроется, стоп-лист снимется.\').then(ok=>{if(ok){closeDrawer();conAct(\'unkick\','+x.inRow+')}})">Вернуть на смену</button></div>';
+  openDrawer(h,x.fio,x.role+(g?' · к '+g.start+', до '+g.end:''));
 }
 function openCat(ci){ // индекс категории, а не имя: значения из данных в inline-обработчики не попадают
   const r=conData,c=r.stats.cats[ci];if(!c)return;const name=c.name;
   const ws=(r.windows||[]).filter(x=>x.role===name),w=ws.length===1?ws[0]:null;
   const sh=r.shifts.map((x,i)=>Object.assign({i:i},x)).filter(x=>x.role===name);
-  const on=sh.filter(x=>x.open),off=sh.filter(x=>!x.open);
-  const row=x=>'<div class="sh" onclick="openShift('+x.i+')"><div><div class="n"><span class="dot'+(x.open?(x.pending?' pend':' on'):x.auto?' auto':'')+'"></span>'+x.fio+'</div><div class="m">'+
-    (x.open?'с '+(x.first||x.in)+' · идёт '+h2(x.factH)+((x.outs||1)>1?' · '+x.outs+'-й выход с '+x.in:'')+(x.pending?' · ждёт: '+x.pending:''):(x.first||x.in)+'–'+x.out+' · зачтено '+h2(x.payH)+((x.outs||1)>1?' · выходов: '+x.outs:'')+(x.auto?' · автозакрытие':'')+(x.kicked?' · выгнан':x.rejected?' · отклонено':'')+(x.released&&!x.relMin?' · отпущен':''))+'</div></div>'+
-    '<div class="r">›</div></div>';
-  let h='<div class="kv"><span class="k">Не вышли · свободных мест</span><b>'+c.free+' из '+c.limit+'</b></div>';
-  if(ws.length>1)h+='<h2 style="margin-top:8px">Группы</h2><div class="card">'+ws.map(g=>{const gs=sh.filter(x=>x.win===g.key);const on=gs.filter(x=>x.open).length;return '<div class="kv"><span class="k">к '+g.start+', до '+g.end+(g.dz?' · дозаказ':'')+'</span><b>'+gs.length+' из '+g.count+(on?' · на объекте '+on:'')+'</b></div>'}).join('')+'<p class="muted" style="margin:6px 0 0">Человек относится к группе, чьё начало ближе к его приходу. Лимит общий на категорию.</p></div>';
-  h+='<h2 style="margin-top:8px">На объекте · '+on.length+'</h2><div class="card">'+(on.length?on.map(row).join(''):'<p class="muted" style="margin:0">никого</p>')+'</div>';
-  h+='<h2>Ушли · '+off.length+'</h2><div class="card">'+(off.length?off.map(row).join(''):'<p class="muted" style="margin:0">никого</p>')+'</div>';
+  const on=sh.filter(x=>x.open).sort((a,b)=>(b.pending?1:0)-(a.pending?1:0)),off=sh.filter(x=>!x.open),miss=Math.max(0,c.limit-c.came);
+  const row=x=>'<button class="prow" onclick="openShift('+x.i+')"><span class="st '+(x.open?(x.pending?'warn':'ok'):(x.auto||x.kicked||x.rejected?'bad':''))+'"><i></i>'+shortFio(x.fio)+'</span><span class="m">'+
+    (x.open?'с '+(x.first||x.in)+' · '+h2(x.factH)+(x.pending?' · ждёт':''):(x.first||x.in)+'–'+x.out+' · '+h2(x.payH)+(x.auto?' · авто':'')+(x.kicked?' · выгнан':x.rejected?' · отклонено':'')+(x.released&&!x.relMin?' · отпущен':''))+'</span></button>';
+  let h='<div class="nums" style="margin-top:18px"><div><b>'+c.on+'</b><small>на объекте</small></div><div><b>'+c.came+'<i> / '+c.limit+'</i></b><small>вышло</small></div><div><b'+(miss?' class="bad"':'')+'>'+miss+'</b><small>не вышли</small></div></div>'+
+    '<div class="fund2" style="margin-top:4px"><span>Фонд: '+rub(c.fact)+' из '+rub(c.plan)+'</span><span>'+pct(c.fact,c.plan)+'%</span></div>';
+  if(ws.length>1)h+='<div class="sec2" style="margin-top:26px">Группы</div><div class="kvs t">'+ws.map(g=>{const gs=sh.filter(x=>x.win===g.key);return '<div class="kv"><span class="k">К '+g.start+', до '+g.end+(g.dz?' · дозаказ':'')+'</span><b>'+gs.length+' из '+g.count+'</b></div>'}).join('')+'</div><p class="cap" style="margin:6px 0 0">Человек относится к группе, чьё начало ближе к его приходу. Лимит общий на категорию.</p>';
+  h+='<div class="sec2" style="margin-top:26px">На объекте <span>'+on.length+'</span></div>'+(on.length?on.map(row).join(''):'<p class="muted" style="margin:8px 0 0">Никого</p>');
+  h+='<div class="sec2" style="margin-top:26px">Ушли <span>'+off.length+'</span></div>'+(off.length?off.map(row).join(''):'<p class="muted" style="margin:8px 0 0">Пока никто не ушёл</p>');
   const notRel=on.filter(x=>!x.released);
-  h+='<div class="acts" style="margin-top:14px">'+(SHOW_RELEASE_CAT&&notRel.length?'<button class="btn" onclick="releaseCatAsk('+ci+')">Отпустить бригаду ('+notRel.length+')</button>':'')+'<button class="btn sec wide" onclick="conAct(\'qr\')">QR-листы</button></div>';
-  openDrawer(h,name,(w?'окно '+w.start+'–'+w.end+' · ':'')+'лимит '+c.limit+' · мин. '+c.min+' ч · '+rub(c.fact)+' из '+rub(c.plan));
+  h+='<div class="foot">'+(SHOW_RELEASE_CAT&&notRel.length?'<button class="btn txt" onclick="releaseCatAsk('+ci+')">Отпустить бригаду ('+notRel.length+')</button>':'')+(r.event.code&&r.event.status!=='Закрыто'?'<button class="btn sec" style="background:var(--sf2)" onclick="conAct(\'qr\')">QR-лист</button>':'')+'</div>';
+  openDrawer(h,name,(w?w.start+'–'+w.end+' · ':'')+'минимум '+c.min+' ч');
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');updBack()}
 /* панель: липкая шапка с заголовком и крестиком, тело ниже */
 /* настройки уведомлений в чате бота: список типов с переключателями, сохранение сразу; обязательные показаны серым */
+/* настройки: оформление — всем; уведомления в чате бота — менеджерам и администраторам (список типов приходит с сервера, сохраняется сразу) */
 let ntfData=null;
-async function ntfOpen(){
-  try{ntfData=await api('con.prefs',{})}catch(e){return toast(e.msg||'Не удалось загрузить настройки')}
-  const rows=ntfData.types.map(x=>'<label class="ntf"><input type="checkbox" '+(x.on?'checked':'')+' onchange="ntfToggle(\''+x.key+'\',this)"><div><div class="t">'+escS(x.title)+'</div><div class="d">'+escS(x.desc)+'</div></div></label>').join('');
-  const locked='<h2 style="margin:18px 0 8px">Приходят всегда</h2><div class="card" style="padding:4px 14px">'+ntfData.locked.map(x=>'<div class="ntf"><div class="t" style="color:var(--mut)">'+escS(x)+'</div></div>').join('')+'</div><p class="muted" style="font-size:13px;margin-top:10px">События остаются в консоли и в таблице.</p>';
-  openDrawer('<div class="card" style="padding:4px 14px">'+rows+'</div>'+locked,'Уведомления','что присылать в чат бота');
+function themeNow(){try{const v=localStorage.getItem('theme');return v==='dark'||v==='light'?v:'auto'}catch(e){return 'auto'}}
+function themeSet(v){try{if(v==='auto')localStorage.removeItem('theme');else localStorage.setItem('theme',v)}catch(e){}applyTheme();document.querySelectorAll('.seg3 button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
+async function settingsOpen(){
+  if(document.getElementById('modal').classList.contains('on')&&document.getElementById('set-box'))return;
+  const cur=themeNow(),staff=!!(me&&me.staff);
+  modalOpen('<div class="mh">Настройки</div><div class="sec2" style="margin-top:18px">Оформление</div>'+
+    '<div class="seg3">'+[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(x=>'<button data-v="'+x[0]+'" class="'+(cur===x[0]?'on':'')+'" onclick="themeSet(\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>'+
+    '<p class="cap" style="margin:10px 0 0">«Авто» — как в Telegram.</p><div id="set-box">'+(staff?'<div class="sec2" style="margin-top:26px">Уведомления в чате бота</div><p class="muted" style="margin:8px 0 0">Загружаю…</p>':'')+'</div>'+
+    '<div class="mfoot"><button class="btn sec" onclick="modalClose()">Готово</button></div>');
+  if(!staff)return;
+  const box=()=>document.getElementById('set-box');
+  try{ntfData=await api('con.prefs',{},true)}catch(e){const b=box();if(b)b.innerHTML='<div class="sec2" style="margin-top:26px">Уведомления в чате бота</div><p class="warn" style="margin:8px 0 0">'+escS(e.msg||'Не удалось загрузить настройки уведомлений')+'</p>';return}
+  const b=box();if(!b)return;
+  b.innerHTML='<div class="sec2" style="margin-top:26px">Уведомления в чате бота</div>'+ntfData.types.map(x=>'<label class="ntf"><input type="checkbox" '+(x.on?'checked':'')+' onchange="ntfToggle(\''+x.key+'\',this)"><div><div class="t">'+escS(x.title)+'</div><div class="d">'+escS(x.desc)+'</div></div></label>').join('')+
+    ((ntfData.locked||[]).length?'<div class="sec2" style="margin-top:26px">Приходят всегда</div><p class="muted" style="margin:8px 0 0">'+ntfData.locked.map(escS).join(' · ')+'</p>':'')+'<p class="cap" style="margin:10px 0 0">События остаются в консоли и в таблице.</p>';
 }
+function ntfOpen(){return settingsOpen()}
 async function ntfToggle(key,el){
   const x=ntfData.types.filter(y=>y.key===key)[0];if(!x)return;
   const was=x.on;x.on=el.checked;
@@ -1093,6 +1472,13 @@ async function ntfToggle(key,el){
   try{const r=await api('con.act',{act:'prefs',off:off},true);if(!r||!r.ok)throw r||{}}
   catch(e){x.on=was;el.checked=was;toast(e.msg||'Не удалось сохранить')}
 }
+/* окно-шторку тоже можно смахнуть вниз за полоску сверху */
+(function(){const g=document.getElementById('modal-grip'),b=g.parentNode;let y0=null,dy=0;
+  g.addEventListener('touchstart',e=>{y0=e.touches[0].clientY;dy=0;b.classList.add('drag')},{passive:true});
+  g.addEventListener('touchmove',e=>{if(y0===null)return;dy=Math.max(0,e.touches[0].clientY-y0);b.style.transform='translateY('+dy+'px)'},{passive:true});
+  const end=()=>{if(y0===null)return;b.classList.remove('drag');b.style.transform='';if(dy>70)modalClose();y0=null;dy=0};
+  g.addEventListener('touchend',end);g.addEventListener('touchcancel',end);
+})();
 /* смахнуть шторку вниз за шапку: тянется за пальцем, при сдвиге больше 70 px закрывается */
 (function(){const d=document.getElementById('drawer'),h=d.querySelector('.dh');let y0=null,dy=0;
   h.addEventListener('touchstart',e=>{if(innerWidth>=700||e.target.closest('button'))return;y0=e.touches[0].clientY;dy=0;d.classList.add('drag')},{passive:true});
@@ -1117,11 +1503,15 @@ async function conAct(act,row,role,extra){
   try{
     const r=await api('con.act',Object.assign({id:ceId,act:act,row:row||0,role:role||''},extra||{}));
     if(act==='qr'){ // в панели: тихое обновление карточки её не стирает, печать печатает только её
-      openDrawer('<div class="qrs">'+r.qr.map(q=>'<figure style="margin:0"><img src="'+q.img+'"><figcaption>'+escS(q.role)+'</figcaption></figure>').join('')+'</div><button class="btn wide noprint" style="margin-top:12px" onclick="conAct(\'qrSend\')">Отправить в чат бота</button><p class="muted noprint">QR-лист и код придут вам сообщением от бота: оттуда их можно переслать или сохранить. На компьютере лист можно распечатать: Ctrl+P.</p>','QR-листы','код '+escS(r.code));
+      const one=r.qr.length===1;
+      openDrawer(r.qr.map(q=>'<figure class="qrbox"><img src="'+q.img+'" alt="QR-код">'+(one?'':'<figcaption>'+escS(q.role)+'</figcaption>')+'</figure>').join('')+
+        '<div class="qcode">'+escS(String(r.code).replace(/^(\d{3})(\d{3})$/,'$1 $2'))+'</div><p class="hint" style="margin-top:4px">Код для тех, у кого не работает сканер</p>'+
+        '<p class="hint noprint" style="margin:22px 0 0">Лист и код придут сообщением от бота: оттуда их можно переслать. На компьютере лист можно распечатать: Ctrl+P.</p>'+
+        '<div class="foot noprint"><button class="btn" onclick="conAct(\'qrSend\')">Отправить в чат бота</button></div>','QR-лист',one?'Один на всё мероприятие и все категории':'');
       return true;
     }
     if(act==='qrSend'||act==='reportSend'){toast(r.msg||'Отправлено',true);return true} // панель с QR остаётся открытой
-    if(act==='report'){openDrawer('<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:0">'+r.text.replace(/</g,'&lt;')+'</pre><button class="btn wide noprint" style="margin-top:14px" onclick="conAct(\'reportSend\')">Отправить в чат бота</button><p class="muted noprint" style="font-size:13px">Отчёт придёт вам сообщением от бота: оттуда его можно переслать. Таблица с тем же отчётом — лист 08.</p>','Отчёт',escS(unesc(conData.event.name)));return true}
+    if(act==='report'){openDrawer(reportHtml(r),'Отчёт',escS(unesc(conData.event.name))+(r.data?' · '+escS(r.data.when):''));return true}
     toast(r.msg||'Готово',true);
     if(r.url)openL(r.url);
     if(act==='evCreate'){await conList();return true}
@@ -1132,6 +1522,22 @@ async function conAct(act,row,role,extra){
     conActErr=e.msg||'Ошибка';toast(conActErr);return false}
 }
 /* панель действий наверху карточки: только то, что нужно сейчас; остальное в «Ещё» */
+/* отчёт: если сервер отдал цифры (data) — структурой, иначе прежним текстом */
+function reportHtml(r){
+  const send='<div class="foot noprint"><button class="btn" onclick="conAct(\'reportSend\')">Отправить в чат бота</button></div><p class="hint noprint">Отчёт придёт сообщением от бота: оттуда его можно переслать.</p>';
+  const d=r.data;if(!d)return '<pre style="white-space:pre-wrap;font-family:inherit;font-size:15px;line-height:1.5;margin:14px 0 0">'+String(r.text||'').replace(/</g,'&lt;')+'</pre>'+send;
+  const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><b>'+v+'</b></div>',diff=d.plan-d.fact;
+  const fw=n=>n+' '+(n%10===1&&n%100!==11?'флаг':(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'флага':'флагов'));
+  let h='<div class="bigv" style="margin-top:18px"><b>'+rub(d.fact)+'</b><span>факт из '+rub(d.plan)+' · '+(diff>=0?'экономия ':'перерасход ')+rub(Math.abs(diff))+'</span></div>'+
+    '<div class="meter'+(diff<0?' over':'')+'"><i style="width:'+Math.min(100,pct(d.fact,d.plan))+'%"></i></div>'+
+    '<div class="nums" style="margin-top:18px"><div><b>'+d.came+'<i> / '+d.lim+'</i></b><small>вышло</small></div><div><b>'+(Math.round(d.payH*10)/10).toLocaleString('ru-RU')+' ч</b><small>зачтено</small></div><div><b'+(d.flags?' class="warn"':'')+'>'+d.flags+'</b><small>'+fw(d.flags).replace(/^\d+ /,'')+'</small></div></div>';
+  h+='<div class="sec2" style="margin-top:26px">По категориям</div><div class="kvs t">'+d.cats.map(c=>kv(escS(c.name)+' · '+c.came+' из '+c.lim,rub(c.fact))).join('')+'</div>';
+  if(d.days&&d.days.length)h+='<div class="sec2" style="margin-top:26px">По дням</div><div class="kvs t">'+d.days.map(x=>kv(ruDay(x.day)+' · '+x.came+' из '+x.lim,rub(x.fact))).join('')+'</div>';
+  const dz=(conData.orders||[]);
+  h+='<div class="sec2" style="margin-top:26px">Что было</div><div class="kvs t">'+dz.map(o=>kv('Дозаказ',o.role+' +'+o.n+' · '+rub(o.sum))).join('')+
+    kv('Наличными своим',rub(d.cash))+kv('Безналом подрядчику',rub(d.cashless))+kv('Правок часов',d.edits)+kv('Автозакрытий',d.auto)+kv('Новых лиц',d.fresh)+(d.openN?kv('Ещё в смене',d.openN):'')+'</div>';
+  return h+send;
+}
 function actionBar(ev,m,st){
   const open=ev.status==='Открыто',closed=ev.status==='Закрыто';
   let b='';
@@ -1171,19 +1577,18 @@ async function bxGo(){
 }
 /* выплаты наличными: поимённый список по закрытым сменам своих, отметка «выдано» */
 function payOpen(){
-  const ev=conData.event,pay=conData.pay||[],multi=(conData.days||[]).length>1;
+  const pay=conData.pay||[],multi=(conData.days||[]).length>1;
   const sum=pay.reduce((n,x)=>n+x.sum,0),done=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0),openN=conData.shifts.filter(x=>x.open&&x.own).length;
-  let h='<div class="tiles" style="margin-top:0"><div class="tile"><b>'+rub(sum-done)+'</b><small>осталось выдать</small></div><div class="tile"><b>'+rub(done)+'</b><small>выдано из '+rub(sum)+'</small></div></div>';
-  if(openN)h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Ещё в смене: '+openN+' чел. Они появятся в списке после ухода.</p>';
-  if(!pay.length)h+='<p class="muted" style="margin:12px 0 0">Закрытых смен своего персонала пока нет.</p>';
+  let h='<div class="bigv" style="margin-top:18px"><b>'+rub(sum-done)+'</b><span>осталось выдать · выдано '+rub(done)+' из '+rub(sum)+'</span></div>';
+  if(openN)h+='<p class="cap" style="margin:10px 0 0;font-size:13.5px">Ещё в смене: '+openN+' чел. Они появятся в списке после ухода.</p>';
+  if(!pay.length)h+='<p class="muted" style="margin:16px 0 0">Закрытых смен своего персонала пока нет.</p>';
   let cat='';
   pay.forEach((x,i)=>{
-    if(x.role!==cat){cat=x.role;h+='<h2 style="margin-top:18px">'+x.role+'</h2>'}
-    h+='<div class="row" style="align-items:center"><span>'+x.fio+'<br><span class="muted" style="font-size:13px">'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</span></span>'+
-      '<span style="display:flex;align-items:center;gap:10px;flex:0 0 auto"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' sec':'')+'" style="width:auto;margin:0;padding:10px 14px;font-size:14px" onclick="payToggle('+i+')">'+(x.paid?'Выдано ✓':'Выдать')+'</button></span></div>';
+    if(x.role!==cat){cat=x.role;h+='<div class="sec2" style="margin-top:26px">'+x.role+'</div>'}
+    h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
+      '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
   });
-  h+='<p class="muted" style="font-size:13px;margin:14px 0 0">Список и отметки видны администратору и в таблице, лист 08. Подрядчику платят по безналу, его здесь нет.</p>';
-  openDrawer(h,'Выплаты наличными',ev.name);
+  openDrawer(h,'Выплаты наличными','Свой персонал · подрядчику платят по безналу');
 }
 async function payToggle(i){
   const x=(conData.pay||[])[i];if(!x)return;
