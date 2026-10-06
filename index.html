@@ -222,7 +222,7 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .hrow.first{align-items:flex-start}
 .hrow h1{min-width:0;flex:1}
 .hrow .lnk{flex:none;padding:0;margin:0;font-weight:500}
-.hrow .st.dot{flex:none;gap:0;margin-top:16px}
+.hrow .st.dot{flex:none;gap:0;margin:12px -10px 0 0;padding:4px 10px;background:none;border:0;cursor:pointer;min-width:44px;min-height:32px;justify-content:center}
 .hrow .st.dot i{width:12px;height:12px}
 .hrow .st.dot.off i{box-shadow:inset 0 0 0 2px var(--mut)}
 .hrow .st.dot.fill i{animation-name:fillp2}
@@ -488,7 +488,7 @@ select.fld{-webkit-appearance:none;appearance:none}
 
 <div id="s-conev" class="scr wrap con">
   <div class="ctop navrow" style="justify-content:flex-start;margin-top:0"><a class="lnk navback" href="#" style="color:var(--mut)" onclick="conBack();return false">‹ Мероприятия</a></div>
-  <div class="hrow first"><h1 id="ce-name" style="margin-top:8px"></h1><span class="st dot" id="ce-status"><i></i></span></div>
+  <div class="hrow first"><h1 id="ce-name" style="margin-top:8px"></h1><button class="st dot" id="ce-status" onclick="toast(this.title,true)" aria-label="Статус мероприятия"><i></i></button></div>
   <div class="muted" id="ce-sub"></div>
   <div id="ce-body"></div>
 </div>
