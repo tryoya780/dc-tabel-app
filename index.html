@@ -1448,10 +1448,18 @@ function timeline(r){
   let ax='';for(let t=Math.ceil(t0/36e5)*36e5;t<=t1;t+=36e5*(span>14*36e5?2:1)){const d=new Date(t);ax+='<span style="left:'+px(t)+'%">'+('0'+d.getHours()).slice(-2)+'</span>'}
   const nowIn=r.now>t0&&r.now<t1;
   const byKey={};ws.forEach(w=>byKey[w.key]=w);const first={};ws.forEach(w=>{if(!first[w.role])first[w.role]=w});
-  return '<h2>Лента смен</h2><div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
-    return '<div class="rw" onclick="openShift('+i+')"><div class="nm">'+shortFio(x.fio)+'<small>'+x.role+'</small></div><div class="tr">'+(w?'<div class="win" style="left:'+px(w.startTs)+'%;width:'+(px(w.endTs)-px(w.startTs))+'%"></div>':'')+
-      '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(2,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+(nowIn?'<div class="nowl" style="left:'+px(r.now)+'%"></div>':'')+'</div></div>'}).join('')+'</div>';
+  // фильтр по категории (если их больше одной): выбор помнится для мероприятия, тихое обновление его не сбрасывает
+  const cats=[];sh.forEach(x=>{if(cats.indexOf(x.role)<0)cats.push(x.role)});
+  let cur=tlCat[ceId]||'';if(cats.indexOf(cur)<0)cur='';
+  const nm=c=>{const a=String(c).split(' '),s0=a[0]==='Официанты'&&a.length>1?a.slice(1).join(' '):a[0];return cats.filter(q=>q!==c&&String(q).indexOf(s0)>=0).length?c:s0};
+  const chips=cats.length>1?'<div class="chipsx" style="margin-bottom:10px">'+['',...cats].map(c=>'<button class="chip'+(c===cur?' on':'')+'" onclick="tlPick('+(c?cats.indexOf(c)+1:0)+')">'+(c?nm(c):'Все')+' '+(c?sh.filter(x=>x.role===c).length:sh.length)+'</button>').join('')+'</div>':'';
+  tlCats=cats;
+  return '<div id="tl-box"><h2>Лента смен</h2>'+chips+'<div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{if(cur&&x.role!==cur)return '';const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
+    return '<div class="rw" onclick="openShift('+i+')"><div class="nm">'+shortFio(x.fio)+(cur?'':'<small>'+x.role+'</small>')+'</div><div class="tr">'+(w?'<div class="win" style="left:'+px(w.startTs)+'%;width:'+(px(w.endTs)-px(w.startTs))+'%"></div>':'')+
+      '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(2,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+(nowIn?'<div class="nowl" style="left:'+px(r.now)+'%"></div>':'')+'</div></div>'}).join('')+'</div></div>';
 }
+let tlCat={},tlCats=[];
+function tlPick(k){tlCat[ceId]=k?tlCats[k-1]:'';const b=document.getElementById('tl-box');if(b&&conData)b.outerHTML=timeline(conData)}
 function shortFio(f){const p=String(f||'').split(/\s+/);return p.length>1?p[0]+' '+p.slice(1).map(x=>x[0]+'.').join(''):f}
 /* кнопки решения по карточке «ждёт»: левая — как по правилу (снимает ожидание), правая — исключение в пользу человека */
 function pendBtns(x){
