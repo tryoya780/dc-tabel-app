@@ -466,7 +466,7 @@ function ordDraw(){
   if((o.roles||[]).some(q=>!have[unesc(q.role)]))h+='<button class="btn sec" onclick="ordAddCat()">+ Категория</button>';
   h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
-  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'В пределах максимума из сметы бухгалтерии наряд согласуется сам; если максимум в смете не указан, наряд уйдёт администратору.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
+  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'Если наряд совпадает со сметой бухгалтерии, он согласуется сам; любое отличие уйдёт администратору, после согласования наряд запишется в смету.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
     (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
   document.getElementById('ord-body').innerHTML=h;ordBar();
 }
