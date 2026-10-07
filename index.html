@@ -1260,7 +1260,7 @@ async function conFlags(quiet){
       h+='<div class="qbox"><button class="grp" onclick="flEv('+gi+')"><b>'+g.name+'</b><span>'+ruDate(g.date).split(',')[0]+' · '+plural(g.items.length)+'</span></button>'+
         g.items.map((x,ii)=>flRow('flData.groups['+gi+'].items['+ii+']',x,'flOpen('+gi+','+ii+')')).join('')+'</div>';
     });
-    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» закрывает флаг без изменения денег. Кнопки с часами отправляют запрос администратору: часы меняет только он.')+'</p>';
+    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» и «Опоздал» закрывают флаг без изменения денег, «Вызывали» сразу даёт минимум. «Время ухода» отправляет запрос администратору.'+(r.me.early?' Ранний уход вы решаете сами.':' Ранний уход разбирают руководитель банкетной службы, Поляков или администратор.'))+'</p>';
     h+='<p class="upd">Обновлено в '+stampNow()+'</p>';
     document.getElementById('con-list').innerHTML=h;document.getElementById('con-foot').innerHTML='';
     {const on=document.querySelector('.chipsx .chip.on'),bx=on&&on.parentNode;if(on&&bx.scrollWidth>bx.clientWidth)bx.scrollLeft=Math.max(0,on.offsetLeft-bx.offsetLeft-20)} // выбранный фильтр не должен прятаться за краем
@@ -1290,8 +1290,10 @@ function flDone(r){
 }
 function flBtns(ref,x){
   const adm=!!(conMe&&conMe.admin); // администратор правит часы сразу, менеджер отправляет запрос
-  const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
-  const keep=h2(x.pay)+(x.own?' · '+rub(x.sum):''),minS=x.min+' ч'+(adm?(x.own&&x.rate?' · '+rub(x.min*x.rate):''):', запрос админу'),tillS=adm?'указать и пересчитать':'пересчёт, запрос админу';
+  // ранний уход разбирают только те, кому разрешено (conMe.early); «Вызывали» по опозданию менеджер применяет сам
+  if(x.main==='early'&&!(conMe&&conMe.early))return '<p class="flask muted">Ранний уход разбирают руководитель банкетной службы, Поляков или администратор.</p>';
+  const now=flNow(x),b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
+  const keep=h2(x.pay)+(x.own?' · '+rub(x.sum):''),minS=x.min+' ч'+(now?(x.own&&x.rate?' · '+rub(x.min*x.rate):''):', запрос админу'),tillS=adm?'указать и пересчитать':'пересчёт, запрос админу';
   const ok=(t,sub)=>b('sec','ok',t||'Всё верно',sub||(h2(x.pay)+' остаётся'));
   let h='';
   if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Время ухода',tillS);
@@ -1307,13 +1309,15 @@ async function flDo(x,act){
   if(act==='until'){flCur=x;return modalOpen('<div class="mh">'+(x.main==='long'?'Когда ушёл':'До скольки работал')+'</div><p class="muted" style="margin:0 0 6px">'+x.fio+' · пришёл '+x.in+'. '+(conMe&&conMe.admin?'Часы посчитаются по обычным правилам и применятся сразу.':'Бот посчитает часы по обычным правилам и отправит запрос администратору.')+'</p>'+
     '<label class="flab" for="fl-till">'+(x.main==='long'?'Время ухода':'Работал до')+'</label><input type="time" class="fld" id="fl-till" value=""><input class="fld" id="fl-why" placeholder="Комментарий (необязательно)"><div class="ferr" id="m-err"></div>'+
     '<div class="acts"><button class="btn" onclick="flUntilGo()">'+(conMe&&conMe.admin?'Пересчитать':'Отправить')+'</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>')}
-  const adm=!!(conMe&&conMe.admin);
+  const adm=flNow(x);
   if(act==='min'&&!(await ask(x.fio+(adm?': зачесть минимум '+x.min+' ч? Оплата пересчитается сразу.':': попросить администратора зачесть минимум '+x.min+' ч?'))))return;
   if(act==='apply'&&!(await ask('Применить: '+x.fio+' → '+h2(x.ask.h)+(x.own?', '+rub(Math.round(x.ask.h*x.rate)):'')+'?')))return;
   if(act==='reject'&&!(await ask('Отклонить запрос? Останется '+h2(x.pay)+'.')))return;
   const map={ok:'flagOk',min:'flagAsk',apply:'flagApply',reject:'flagReject'};
   await flSend(x,map[act],act==='min'?(adm?{kind:'min',now:1}:{kind:'min'}):{});
 }
+/* кнопка «минимум» применяется сразу, без запроса администратору */
+function flNow(x){return !!(conMe&&conMe.admin)||x.main==='late'||(x.main==='early'&&!!(conMe&&conMe.early))}
 function flUntilGo(){
   const t=document.getElementById('fl-till').value,w=document.getElementById('fl-why').value.trim();
   if(!/^\d{1,2}:\d{2}$/.test(t))return mErr('Укажите время');
