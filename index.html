@@ -288,6 +288,7 @@ body.tgback #s-ord h1,body.tgback #s-arch h1{margin-top:4px!important}
 /* ── карточка мероприятия, шторки человека и категории, окна действий (редизайн, вариант A) ── */
 .abar{gap:8px;margin:16px 0 4px}
 .abar .btn{background:var(--sf2);color:var(--txt);min-height:44px;padding:10px 14px;font-size:15px;border-radius:12px}
+.abar .btn.red{background:var(--bad);color:var(--on-bad)}.abar .btn.grow2{flex:2 1 0;white-space:nowrap}.abar .btn.grow1{flex:1 1 0}
 .sec2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:34px 0 4px;display:flex;gap:8px;align-items:baseline}
 .sec2 span{color:var(--txt);letter-spacing:0;font-size:14px}
 .qbox .sec2{margin:0;padding-top:16px}
@@ -1641,6 +1642,8 @@ function reportHtml(r){
 }
 function actionBar(ev,m,st){
   const open=ev.status==='Открыто',closed=ev.status==='Закрыто';
+  // через час после планового конца главная кнопка — «Закрыть мероприятие»; дозаказ и QR уходят в «Ещё…» (07.10)
+  if(evEnded(ev))return '<div class="abar noprint"><button class="btn red grow2" onclick="conClose()">Закрыть мероприятие</button><button class="btn sec grow1" onclick="moreAsk()">Ещё…</button></div>';
   let b='';
   if(open)b+='<button class="btn" onclick="dzAsk()">Дозаказ</button>';
   if(m.admin&&!open&&!closed)b+=(st&&st.limit?'<button class="btn" onclick="ask(\'Открыть мероприятие? Персонал сможет отмечаться, выпустятся QR и код.\').then(ok=>{if(ok)conAct(\'open\')})">Открыть и выпустить QR</button>':'<button class="btn" disabled title="Заполните и согласуйте наряд ниже">Наряд не согласован</button>');
@@ -1649,16 +1652,19 @@ function actionBar(ev,m,st){
   if(m.admin)b+='<button class="btn sec" onclick="moreAsk()">Ещё…</button>';
   return b?'<div class="abar noprint">'+b+'</div>':'';
 }
+const evEnded=ev=>ev.status==='Открыто'&&+ev.planEnd>0&&Date.now()>=+ev.planEnd+36e5;
 function moreAsk(){
-  const ev=conData.event,open=ev.status==='Открыто';
+  const ev=conData.event,open=ev.status==='Открыто',adm=!!(conMe&&conMe.admin);
   const it=(t,fn,cls)=>'<button class="btn '+(cls||'sec')+'" style="margin-top:8px" onclick="modalClose();'+fn+'">'+t+'</button>';
-  let h='<div class="mh">'+ev.name+'</div><p class="muted" style="margin:0 0 6px">Действия администратора</p>';
+  let h='<div class="mh">'+ev.name+'</div>';
+  if(evEnded(ev))h+=it('Дозаказ',"dzAsk()")+(ev.code?it('QR-листы',"conAct('qr')"):'');
+  if(!adm){h+=it('Отмена','','sec');return modalOpen(h)}
   h+=it('Отчёт',"conAct('report')");
   h+=it('Номер сделки Битрикс',"bxAsk()");
   h+=it('Выплаты наличными',"payOpen()")+it('Реестр подрядчику',"conAct('registry')");
   if(ev.bx)h+=it(conData.order&&conData.order.pushed?'Выгрузить в бухгалтерию ещё раз':'Выгрузить в бухгалтерию',"conAct('bookPush')");
   if(ev.code)h+=it('Перевыпустить QR',"ask('Перевыпустить QR? Старые листы и код перестанут работать.').then(ok=>{if(ok)conAct('reissue')})");
-  if(open)h+=it('Закрыть мероприятие',"conClose()",'red');
+  if(open&&!evEnded(ev))h+=it('Закрыть мероприятие',"conClose()",'red');
   h+=it('Отмена',"",'sec');
   modalOpen(h);
 }
