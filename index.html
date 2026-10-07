@@ -529,6 +529,9 @@ select.fld{-webkit-appearance:none;appearance:none}
 <div id="modal"><div class="box"><div class="mgrip" id="modal-grip"><i></i></div><div id="modal-box"></div></div></div>
 <div id="busy"><div class="spin"></div><div class="t" id="busy-t">Загружаю…</div><div class="s" id="busy-s"></div></div>
 
+<script>/* ловушка ошибок на ES5: если основной скрипт не разобрался (старый Android WebView), показать причину вместо вечного «Загружаю…» */
+window.onerror=function(m,u,l,c){try{var t=document.getElementById('busy-t'),x=document.getElementById('busy-s');if(t)t.textContent='Приложение не запустилось';if(x)x.textContent=String(m)+' (стр. '+l+':'+c+'). Обновите Telegram и «Android System WebView» в Google Play. '+navigator.userAgent}catch(e){}};
+</script>
 <script>
 const API='https://script.google.com/macros/s/AKfycbyPd_656FGUQs8kCA9silxZXttqHBHrvKaOm5tWyL5DdMRlhpkuFR5pNhahqfCXZGhC/exec';
 const tg=window.Telegram&&window.Telegram.WebApp;
@@ -922,7 +925,7 @@ async function api(action,data,quiet,toMs){
   }catch(e){
     // запросы чтения безопасно повторить один раз: холодный старт сервера иногда даёт мусор или таймаут
     const readOnly=['me','event','con.events','con.event','con.flags','con.prefs'].indexOf(action)>=0;
-    if(readOnly&&!quiet&&!data?._retry&&(e.error==='bad'||e.error==='net')){document.getElementById('busy-s').textContent='Сервер просыпается, повторяю запрос…';return api(action,Object.assign({},data||{},{_retry:1}),quiet)}
+    if(readOnly&&!quiet&&!(data&&data._retry)&&(e.error==='bad'||e.error==='net')){document.getElementById('busy-s').textContent='Сервер просыпается, повторяю запрос…';return api(action,Object.assign({},data||{},{_retry:1}),quiet)}
     throw e;
   }finally{if(!quiet)unbusy()}
 }

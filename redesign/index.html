@@ -922,7 +922,7 @@ async function api(action,data,quiet,toMs){
   }catch(e){
     // запросы чтения безопасно повторить один раз: холодный старт сервера иногда даёт мусор или таймаут
     const readOnly=['me','event','con.events','con.event','con.flags','con.prefs'].indexOf(action)>=0;
-    if(readOnly&&!quiet&&!data?._retry&&(e.error==='bad'||e.error==='net')){document.getElementById('busy-s').textContent='Сервер просыпается, повторяю запрос…';return api(action,Object.assign({},data||{},{_retry:1}),quiet)}
+    if(readOnly&&!quiet&&!(data&&data._retry)&&(e.error==='bad'||e.error==='net')){document.getElementById('busy-s').textContent='Сервер просыпается, повторяю запрос…';return api(action,Object.assign({},data||{},{_retry:1}),quiet)}
     throw e;
   }finally{if(!quiet)unbusy()}
 }
