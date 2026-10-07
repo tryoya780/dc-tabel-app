@@ -1260,7 +1260,7 @@ async function conFlags(quiet){
       h+='<div class="qbox"><button class="grp" onclick="flEv('+gi+')"><b>'+g.name+'</b><span>'+ruDate(g.date).split(',')[0]+' · '+plural(g.items.length)+'</span></button>'+
         g.items.map((x,ii)=>flRow('flData.groups['+gi+'].items['+ii+']',x,'flOpen('+gi+','+ii+')')).join('')+'</div>';
     });
-    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» и «Опоздал» закрывают флаг без изменения денег, «Вызывали» сразу даёт минимум. «Время ухода» отправляет запрос администратору.'+(r.me.early?' Ранний уход вы решаете сами.':' Ранний уход разбирают руководитель банкетной службы, Поляков или администратор.'))+'</p>';
+    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» и «Опоздал» закрывают флаг без изменения денег, «Вызывали» сразу даёт минимум. «Время ухода» отправляет запрос администратору.'+(r.me.early?' Ранний уход вы решаете сами.':' Ранний уход разбирают администраторы.'))+'</p>';
     h+='<p class="upd">Обновлено в '+stampNow()+'</p>';
     document.getElementById('con-list').innerHTML=h;document.getElementById('con-foot').innerHTML='';
     {const on=document.querySelector('.chipsx .chip.on'),bx=on&&on.parentNode;if(on&&bx.scrollWidth>bx.clientWidth)bx.scrollLeft=Math.max(0,on.offsetLeft-bx.offsetLeft-20)} // выбранный фильтр не должен прятаться за краем
@@ -1291,7 +1291,7 @@ function flDone(r){
 function flBtns(ref,x){
   const adm=!!(conMe&&conMe.admin); // администратор правит часы сразу, менеджер отправляет запрос
   // ранний уход разбирают только те, кому разрешено (conMe.early); «Вызывали» по опозданию менеджер применяет сам
-  if(x.main==='early'&&!(conMe&&conMe.early))return '<p class="flask muted">Ранний уход разбирают руководитель банкетной службы, Поляков или администратор.</p>';
+  if(x.main==='early'&&!(conMe&&conMe.early))return '<p class="flask muted">Ранний уход разбирают администраторы.</p>';
   const now=flNow(x),b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
   const keep=h2(x.pay)+(x.own?' · '+rub(x.sum):''),minS=x.min+' ч'+(now?(x.own&&x.rate?' · '+rub(x.min*x.rate):''):', запрос админу'),tillS=adm?'указать и пересчитать':'пересчёт, запрос админу';
   const ok=(t,sub)=>b('sec','ok',t||'Всё верно',sub||(h2(x.pay)+' остаётся'));
