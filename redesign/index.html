@@ -210,6 +210,19 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ctx>div:first-child{flex:1;min-width:0}.ctx>.lnk{flex:none}.ctx b{display:block;font-weight:600}.ctx span{color:var(--mut);font-size:15px}
 .ctx .notew{flex-basis:100%;margin-top:6px}
 .cam{border-radius:22px}
+.tlh h2{display:inline-block}
+#modal .ib{all:unset;cursor:pointer;color:var(--mut);display:inline-flex}#modal .ib svg{width:20px;height:20px}
+#modal .tip{display:none;background:var(--sf2);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13.5px;color:var(--mut);line-height:1.45}#modal .tip.on{display:block}
+.rolee{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px}.rolee svg{width:16px;height:16px;flex:none}
+.rsel .cat{padding:13px 12px;margin-top:6px;border:0;border-radius:12px;background:var(--sf2)}.rsel .cat.sel{box-shadow:inset 0 0 0 1.5px var(--txt)}.rsel .cat.full{opacity:.55}
+/* селфи: экран ровно в высоту окна, окно камеры ужимается, чтобы кнопка всегда была видна внизу; на высоких экранах камера прежняя, 3:4 */
+@supports (height:1cqh) and selector(:has(*)){
+  body:has(#s-cam.on){height:var(--tg-viewport-stable-height,100dvh);min-height:0;box-sizing:border-box;overflow:hidden}
+  #s-cam.on{min-height:0}
+  #s-cam .camw{flex:1 1 0;min-height:120px;container-type:size}
+  #s-cam .grow{display:none}
+  #s-cam .cam{aspect-ratio:auto;height:min(100cqh,133.33cqw)}
+}
 #ev-name:not(:empty)::after{content:" · "}
 /* ── консоль (редизайн, вариант A): мероприятия карточками на подложке, очередь решений на подложке, фильтры одной строкой ── */
 .scr.con.on{display:flex;flex-direction:column}
@@ -275,6 +288,7 @@ body.tgback #s-ord h1,body.tgback #s-arch h1{margin-top:4px!important}
 /* ── карточка мероприятия, шторки человека и категории, окна действий (редизайн, вариант A) ── */
 .abar{gap:8px;margin:16px 0 4px}
 .abar .btn{background:var(--sf2);color:var(--txt);min-height:44px;padding:10px 14px;font-size:15px;border-radius:12px}
+.abar .btn.red{background:var(--bad);color:var(--on-bad)}.abar .btn.grow2{flex:2 1 0;white-space:nowrap}.abar .btn.grow1{flex:1 1 0}
 .sec2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:34px 0 4px;display:flex;gap:8px;align-items:baseline}
 .sec2 span{color:var(--txt);letter-spacing:0;font-size:14px}
 .qbox .sec2{margin:0;padding-top:16px}
@@ -369,9 +383,10 @@ select.fld{-webkit-appearance:none;appearance:none}
 .payr .btn.done{background:none;color:var(--ok);font-weight:550}
 .qrbox{width:230px;max-width:100%;margin:22px auto 0;padding:16px;border-radius:20px;background:#fff}
 .qrbox img{display:block;width:100%}
+.jrn summary{cursor:pointer;list-style:none}.jrn summary::-webkit-details-marker{display:none}.jrn summary::after{content:'›';display:inline-block;margin-left:6px;color:var(--mut);transition:transform .15s}.jrn[open] summary::after{transform:rotate(90deg)}
 .qrbox figcaption{text-align:center;color:#111;font-size:13px;font-weight:600;margin-top:8px}
 .qcode{text-align:center;font-size:36px;font-weight:650;letter-spacing:.06em;margin-top:18px;font-variant-numeric:tabular-nums}
-@media print{.qrbox{margin:20px auto;page-break-inside:avoid}}
+@media print{.qrbox{width:125mm;margin:12mm auto 0;padding:0;page-break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -459,10 +474,10 @@ select.fld{-webkit-appearance:none;appearance:none}
 <div id="s-cam" class="scr emp">
   <h1 id="cam-title">Селфи</h1>
   <div class="ctx" id="cam-sub"></div>
-  <div class="cam" id="cam-box"><video id="video" autoplay playsinline muted></video><img id="shot" style="display:none"><div class="cam-msg">Камера недоступна. Без селфи с камеры отметиться нельзя: разрешите Telegram доступ к камере в настройках телефона и откройте приложение заново или обратитесь к менеджеру на площадке.</div></div>
+  <div class="camw"><div class="cam" id="cam-box"><video id="video" autoplay playsinline muted></video><img id="shot" style="display:none"><div class="cam-msg">Камера недоступна. Без селфи с камеры отметиться нельзя: разрешите Telegram доступ к камере в настройках телефона и откройте приложение заново или обратитесь к менеджеру на площадке.</div></div>
+  </div>
   <input type="file" id="file" accept="image/*" capture="user" style="display:none">
   <div class="grow"></div>
-  <p class="hint">Снимок делается камерой прямо сейчас</p>
   <button class="btn txt navback" onclick="stopCam();show(camBack)">Назад</button>
   <button class="btn txt" id="btn-retake" style="display:none" onclick="retake()">Переснять</button>
   <button class="btn" id="btn-shot" onclick="takeShot()">Сделать фото</button>
@@ -574,6 +589,7 @@ async function kickGo(row){
 }
 /* дозаказ из консоли: все категории списком со счётчиком, причина одна; администратор добавляет сразу, менеджер отправляет на подтверждение */
 let dzN={};
+let jrnOpen=''; // карточка, где журнал раскрыт: тихое обновление его не сворачивает
 function dzAsk(){
   const r=conData,cats=r.stats.cats.map(c=>unesc(c.name)),roles=cats.concat(((r.roles||[]).map(unesc)).filter(x=>cats.indexOf(x)<0));dzN={};
   const info=n=>{const c=r.stats.cats.filter(q=>unesc(q.name)===n)[0],R=ordRole(n);return{rate:R?+R.rate||0:0,h:c?+c.min||0:0}};
@@ -613,14 +629,54 @@ const hrs=h=>String(Math.round((+h||0)*100)/100).replace('.',',')+' ч';
 function hmAdd(st,h){const m=String(st||'').match(/^(\d{1,2}):(\d{2})$/);if(!m||!(h>0))return '';const t=(+m[1]*60+ +m[2]+Math.round(h*60))%1440;return ('0'+Math.floor(t/60)).slice(-2)+':'+('0'+t%60).slice(-2)}
 function hmDiff(st,en){const a=String(st||'').match(/^(\d{1,2}):(\d{2})$/),b=String(en||'').match(/^(\d{1,2}):(\d{2})$/);if(!a||!b)return '';let d=(+b[1]*60+ +b[2])-(+a[1]*60+ +a[2]);if(d<=0)d+=1440;return Math.round(d/60*4)/4}
 function ordRole(name){return ((conData&&conData.order&&conData.order.roles)||[]).filter(q=>unesc(q.role)===name)[0]}
-/* менеджеры с фиксированной оплатой: читаются из сметы бухгалтерии, в приложении только показываются */
+/* менеджеры с фиксированной оплатой за проект: роли и суммы по умолчанию — лист 03, ставка человека — лист 13; правятся в наряде */
+let ordMg=[];
 function mgrBlock(o){
-  const b=o&&o.book;if(!b||!b.found)return '';
-  const list=(b.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0));
-  let h='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">Менеджеры</span><span class="muted">'+(list.length?rub(list.reduce((n,x)=>n+(x.sum||x.rate*x.people),0)):'')+'</span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">фиксированная оплата · из сметы бухгалтерии</div>';
-  h+=list.length?list.map(x=>'<div class="oln" style="cursor:default"><span>'+x.label+(x.people>1?' · '+x.people+' чел.':'')+'</span><span>'+rub(x.sum||x.rate*x.people)+'</span></div>').join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">В смете суммы менеджерам пока не указаны.</p>';
-  if(b.pm||b.bm)h+='<p class="muted" style="margin:10px 0 8px;font-size:13px">'+[b.pm?'менеджер проекта '+b.pm:'',b.bm?'банкетный менеджер '+b.bm:''].filter(Boolean).join(' · ')+'</p>';
+  const sum=ordMg.reduce((n,x)=>n+(+x.sum||0),0);
+  let h='<div class="card ocat" style="margin-top:12px"><div class="oct"><span class="ocn">Менеджеры</span><span class="muted">'+(ordMg.length?rub(sum):'')+'</span></div><div class="muted" style="font-size:13px;margin:2px 0 4px">фиксированная оплата за проект</div>';
+  if(!ordMg.length)h+='<p class="muted" style="margin:8px 0 4px;font-size:14px">Менеджеров в наряде пока нет.</p>';
+  ordMg.forEach((x,i)=>{h+='<div class="oln" style="cursor:default;display:block"><div>'+escS(x.fio)+'<br><small>'+escS(x.role)+'</small></div>'+
+    '<div style="display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:8px"><span class="muted" style="font-size:13px;margin-right:auto">сумма за проект</span><input class="fld" type="number" inputmode="numeric" value="'+(+x.sum||0)+'" style="width:120px;margin:0;text-align:right" onchange="ordMgSum('+i+',this.value)" aria-label="Сумма за проект"><a class="lnk" href="#" style="color:var(--bad)" onclick="ordMgDel('+i+');return false">Убрать</a></div></div>'});
+  if(((o&&o.people)||[]).length&&((o&&o.fixed)||[]).length)h+='<button class="btn txt" style="margin-top:4px" onclick="ordMgAdd()">+ Менеджер</button>';
   return h+'</div>';
+}
+function ordMgSum(i,v){const x=ordMg[i];if(!x)return;x.sum=Math.max(0,Math.round(ordNum(v)));ordDirty=true;ordBar();const e=document.querySelector('#ord-body .ocat:last-of-type .oct .muted');if(e)e.textContent=rub(ordMg.reduce((n,y)=>n+(+y.sum||0),0))}
+function ordMgDel(i){ordMg.splice(i,1);ordMg.forEach(x=>x.role=ordMgRoleOf(x));ordDirty=true;ordDraw()}
+const MG_ROLE={own:'Банкетный менеджер проекта',own2:'Банкетный менеджер DC',hired:'Вызывной банкетный менеджер'};
+function ordMgRoleOf(p,list){ // роль для книги назначает сервер; здесь только подпись: первый наш — проекта, следующие — DC, вызывной — вызывной
+  if(p.kind==='hired')return MG_ROLE.hired;const own=(list||ordMg).filter(x=>x.kind==='own');return own.length&&own[0].phone!==p.phone?MG_ROLE.own2:MG_ROLE.own;
+}
+let mgQ='';
+function ordMgAdd(q){
+  const o=conData.order,people=o.people||[],ev=o.evMgr||'',have={};ordMg.forEach(x=>have[x.phone]=1);mgQ=q||'';
+  const f=p=>!have[p.phone]&&(!mgQ||unesc(p.fio).toLowerCase().indexOf(mgQ.toLowerCase())>=0);
+  const own=people.filter(p=>p.kind==='own'&&f(p)).sort((a,b)=>(b.phone===ev)-(a.phone===ev)),hired=people.filter(p=>p.kind==='hired'&&f(p));
+  const btn=p=>'<button class="btn sec" style="margin-top:8px;text-align:left" onclick="ordMgPut(conData.order.people['+people.indexOf(p)+'])">'+escS(p.fio)+'<span class="muted" style="float:right">'+(p.phone===ev?'менеджер мероприятия · ':'')+rub(p.rate)+'</span></button>';
+  let h='<div class="mh">Кто из менеджеров?</div>';
+  if(people.length>8)h+='<input class="fld" type="search" placeholder="Фамилия" value="'+escS(mgQ)+'" oninput="ordMgAdd(this.value)" style="margin:4px 0 6px">';
+  h+='<div class="fsec" style="margin-top:8px">Наши</div>'+(own.length?own.map(btn).join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">'+(mgQ?'Не найдено':'Все уже в наряде')+'</p>');
+  h+='<div class="fsec" style="margin-top:14px">Вызывные</div>'+(hired.length?hired.map(btn).join(''):'<p class="muted" style="margin:8px 0 0;font-size:14px">'+(mgQ?'Не найдено':'Пока никого')+'</p>');
+  h+='<button class="btn txt" style="margin-top:10px" onclick="ordMgNew()">+ Новый вызывной</button><button class="btn sec" style="margin-top:8px" onclick="modalClose()">Отмена</button>';
+  modalOpen(h);if(mgQ){const e=document.querySelector('#modal-box input[type=search]');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}
+}
+function ordMgNew(){
+  const f=(id,lab,type,extra)=>'<div><label class="flab" for="'+id+'">'+lab+'</label><input id="'+id+'" class="fld" type="'+(type||'text')+'" '+(extra||'')+'></div>';
+  modalOpen('<div class="mh">Новый вызывной менеджер</div><p class="muted" style="margin:0 0 4px;font-size:13px">Попадёт в справочник и будет в списке в следующий раз.</p>'+
+    f('mgn-fio','Фамилия Имя Отчество')+f('mgn-phone','Телефон','tel','inputmode="numeric" placeholder="79161234567"')+f('mgn-sum','Сумма за смену, ₽','number','inputmode="numeric"')+
+    '<div class="ferr" id="m-err"></div><div class="acts" style="margin-top:16px"><button class="btn" onclick="ordMgNewGo()">Добавить в наряд</button><button class="btn sec" onclick="ordMgAdd()">Назад</button></div>');
+}
+async function ordMgNewGo(){
+  const g=id=>document.getElementById(id).value.trim(),d={fio:g('mgn-fio'),phone:g('mgn-phone').replace(/\D/g,''),sum:g('mgn-sum')};
+  if(d.phone.length===11&&d.phone[0]==='8')d.phone='7'+d.phone.slice(1);
+  if(d.fio.split(/\s+/).length<2||d.phone.length!==11||!(+d.sum>0)){mErr('Нужны фамилия и имя, телефон из 11 цифр и сумма');return}
+  mErr('');
+  try{const r=await api('con.act',{id:ceId,act:'mgrNew',fio:d.fio,phone:d.phone,sum:+d.sum});
+    const p=r.person;conData.order.people=(conData.order.people||[]).filter(x=>x.phone!==p.phone).concat([p]);toast(r.msg||'Добавлен',true);ordMgPut(p)}
+  catch(e){mErr(e.msg||'Не получилось добавить')}
+}
+function ordMgPut(p){
+  if(ordMg.some(x=>x.phone===p.phone)){toast(unesc(p.fio)+' уже в наряде');modalClose();return}
+  ordMg.push({phone:p.phone,fio:unesc(p.fio),kind:p.kind,sum:+p.rate||0,role:ordMgRoleOf(p)});ordDirty=true;modalClose();ordDraw();
 }
 function ordCard(r){
   const o=r.order;if(!o)return '';
@@ -636,8 +692,9 @@ function ordCard(r){
     else h+='<div class="row"><span class="muted">'+(multi?'Всего за '+ruDay(day):'Всего')+' · '+n+' чел.</span><b>'+rub(sum)+'</b></div>';
     if(multi){const all=own.reduce((m,x)=>m+x.hours*x.n*x.rate,0);h+='<div class="row"><span class="muted">За все дни ('+r.days.length+')</span><b>'+rub(all)+'</b></div>'}
   }
-  {const bk=o.book,ml=bk&&bk.found?(bk.mgrs||[]).filter(x=>x.sum>0||(x.rate>0&&x.people>0)):[];
-    if(ml.length)h+='<div class="row"><span class="muted">Менеджеры (фикс из сметы) · '+ml.length+'</span><b>'+rub(ml.reduce((n,x)=>n+(x.sum||x.rate*x.people),0))+'</b></div>';
+  {const ml=o.mgrs||[];
+    ml.forEach(x=>{h+='<div class="row"><span>'+x.fio+'<br><span class="muted" style="font-size:13px">'+x.role+(o.state==='pending'&&!x.ok?' · <span class="warn">ждёт согласования</span>':'')+'</span></span><b>'+rub(x.sum)+'</b></div>'});
+    if(ml.length>1)h+='<div class="row"><span class="muted">Менеджеры · '+ml.length+'</span><b>'+rub(ml.reduce((n,x)=>n+x.sum,0))+'</b></div>';
     if(o.pushed)h+='<p class="muted" style="margin:8px 0 0;font-size:13px">Факт выгружен в бухгалтерию '+o.pushed.slice(8,10)+'.'+o.pushed.slice(5,7)+' в '+o.pushed.slice(11,16)+'</p>'}
   let b='';
   if(o.canApprove)b+='<button class="btn" onclick="ask(\'Согласовать наряд? После этого мероприятие можно открывать.\').then(ok=>{if(ok)conAct(\'ordApprove\')})">Согласовать</button>';
@@ -654,6 +711,7 @@ const ordNum=v=>parseFloat(String(v).replace(',','.'))||0;
 function ordEdit(){
   const o=conData.order,ev=conData.event,used={};(o.used||[]).forEach(u=>used[unesc(u)]=1);
   ordEd=o.rows.filter(x=>!x.dz).map(x=>{const role=unesc(x.role);return{role:role,day:x.day,start:x.start,hours:x.hours||hmDiff(x.start,x.end)||'',end:x.end,n:x.n,locked:!!used[role+'|'+x.day+'|'+x.start+'|'+x.end]}});
+  ordMg=(o.mgrs||[]).map(x=>({role:unesc(x.role),phone:x.phone,fio:unesc(x.fio),sum:+x.sum||0,kind:/вызывн/i.test(unesc(x.role))?'hired':'own'}));
   const set={};for(let k=0;k<(+ev.days||1);k++)set[dayAdd(ev.date,k)]=1;ordEd.forEach(x=>set[x.day]=1);
   ordDays=Object.keys(set).sort();ordDay=ordDays.indexOf(ceDay)>=0?ceDay:ordDays[0];ordOpen=-1;ordDirty=false;ordEndEdit=false;
   document.getElementById('ord-ev').innerHTML=ev.name;
@@ -702,7 +760,7 @@ function ordBar(){
   const op=ordOpen>=0?ordEd[ordOpen]:null;
   document.getElementById('ord-bar').innerHTML=op
     ?'<div class="tot2"><span>'+escS(op.role)+'<br><span class="muted">'+(op.start?'к '+op.start+(op.end?' до '+op.end:''):'время не указано')+(op.n?' · '+op.n+' чел.':'')+'</span></span></div><button class="btn" onclick="ordCloseRow()">Готово</button>'
-    :'<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
+    :'<div class="tot2"><span>'+(multi?dayLbl(ordDay)+' · ':'')+d.n+' чел.'+(multi?'<br>за все дни '+rub(all.sum):'')+(ordMg.length?'<br>менеджеры '+rub(ordMg.reduce((n,x)=>n+(+x.sum||0),0)):'')+'</span><b>'+rub(d.sum)+'</b></div><button class="btn" onclick="ordGo()">Сохранить</button>';
   ordEd.forEach(x=>{if(x.day!==ordDay)return;const e=document.getElementById('oc-'+ordCatId(x.role));if(e){const t=ordSum(ordEd.filter(y=>y.day===ordDay&&y.role===x.role)),m=ordMax(x.role);e.textContent=t.n+(m?' из '+m:'')+' чел. · '+rub(t.sum);e.className=m&&t.n>m?'warn':'muted'}});
 }
 const ordMax=role=>{const b=conData.order.book;return b&&b.found&&b.max&&b.max[role]>0?b.max[role]:0};
@@ -738,7 +796,7 @@ function ordDraw(){
   h+=mgrBlock(o);
   if(!multi)h+='<p style="margin:14px 0 0;font-size:14px;text-align:center"><a class="lnk" href="#" onclick="ordAddDay();return false">Мероприятие идёт не один день: + день</a></p>';
   if(multi&&!ordBaseDay(ordDay))h+='<button class="btn txt red" style="margin-top:4px" onclick="ordDelDay()">Убрать день '+dayLbl(ordDay)+'</button>';
-  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован».':(o.book&&o.book.found?'Если наряд совпадает со сметой бухгалтерии, он согласуется сам; любое отличие уйдёт администратору, после согласования наряд запишется в смету.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
+  h+='<p class="muted" style="font-size:13px;margin:16px 0 0;text-align:center">'+(conMe.admin?'Сохранится сразу со статусом «Согласован»'+(o.book&&o.book.found?' и запишется в смету бухгалтерии.':'.'):(o.book&&o.book.found?'Если наряд совпадает со сметой бухгалтерии, он согласуется сам; любое отличие уйдёт администратору, после согласования наряд запишется в смету.':'После сохранения наряд уйдёт администратору на согласование.'))+'</p>'+
     (o.book&&!o.book.found&&o.book.why?'<p class="muted" style="font-size:13px;margin:6px 0 0;text-align:center">'+o.book.why+'</p>':'');
   document.getElementById('ord-body').innerHTML=h;ordBar();
 }
@@ -750,7 +808,7 @@ async function ordGo(){
     rows.push({role:x.role,day:x.day,start:x.start,hours:h,end:x.end,n:n});
   }
   if(!rows.length){toast('Добавьте хотя бы одну категорию');return}
-  if(await conAct('ordSave',0,'',{rows:rows}))ordDirty=false;
+  if(await conAct('ordSave',0,'',{rows:rows,mgrs:ordMg.map(x=>({phone:x.phone,sum:x.sum}))}))ordDirty=false;
 }
 /* создание мероприятия администратором */
 let evcN=1;
@@ -816,11 +874,16 @@ async function dzDecide(di,ok){
   conAct(ok?'dzConfirm':'dzReject',0,'',{req:unesc(d.id)});
 }
 function unesc(t){const e=document.createElement('textarea');e.innerHTML=String(t);return e.value}
-async function releaseCatAsk(ci){
-  const c=conData.stats.cats[ci];if(!c)return;
-  const n=conData.shifts.filter(x=>x.role===c.name&&x.open&&!x.released).length;
-  if(!(await ask('Отпустить бригаду: '+n+' чел.? Смены закроются, минимум за выход сохранится.')))return;
-  closeDrawer();conAct('releaseCat',0,unesc(c.name));
+let relGrp=null;
+function relGrpGo(){const q=relGrp;if(!q)return;modalClose();closeDrawer();conAct('releaseGrp',0,q.role,{win:q.win})}
+function relGrpAsk(ci,k){
+  const c=conData.stats.cats[ci],ws=(conData.windows||[]).filter(x=>x.role===c.name),g=ws[k];if(!g)return;
+  relGrp={role:unesc(c.name),win:ws.length>1?unesc(g.key):''};
+  const ppl=conData.shifts.filter(x=>x.role===c.name&&x.open&&(ws.length===1||x.win===g.key));
+  modalOpen(shHead(ws.length>1?'Отпустить группу?':'Отпустить всех?',c.name+' · к '+g.start+', до '+g.end)+
+    '<p class="cap" style="margin:12px 0 0;font-size:14.5px">'+ppl.map(x=>shortFio(x.fio)).join(', ')+'</p>'+
+    '<p class="cap" style="margin:10px 0 0;font-size:14px">Смены закроются в '+stampNow()+' без селфи, как при «Отпустить»: по факту, а в последние 2 часа окна и позже — не меньше минимума.</p>'+
+    '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="relGrpGo()">Отпустить ('+ppl.length+')</button>');
 }
 /* «Отпустить»: своё окно вместо системного, с исходом заранее (поле rel приходит с сервера; без него — общий текст) */
 function releaseAsk(i){
@@ -1080,7 +1143,7 @@ function retake(){openCam()}
 /* приход/уход с повтором: «сервер занят», обрыв связи или пустой ответ → ждём и пробуем ещё, до 3 попыток.
    Если после повтора сервер отвечает «смена уже открыта» / «открытых смен нет» — предыдущая попытка на самом деле записалась. */
 async function apiRetry(action,data){
-  const WAIT=[4000,7000,10000];let tries=0;
+  const WAIT=[3000,5000,8000,10000,12000];let tries=0; // до пяти повторов после первой попытки: обрыв связи, занятый сервер, мусорный ответ
   for(;;){
     try{return await api(action,data)}
     catch(e){
@@ -1128,7 +1191,9 @@ async function sendShot(){
     if(e.error==='need_contact')return show('s-contact');
     if(e.error==='need_fio')return show('s-fio');
     if(e.error==='consent'){stopCam();try{me=Object.assign(me||{},await api('me',{},true))}catch(_){}me.consent=false;showConsent();return} // сервер требует согласие (кэш профиля устарел или текст обновили)
-    toast(e.msg||'Ошибка отправки');
+    // связи не было: фото остаётся в приложении, снимать заново не нужно — достаточно нажать «Отправить» ещё раз
+    if(['busy','net','bad'].indexOf(e.error)>=0)toast((mode==='in'?'Смена не открыта':'Смена не закрыта')+': сервер не ответил после 6 попыток. Фото сохранено — проверьте связь и нажмите «Отправить» ещё раз.','warn');
+    else toast(e.msg||'Ошибка отправки');
     // повтор бессмыслен: смена уже открыта/закрыта, мероприятие закрыто, человек выгнан, мест нет — домой с обновлением профиля
     if(['open','noshift','closed','kicked','stop','full','token','notfound'].indexOf(e.error)>=0){stopCam();try{localStorage.removeItem('me')}catch(_){}init()}
   }finally{b.disabled=false;b.textContent='Отправить'}
@@ -1203,7 +1268,7 @@ async function conFlags(quiet){
       h+='<div class="qbox"><button class="grp" onclick="flEv('+gi+')"><b>'+g.name+'</b><span>'+ruDate(g.date).split(',')[0]+' · '+plural(g.items.length)+'</span></button>'+
         g.items.map((x,ii)=>flRow('flData.groups['+gi+'].items['+ii+']',x,'flOpen('+gi+','+ii+')')).join('')+'</div>';
     });
-    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» закрывает флаг без изменения денег. Кнопки с часами отправляют запрос администратору: часы меняет только он.')+'</p>';
+    if(r.state==='open'&&r.groups.length)h+='<p class="cap" style="margin-top:14px">'+(r.me.admin?'«Всё верно» и «Оставить факт» закрывают флаг без изменения денег. Кнопки с часами сразу пересчитывают оплату.':'«Всё верно» и «Опоздал» закрывают флаг без изменения денег, «Вызывали» сразу даёт минимум. «Время ухода» отправляет запрос администратору.'+(r.me.early?' Ранний уход вы решаете сами.':' Ранний уход разбирают администраторы.'))+'</p>';
     h+='<p class="upd">Обновлено в '+stampNow()+'</p>';
     document.getElementById('con-list').innerHTML=h;document.getElementById('con-foot').innerHTML='';
     {const on=document.querySelector('.chipsx .chip.on'),bx=on&&on.parentNode;if(on&&bx.scrollWidth>bx.clientWidth)bx.scrollLeft=Math.max(0,on.offsetLeft-bx.offsetLeft-20)} // выбранный фильтр не должен прятаться за краем
@@ -1233,8 +1298,10 @@ function flDone(r){
 }
 function flBtns(ref,x){
   const adm=!!(conMe&&conMe.admin); // администратор правит часы сразу, менеджер отправляет запрос
-  const b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
-  const keep=h2(x.pay)+(x.own?' · '+rub(x.sum):''),minS=x.min+' ч'+(adm?(x.own&&x.rate?' · '+rub(x.min*x.rate):''):', запрос админу'),tillS=adm?'указать и пересчитать':'пересчёт, запрос админу';
+  // ранний уход разбирают только те, кому разрешено (conMe.early); «Вызывали» по опозданию менеджер применяет сам
+  if(x.main==='early'&&!(conMe&&conMe.early))return '<p class="flask muted">Ранний уход разбирают администраторы.</p>';
+  const now=flNow(x),b=(cls,act,t,sub)=>'<button class="btn '+cls+'" onclick="flDo('+ref+',\''+act+'\')"><span>'+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</button>';
+  const keep=h2(x.pay)+(x.own?' · '+rub(x.sum):''),minS=x.min+' ч'+(now?(x.own&&x.rate?' · '+rub(x.min*x.rate):''):', запрос админу'),tillS=adm?'указать и пересчитать':'пересчёт, запрос админу';
   const ok=(t,sub)=>b('sec','ok',t||'Всё верно',sub||(h2(x.pay)+' остаётся'));
   let h='';
   if(x.main==='auto')h=ok('Всё верно',h2(x.pay)+' остаётся')+b('','until','Время ухода',tillS);
@@ -1250,13 +1317,15 @@ async function flDo(x,act){
   if(act==='until'){flCur=x;return modalOpen('<div class="mh">'+(x.main==='long'?'Когда ушёл':'До скольки работал')+'</div><p class="muted" style="margin:0 0 6px">'+x.fio+' · пришёл '+x.in+'. '+(conMe&&conMe.admin?'Часы посчитаются по обычным правилам и применятся сразу.':'Бот посчитает часы по обычным правилам и отправит запрос администратору.')+'</p>'+
     '<label class="flab" for="fl-till">'+(x.main==='long'?'Время ухода':'Работал до')+'</label><input type="time" class="fld" id="fl-till" value=""><input class="fld" id="fl-why" placeholder="Комментарий (необязательно)"><div class="ferr" id="m-err"></div>'+
     '<div class="acts"><button class="btn" onclick="flUntilGo()">'+(conMe&&conMe.admin?'Пересчитать':'Отправить')+'</button><button class="btn sec" onclick="modalClose()">Отмена</button></div>')}
-  const adm=!!(conMe&&conMe.admin);
+  const adm=flNow(x);
   if(act==='min'&&!(await ask(x.fio+(adm?': зачесть минимум '+x.min+' ч? Оплата пересчитается сразу.':': попросить администратора зачесть минимум '+x.min+' ч?'))))return;
   if(act==='apply'&&!(await ask('Применить: '+x.fio+' → '+h2(x.ask.h)+(x.own?', '+rub(Math.round(x.ask.h*x.rate)):'')+'?')))return;
   if(act==='reject'&&!(await ask('Отклонить запрос? Останется '+h2(x.pay)+'.')))return;
   const map={ok:'flagOk',min:'flagAsk',apply:'flagApply',reject:'flagReject'};
   await flSend(x,map[act],act==='min'?(adm?{kind:'min',now:1}:{kind:'min'}):{});
 }
+/* кнопка «минимум» применяется сразу, без запроса администратору */
+function flNow(x){return !!(conMe&&conMe.admin)||x.main==='late'||(x.main==='early'&&!!(conMe&&conMe.early))}
 function flUntilGo(){
   const t=document.getElementById('fl-till').value,w=document.getElementById('fl-why').value.trim();
   if(!/^\d{1,2}:\d{2}$/.test(t))return mErr('Укажите время');
@@ -1371,7 +1440,8 @@ async function conOpen(id,day,quiet){
     const pay=r.pay||[],paySum=pay.reduce((n,x)=>n+x.sum,0),payDone=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0);
     h+='<div class="sec2">Оплата</div><button class="crow" onclick="payOpen()"><div>Свои · наличными<small>'+pay.length+' чел.'+(pay.length?' · выдано '+rub(payDone):'')+'</small></div><div class="r">'+rub(paySum)+' ›</div></button>'+
       '<div class="crow" style="cursor:default"><div>Подрядчик · безнал<small>'+sub.length+' чел.</small></div><div class="r">'+rub(sub.reduce((n,x)=>n+(x.sum||0),0))+'</div></div>';
-    if(r.journal.length)h+='<div class="sec2">Журнал</div><div class="kvs t">'+r.journal.slice().reverse().map(j=>'<div class="kv" style="display:block"><b style="text-align:left;display:block">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</b><span class="k" style="font-size:13px">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</span></div>').join('')+'</div>';
+    // журнал свёрнут по умолчанию: данные уже в ответе, раскрытие ничего не подгружает; раскрытый не сворачивается при тихом обновлении
+    if(r.journal.length)h+='<details class="jrn"'+(jrnOpen===ceId?' open':'')+' ontoggle="jrnOpen=this.open?ceId:\'\'"><summary class="sec2">Журнал <span>'+r.journal.length+'</span></summary><div class="kvs t">'+r.journal.slice().reverse().map(j=>'<div class="kv" style="display:block"><b style="text-align:left;display:block">'+j.what+(j.was!==''||j.now!==''?': '+j.was+' → '+j.now:'')+'</b><span class="k" style="font-size:13px">'+j.t+' · '+j.who+(j.why?' · '+j.why:'')+'</span></div>').join('')+'</div></details>';
     h+='<p class="upd noprint">Обновлено в '+stampNow()+' · <a class="lnk" href="#" style="padding:0;margin:0;font-size:13px" onclick="conOpen(ceId,ceDay);return false">обновить</a></p>';
     document.getElementById('ce-body').innerHTML=h;
     show('s-conev');
@@ -1391,10 +1461,21 @@ function timeline(r){
   let ax='';for(let t=Math.ceil(t0/36e5)*36e5;t<=t1;t+=36e5*(span>14*36e5?2:1)){const d=new Date(t);ax+='<span style="left:'+px(t)+'%">'+('0'+d.getHours()).slice(-2)+'</span>'}
   const nowIn=r.now>t0&&r.now<t1;
   const byKey={};ws.forEach(w=>byKey[w.key]=w);const first={};ws.forEach(w=>{if(!first[w.role])first[w.role]=w});
-  return '<h2>Лента смен</h2><div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
-    return '<div class="rw" onclick="openShift('+i+')"><div class="nm">'+shortFio(x.fio)+'<small>'+x.role+'</small></div><div class="tr">'+(w?'<div class="win" style="left:'+px(w.startTs)+'%;width:'+(px(w.endTs)-px(w.startTs))+'%"></div>':'')+
-      '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(2,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+(nowIn?'<div class="nowl" style="left:'+px(r.now)+'%"></div>':'')+'</div></div>'}).join('')+'</div>';
+  // фильтр по категории (если их больше одной): выбор помнится для мероприятия, тихое обновление его не сбрасывает
+  const cats=[];sh.forEach(x=>{if(cats.indexOf(x.role)<0)cats.push(x.role)});
+  let cur=tlCat[ceId]||'';if(cats.indexOf(cur)<0)cur='';
+  const nm=c=>{const a=String(c).split(' '),s0=a[0]==='Официанты'&&a.length>1?a.slice(1).join(' '):a[0];return cats.filter(q=>q!==c&&String(q).indexOf(s0)>=0).length?c:s0};
+  const chips=cats.length>1?'<div class="chipsx" style="margin-bottom:10px">'+['',...cats].map(c=>'<button class="chip'+(c===cur?' on':'')+'" onclick="tlPick('+(c?cats.indexOf(c)+1:0)+')">'+(c?nm(c):'Все')+' '+(c?sh.filter(x=>x.role===c).length:sh.length)+'</button>').join('')+'</div>':'';
+  tlCats=cats;
+  // лента сворачивается заголовком; по умолчанию раскрыта, свёрнутое состояние помнится для всех мероприятий
+  return '<details id="tl-box" class="jrn"'+(tlOff()?'':' open')+' ontoggle="tlSave(!this.open)"><summary class="tlh"><h2>Лента смен</h2></summary>'+chips+'<div class="card tl"><div class="ax">'+ax+'</div>'+sh.map((x,i)=>{if(cur&&x.role!==cur)return '';const w=byKey[x.win]||first[x.role];const end=x.outTs||r.now;const mk=x.inTs+x.min*36e5;
+    return '<div class="rw" onclick="openShift('+i+')"><div class="nm">'+shortFio(x.fio)+(cur?'':'<small>'+x.role+'</small>')+'</div><div class="tr">'+(w?'<div class="win" style="left:'+px(w.startTs)+'%;width:'+(px(w.endTs)-px(w.startTs))+'%"></div>':'')+
+      '<div class="bar'+(x.open?(x.pending?' pend':' open'):x.auto?' auto':'')+'" style="left:'+px(x.inTs)+'%;width:'+Math.max(2,px(end)-px(x.inTs))+'%"></div>'+(mk<t1?'<div class="mk" style="left:'+px(mk)+'%" title="минимум '+x.min+' ч"></div>':'')+(nowIn?'<div class="nowl" style="left:'+px(r.now)+'%"></div>':'')+'</div></div>'}).join('')+'</div></details>';
 }
+let tlCat={},tlCats=[];
+function tlOff(){try{return localStorage.getItem('tlOff')==='1'}catch(e){return false}}
+function tlSave(off){try{localStorage.setItem('tlOff',off?'1':'')}catch(e){}}
+function tlPick(k){tlCat[ceId]=k?tlCats[k-1]:'';const b=document.getElementById('tl-box');if(b&&conData)b.outerHTML=timeline(conData)}
 function shortFio(f){const p=String(f||'').split(/\s+/);return p.length>1?p[0]+' '+p.slice(1).map(x=>x[0]+'.').join(''):f}
 /* кнопки решения по карточке «ждёт»: левая — как по правилу (снимает ожидание), правая — исключение в пользу человека */
 function pendBtns(x){
@@ -1425,7 +1506,28 @@ function openShift(i){
   h+='<p class="hint">'+(x.open?'Часы и сумма появятся после закрытия смены':x.flg?({open:'Если часы неверные — кнопки в блоке флага',ask:'Запрос правки ждёт администратора',done:'Флаг разобран. Спорный случай — к администратору'})[x.flg.state]:'Флагов нет, всё посчитано по правилам')+'</p>';
   if(x.open)h+='<div class="foot"><button class="btn txt red" onclick="kickAsk('+i+')">Выгнать</button><button class="btn sec" style="background:var(--sf2)" onclick="releaseAsk('+i+')">Отпустить сейчас</button></div>';
   if(x.kicked&&conMe&&conMe.admin)h+='<div class="foot"><button class="btn sec" style="background:var(--sf2)" onclick="ask(\'Вернуть на смену? Пометка «выгнан» снимется, смена снова откроется, стоп-лист снимется.\').then(ok=>{if(ok){closeDrawer();conAct(\'unkick\','+x.inRow+')}})">Вернуть на смену</button></div>';
-  openDrawer(h,x.fio,x.role+(g?' · к '+g.start+', до '+g.end:''));
+  // категория под ФИО: пока мероприятие не закрыто, менеджер и администратор меняют её по нажатию (карандаш)
+  const canRole=ev.status!=='Закрыто'&&!x.kicked,grp=g?'к '+g.start+', до '+g.end:'';
+  openDrawer(h,x.fio,canRole?'<button class="rolee" onclick="roleAsk('+i+')">'+x.role+PEN_IC+'</button> '+grp:x.role+(g?' · '+grp:''));
+}
+const PEN_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+/* «Сменить категорию»: строка = категория + группа этого дня; без свободных мест выбрать нельзя (своя категория не в счёт) */
+let roleOpts=[],roleK=-1;
+function roleAsk(i){
+  const x=conData.shifts[i];if(!x)return;
+  roleOpts=(conData.windows||[]).filter(w=>!(w.role===x.role&&w.key===x.win));roleK=-1;
+  const free=r=>{const c=conData.stats.cats.filter(q=>q.name===r)[0];return c?Math.max(0,c.limit-c.came):0};
+  const rows=roleOpts.map((w,k)=>{const f=w.role===x.role?-1:free(w.role),dis=f===0;
+    return '<div class="cat'+(dis?' full':'')+'"'+(dis?'':' onclick="roleSel('+k+')"')+' data-k="'+k+'"><div><b>'+w.role+'</b><small style="display:block">к '+w.start+', до '+w.end+(w.rate?' · '+rub(w.rate)+'/ч':'')+'</small></div><div>'+(dis?'мест нет':f>0?'своб. '+f:'')+'</div></div>'}).join('');
+  modalOpen(shHead(x.fio+' — в какую категорию?','Сейчас: '+x.role)+'<div class="rsel">'+(rows||'<p class="cap">Других категорий и групп в этот день нет.</p>')+'</div>'+
+    '<p class="cap" style="margin:12px 0 0;font-size:14px">Приход остаётся '+(x.first||x.in)+'. Часы и сумма считаются по новой категории. Человеку придёт сообщение.</p>'+
+    '<div class="ferr" id="m-err"></div><div class="mfoot"><button class="btn txt" onclick="modalClose()">Отмена</button><button class="btn" id="role-go" style="margin-top:6px" onclick="roleGo('+i+')">Сменить</button></div>');
+}
+function roleSel(k){roleK=k;document.querySelectorAll('#modal .rsel .cat').forEach(e=>e.classList.toggle('sel',+e.dataset.k===k))}
+function roleGo(i){
+  const x=conData.shifts[i],w=roleOpts[roleK];
+  if(!w){document.getElementById('m-err').textContent='Выберите категорию';return}
+  modalClose();closeDrawer();conAct('role',x.inRow,unesc(w.role),{win:unesc(w.key)});
 }
 function openCat(ci){ // индекс категории, а не имя: значения из данных в inline-обработчики не попадают
   const r=conData,c=r.stats.cats[ci];if(!c)return;const name=c.name;
@@ -1439,8 +1541,9 @@ function openCat(ci){ // индекс категории, а не имя: зна
   if(ws.length>1)h+='<div class="sec2" style="margin-top:26px">Группы</div><div class="kvs t">'+ws.map(g=>{const gs=sh.filter(x=>x.win===g.key);return '<div class="kv"><span class="k">К '+g.start+', до '+g.end+(g.dz?' · дозаказ':'')+'</span><b>'+gs.length+' из '+g.count+'</b></div>'}).join('')+'</div><p class="cap" style="margin:6px 0 0">Человек относится к группе, чьё начало ближе к его приходу. Лимит общий на категорию.</p>';
   h+='<div class="sec2" style="margin-top:26px">На объекте <span>'+on.length+'</span></div>'+(on.length?on.map(row).join(''):'<p class="muted" style="margin:8px 0 0">Никого</p>');
   h+='<div class="sec2" style="margin-top:26px">Ушли <span>'+off.length+'</span></div>'+(off.length?off.map(row).join(''):'<p class="muted" style="margin:8px 0 0">Пока никто не ушёл</p>');
-  const notRel=on.filter(x=>!x.released);
-  h+='<div class="foot">'+(SHOW_RELEASE_CAT&&notRel.length?'<button class="btn txt" onclick="releaseCatAsk('+ci+')">Отпустить бригаду ('+notRel.length+')</button>':'')+(r.event.code&&r.event.status!=='Закрыто'?'<button class="btn sec" style="background:var(--sf2)" onclick="conAct(\'qr\')">QR-лист</button>':'')+'</div>';
+  // «Отпустить группу»: как «Отпустить» по одному, для всей группы времени (одна группа — «Отпустить всех»)
+  const rel=ws.map((g,k)=>({k:k,n:on.filter(x=>ws.length===1||x.win===g.key).length,g:g})).filter(q=>q.n);
+  h+='<div class="foot">'+rel.map(q=>'<button class="btn txt" onclick="relGrpAsk('+ci+','+q.k+')">'+(ws.length>1?'Отпустить группу к '+q.g.start:'Отпустить всех')+' ('+q.n+')</button>').join('')+(r.event.code&&r.event.status!=='Закрыто'?'<button class="btn sec" style="background:var(--sf2)" onclick="conAct(\'qr\')">QR-лист</button>':'')+'</div>';
   openDrawer(h,name,(w?w.start+'–'+w.end+' · ':'')+'минимум '+c.min+' ч');
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');updBack()}
@@ -1495,7 +1598,6 @@ async function openPhoto(i,kind){
   catch(e){const w=document.querySelector('#modal .ph-wrap');if(w)w.innerHTML='<div class="muted bad">'+escS(e.msg||'Не удалось загрузить фото')+'</div>'}
 }
 function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
-const SHOW_RELEASE_CAT=false; // «Отпустить бригаду» (минимум всем) скрыта по решению 22.09, сервер её поддерживает
 let conActErr='';
 /* возвращает true при успехе; текст ошибки в conActErr (для модалок) и в тосте */
 async function conAct(act,row,role,extra){
@@ -1507,7 +1609,7 @@ async function conAct(act,row,role,extra){
       openDrawer(r.qr.map(q=>'<figure class="qrbox"><img src="'+q.img+'" alt="QR-код">'+(one?'':'<figcaption>'+escS(q.role)+'</figcaption>')+'</figure>').join('')+
         '<div class="qcode">'+escS(String(r.code).replace(/^(\d{3})(\d{3})$/,'$1 $2'))+'</div><p class="hint" style="margin-top:4px">Код для тех, у кого не работает сканер</p>'+
         '<p class="hint noprint" style="margin:22px 0 0">Лист и код придут сообщением от бота: оттуда их можно переслать. На компьютере лист можно распечатать: Ctrl+P.</p>'+
-        '<div class="foot noprint"><button class="btn" onclick="conAct(\'qrSend\')">Отправить в чат бота</button></div>','QR-лист',one?'Один на всё мероприятие и все категории':'');
+        '<div class="foot noprint"><button class="btn" onclick="conAct(\'qrSend\')">Отправить в чат бота</button></div>','QR-лист','');
       return true;
     }
     if(act==='qrSend'||act==='reportSend'){toast(r.msg||'Отправлено',true);return true} // панель с QR остаётся открытой
@@ -1540,6 +1642,8 @@ function reportHtml(r){
 }
 function actionBar(ev,m,st){
   const open=ev.status==='Открыто',closed=ev.status==='Закрыто';
+  // через час после планового конца главная кнопка — «Закрыть мероприятие»; дозаказ и QR уходят в «Ещё…» (07.10)
+  if(evEnded(ev))return '<div class="abar noprint"><button class="btn red grow2" onclick="conClose()">Закрыть мероприятие</button><button class="btn sec grow1" onclick="moreAsk()">Ещё…</button></div>';
   let b='';
   if(open)b+='<button class="btn" onclick="dzAsk()">Дозаказ</button>';
   if(m.admin&&!open&&!closed)b+=(st&&st.limit?'<button class="btn" onclick="ask(\'Открыть мероприятие? Персонал сможет отмечаться, выпустятся QR и код.\').then(ok=>{if(ok)conAct(\'open\')})">Открыть и выпустить QR</button>':'<button class="btn" disabled title="Заполните и согласуйте наряд ниже">Наряд не согласован</button>');
@@ -1548,16 +1652,19 @@ function actionBar(ev,m,st){
   if(m.admin)b+='<button class="btn sec" onclick="moreAsk()">Ещё…</button>';
   return b?'<div class="abar noprint">'+b+'</div>':'';
 }
+const evEnded=ev=>ev.status==='Открыто'&&+ev.planEnd>0&&Date.now()>=+ev.planEnd+36e5;
 function moreAsk(){
-  const ev=conData.event,open=ev.status==='Открыто';
+  const ev=conData.event,open=ev.status==='Открыто',adm=!!(conMe&&conMe.admin);
   const it=(t,fn,cls)=>'<button class="btn '+(cls||'sec')+'" style="margin-top:8px" onclick="modalClose();'+fn+'">'+t+'</button>';
-  let h='<div class="mh">'+ev.name+'</div><p class="muted" style="margin:0 0 6px">Действия администратора</p>';
+  let h='<div class="mh">'+ev.name+'</div>';
+  if(evEnded(ev))h+=it('Дозаказ',"dzAsk()")+(ev.code?it('QR-листы',"conAct('qr')"):'');
+  if(!adm){h+=it('Отмена','','sec');return modalOpen(h)}
   h+=it('Отчёт',"conAct('report')");
   h+=it('Номер сделки Битрикс',"bxAsk()");
   h+=it('Выплаты наличными',"payOpen()")+it('Реестр подрядчику',"conAct('registry')");
   if(ev.bx)h+=it(conData.order&&conData.order.pushed?'Выгрузить в бухгалтерию ещё раз':'Выгрузить в бухгалтерию',"conAct('bookPush')");
   if(ev.code)h+=it('Перевыпустить QR',"ask('Перевыпустить QR? Старые листы и код перестанут работать.').then(ok=>{if(ok)conAct('reissue')})");
-  if(open)h+=it('Закрыть мероприятие',"conClose()",'red');
+  if(open&&!evEnded(ev))h+=it('Закрыть мероприятие',"conClose()",'red');
   h+=it('Отмена',"",'sec');
   modalOpen(h);
 }
@@ -1581,28 +1688,40 @@ function payOpen(){
   const sum=pay.reduce((n,x)=>n+x.sum,0),done=pay.filter(x=>x.paid).reduce((n,x)=>n+x.sum,0),openN=conData.shifts.filter(x=>x.open&&x.own).length;
   let h='<div class="bigv" style="margin-top:18px"><b>'+rub(sum-done)+'</b><span>осталось выдать · выдано '+rub(done)+' из '+rub(sum)+'</span></div>';
   if(openN)h+='<p class="cap" style="margin:10px 0 0;font-size:13.5px">Ещё в смене: '+openN+' чел. Они появятся в списке после ухода.</p>';
-  if(!pay.length)h+='<p class="muted" style="margin:16px 0 0">Закрытых смен своего персонала пока нет.</p>';
+  if(!pay.length)h+='<p class="muted" style="margin:16px 0 0">Закрытых смен своего персонала и менеджеров с фиксом пока нет.</p>';
   let cat='';
   pay.forEach((x,i)=>{
     if(x.role!==cat){cat=x.role;h+='<div class="sec2" style="margin-top:26px">'+x.role+'</div>'}
-    h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate)+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
-      '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
+    h+='<div class="payr"><div><b>'+x.fio+'</b><small>'+(x.fixed?'фикс за проект':(multi?ruDay(x.day)+' · ':'')+hrs(x.pay)+' × '+rub(x.rate))+(x.flag?' · <span class="warn">флаг не разобран</span>':'')+'</small></div>'+
+      '<div class="r"><b>'+rub(x.sum)+'</b><button class="btn'+(x.paid?' done':'')+'" data-pay="'+i+'" onclick="payToggle('+i+')">'+(x.paid?'Выдано':'Выдать')+'</button></div></div>';
   });
   openDrawer(h,'Выплаты наличными','Свой персонал · подрядчику платят по безналу');
 }
 async function payToggle(i){
   const x=(conData.pay||[])[i];if(!x)return;
   if(x.paid&&!(await ask('Снять отметку «выдано» у '+unesc(x.fio)+'?')))return;
-  try{const r=await api('con.act',{id:ceId,act:'paySet',key:unesc(x.key),on:!x.paid});x.paid=!!r.paid;toast(r.msg||'Готово',true);const y=document.getElementById('drawer').scrollTop;payOpen();document.getElementById('drawer').scrollTop=y}
-  catch(e){toast(e.msg||'Не удалось сохранить')}
+  const btn=document.querySelector('#drawer button[data-pay="'+i+'"]');if(btn){if(btn.disabled)return;btn.disabled=true;btn.textContent='Сохраняю…'} // двойное нажатие при медленной сети не проходит
+  try{const r=await api('con.act',{id:ceId,act:'paySet',key:unesc(x.key),on:!x.paid},true,40000);x.paid=!!r.paid;toast(r.msg||'Готово',true);const y=document.getElementById('drawer').scrollTop;payOpen();document.getElementById('drawer').scrollTop=y}
+  catch(e){toast(e.msg||'Не удалось сохранить');if(btn){btn.disabled=false;btn.textContent=x.paid?'Выдано':'Выдать'}}
 }
+/* закрыть можно без открытых смен и неразобранных флагов (07.10); при закрытии факт сразу уходит в книгу бухгалтерии */
+const INFO_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
 function conClose(){
-  const n=conData.shifts.filter(x=>x.open).length;
-  modalOpen('<div class="mh">Закрыть мероприятие</div><p class="muted" style="margin:0 0 10px">Код и QR перестанут работать, новые приходы не примутся.'+(n?' Сейчас открыто смен: '+n+'.':'')+'</p>'+
-    (n?'<button class="btn red" onclick="modalClose();conAct(\'closeShifts\')">Закрыть и завершить смены сейчас</button><p class="muted" style="margin:6px 0 0;font-size:13px">Открытые смены закроются по половине минимума, как при автозакрытии.</p>'+
-       '<button class="btn sec" style="margin-top:12px" onclick="modalClose();conAct(\'close\')">Закрыть, смены оставить до утра</button><p class="muted" style="margin:6px 0 0;font-size:13px">Люди ещё смогут отметить уход сами, остальные закроются утром.</p>'
-      :'<button class="btn red" onclick="modalClose();conAct(\'close\')">Закрыть мероприятие</button>')+
-    '<button class="btn sec" style="margin-top:12px" onclick="modalClose()">Отмена</button>');
+  const open=conData.shifts.filter(x=>x.open).length,fl=conData.shifts.filter(x=>x.flg&&(x.flg.state==='open'||x.flg.state==='ask')).length;
+  const line=(c,t)=>'<div style="margin-top:12px"><span class="st '+c+'"><i></i>'+t+'</span></div>';
+  let h='<div class="mh" style="display:flex;align-items:center;gap:6px">Закрыть мероприятие'+(open?'<button class="ib" aria-label="Пояснение" onclick="document.getElementById(\'cl-tip\').classList.toggle(\'on\')">'+INFO_IC+'</button>':'')+'</div>';
+  if(open){
+    h+='<div class="tip" id="cl-tip">Закрыть можно, когда все смены закрыты и флаги разобраны. «Отпустить всех» закрывает смены сейчас, как «Отпустить»: по факту, а в последние 2 часа окна и позже — не меньше минимума.</div>'+
+      line('ok','Открыто смен - '+open)+(fl?line('warn','Флагов не разобрано - '+fl):'')+
+      '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn red" style="margin-top:6px" onclick="modalClose();conAct(\'releaseAll\')">Отпустить всех сейчас</button>';
+  }else if(fl){
+    h+=line('warn','Флагов не разобрано - '+fl)+'<p class="cap" style="margin:4px 0 0;font-size:13px">Закрыть можно, когда все флаги разобраны.</p>'+
+      '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="modalClose();conTabGo(\'flags\')">Разобрать флаги</button>';
+  }else{
+    h+='<p class="cap" style="margin:6px 0 0;font-size:14.5px">Код и QR перестанут работать. Факт сразу выгрузится в книгу бухгалтерии.</p>'+
+      '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn red" style="margin-top:6px" onclick="modalClose();conAct(\'close\')">Закрыть мероприятие</button>';
+  }
+  modalOpen(h);
 }
 init();
 </script>
