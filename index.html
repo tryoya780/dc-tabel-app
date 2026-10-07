@@ -211,6 +211,8 @@ h2.evn{font-size:19px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em;color
 .ctx .notew{flex-basis:100%;margin-top:6px}
 .cam{border-radius:22px}
 .tlh h2{display:inline-block}
+#modal .ib{all:unset;cursor:pointer;color:var(--mut);display:inline-flex}#modal .ib svg{width:20px;height:20px}
+#modal .tip{display:none;background:var(--sf2);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13.5px;color:var(--mut);line-height:1.45}#modal .tip.on{display:block}
 .rolee{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px}.rolee svg{width:16px;height:16px;flex:none}
 .rsel .cat{padding:13px 12px;margin-top:6px;border:0;border-radius:12px;background:var(--sf2)}.rsel .cat.sel{box-shadow:inset 0 0 0 1.5px var(--txt)}.rsel .cat.full{opacity:.55}
 /* селфи: экран ровно в высоту окна, окно камеры ужимается, чтобы кнопка всегда была видна внизу; на высоких экранах камера прежняя, 3:4 */
@@ -871,11 +873,16 @@ async function dzDecide(di,ok){
   conAct(ok?'dzConfirm':'dzReject',0,'',{req:unesc(d.id)});
 }
 function unesc(t){const e=document.createElement('textarea');e.innerHTML=String(t);return e.value}
-async function releaseCatAsk(ci){
-  const c=conData.stats.cats[ci];if(!c)return;
-  const n=conData.shifts.filter(x=>x.role===c.name&&x.open&&!x.released).length;
-  if(!(await ask('Отпустить бригаду: '+n+' чел.? Смены закроются, минимум за выход сохранится.')))return;
-  closeDrawer();conAct('releaseCat',0,unesc(c.name));
+let relGrp=null;
+function relGrpGo(){const q=relGrp;if(!q)return;modalClose();closeDrawer();conAct('releaseGrp',0,q.role,{win:q.win})}
+function relGrpAsk(ci,k){
+  const c=conData.stats.cats[ci],ws=(conData.windows||[]).filter(x=>x.role===c.name),g=ws[k];if(!g)return;
+  relGrp={role:unesc(c.name),win:ws.length>1?unesc(g.key):''};
+  const ppl=conData.shifts.filter(x=>x.role===c.name&&x.open&&(ws.length===1||x.win===g.key));
+  modalOpen(shHead(ws.length>1?'Отпустить группу?':'Отпустить всех?',c.name+' · к '+g.start+', до '+g.end)+
+    '<p class="cap" style="margin:12px 0 0;font-size:14.5px">'+ppl.map(x=>shortFio(x.fio)).join(', ')+'</p>'+
+    '<p class="cap" style="margin:10px 0 0;font-size:14px">Смены закроются в '+stampNow()+' без селфи, как при «Отпустить»: по факту, а в последние 2 часа окна и позже — не меньше минимума.</p>'+
+    '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="relGrpGo()">Отпустить ('+ppl.length+')</button>');
 }
 /* «Отпустить»: своё окно вместо системного, с исходом заранее (поле rel приходит с сервера; без него — общий текст) */
 function releaseAsk(i){
@@ -1533,8 +1540,9 @@ function openCat(ci){ // индекс категории, а не имя: зна
   if(ws.length>1)h+='<div class="sec2" style="margin-top:26px">Группы</div><div class="kvs t">'+ws.map(g=>{const gs=sh.filter(x=>x.win===g.key);return '<div class="kv"><span class="k">К '+g.start+', до '+g.end+(g.dz?' · дозаказ':'')+'</span><b>'+gs.length+' из '+g.count+'</b></div>'}).join('')+'</div><p class="cap" style="margin:6px 0 0">Человек относится к группе, чьё начало ближе к его приходу. Лимит общий на категорию.</p>';
   h+='<div class="sec2" style="margin-top:26px">На объекте <span>'+on.length+'</span></div>'+(on.length?on.map(row).join(''):'<p class="muted" style="margin:8px 0 0">Никого</p>');
   h+='<div class="sec2" style="margin-top:26px">Ушли <span>'+off.length+'</span></div>'+(off.length?off.map(row).join(''):'<p class="muted" style="margin:8px 0 0">Пока никто не ушёл</p>');
-  const notRel=on.filter(x=>!x.released);
-  h+='<div class="foot">'+(SHOW_RELEASE_CAT&&notRel.length?'<button class="btn txt" onclick="releaseCatAsk('+ci+')">Отпустить бригаду ('+notRel.length+')</button>':'')+(r.event.code&&r.event.status!=='Закрыто'?'<button class="btn sec" style="background:var(--sf2)" onclick="conAct(\'qr\')">QR-лист</button>':'')+'</div>';
+  // «Отпустить группу»: как «Отпустить» по одному, для всей группы времени (одна группа — «Отпустить всех»)
+  const rel=ws.map((g,k)=>({k:k,n:on.filter(x=>ws.length===1||x.win===g.key).length,g:g})).filter(q=>q.n);
+  h+='<div class="foot">'+rel.map(q=>'<button class="btn txt" onclick="relGrpAsk('+ci+','+q.k+')">'+(ws.length>1?'Отпустить группу к '+q.g.start:'Отпустить всех')+' ('+q.n+')</button>').join('')+(r.event.code&&r.event.status!=='Закрыто'?'<button class="btn sec" style="background:var(--sf2)" onclick="conAct(\'qr\')">QR-лист</button>':'')+'</div>';
   openDrawer(h,name,(w?w.start+'–'+w.end+' · ':'')+'минимум '+c.min+' ч');
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');updBack()}
@@ -1589,7 +1597,6 @@ async function openPhoto(i,kind){
   catch(e){const w=document.querySelector('#modal .ph-wrap');if(w)w.innerHTML='<div class="muted bad">'+escS(e.msg||'Не удалось загрузить фото')+'</div>'}
 }
 function openL(u){if(tg&&tg.openLink)tg.openLink(u);else window.open(u,'_blank')}
-const SHOW_RELEASE_CAT=false; // «Отпустить бригаду» (минимум всем) скрыта по решению 22.09, сервер её поддерживает
 let conActErr='';
 /* возвращает true при успехе; текст ошибки в conActErr (для модалок) и в тосте */
 async function conAct(act,row,role,extra){
@@ -1691,13 +1698,24 @@ async function payToggle(i){
   try{const r=await api('con.act',{id:ceId,act:'paySet',key:unesc(x.key),on:!x.paid},true,40000);x.paid=!!r.paid;toast(r.msg||'Готово',true);const y=document.getElementById('drawer').scrollTop;payOpen();document.getElementById('drawer').scrollTop=y}
   catch(e){toast(e.msg||'Не удалось сохранить');if(btn){btn.disabled=false;btn.textContent=x.paid?'Выдано':'Выдать'}}
 }
+/* закрыть можно без открытых смен и неразобранных флагов (07.10); при закрытии факт сразу уходит в книгу бухгалтерии */
+const INFO_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
 function conClose(){
-  const n=conData.shifts.filter(x=>x.open).length;
-  modalOpen('<div class="mh">Закрыть мероприятие</div><p class="muted" style="margin:0 0 10px">Код и QR перестанут работать, новые приходы не примутся.'+(n?' Сейчас открыто смен: '+n+'.':'')+'</p>'+
-    (n?'<button class="btn red" onclick="modalClose();conAct(\'closeShifts\')">Закрыть и завершить смены сейчас</button><p class="muted" style="margin:6px 0 0;font-size:13px">Открытые смены закроются по половине минимума, как при автозакрытии.</p>'+
-       '<button class="btn sec" style="margin-top:12px" onclick="modalClose();conAct(\'close\')">Закрыть, смены оставить до утра</button><p class="muted" style="margin:6px 0 0;font-size:13px">Люди ещё смогут отметить уход сами, остальные закроются утром.</p>'
-      :'<button class="btn red" onclick="modalClose();conAct(\'close\')">Закрыть мероприятие</button>')+
-    '<button class="btn sec" style="margin-top:12px" onclick="modalClose()">Отмена</button>');
+  const open=conData.shifts.filter(x=>x.open).length,fl=conData.shifts.filter(x=>x.flg&&(x.flg.state==='open'||x.flg.state==='ask')).length;
+  const line=(c,t)=>'<div style="margin-top:12px"><span class="st '+c+'"><i></i>'+t+'</span></div>';
+  let h='<div class="mh" style="display:flex;align-items:center;gap:6px">Закрыть мероприятие'+(open?'<button class="ib" aria-label="Пояснение" onclick="document.getElementById(\'cl-tip\').classList.toggle(\'on\')">'+INFO_IC+'</button>':'')+'</div>';
+  if(open){
+    h+='<div class="tip" id="cl-tip">Закрыть можно, когда все смены закрыты и флаги разобраны. «Отпустить всех» закрывает смены сейчас, как «Отпустить»: по факту, а в последние 2 часа окна и позже — не меньше минимума.</div>'+
+      line('ok','Открыто смен - '+open)+(fl?line('warn','Флагов не разобрано - '+fl):'')+
+      '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn red" style="margin-top:6px" onclick="modalClose();conAct(\'releaseAll\')">Отпустить всех сейчас</button>';
+  }else if(fl){
+    h+=line('warn','Флагов не разобрано - '+fl)+'<p class="cap" style="margin:4px 0 0;font-size:13px">Закрыть можно, когда все флаги разобраны.</p>'+
+      '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn" style="margin-top:6px" onclick="modalClose();conTabGo(\'flags\')">Разобрать флаги</button>';
+  }else{
+    h+='<p class="cap" style="margin:6px 0 0;font-size:14.5px">Код и QR перестанут работать. Факт сразу выгрузится в книгу бухгалтерии.</p>'+
+      '<button class="btn txt" style="margin-top:18px" onclick="modalClose()">Отмена</button><button class="btn red" style="margin-top:6px" onclick="modalClose();conAct(\'close\')">Закрыть мероприятие</button>';
+  }
+  modalOpen(h);
 }
 init();
 </script>
